@@ -3,6 +3,7 @@ package testConnection;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 
 public class UDPtestAsServer {
 
@@ -11,12 +12,11 @@ public class UDPtestAsServer {
 		try {
 			System.out.println("Server trying to start...");
 			DatagramSocket socket = new DatagramSocket(5000); // 송/수신 포트를 지정. 여기서는 수신용
+			MulticastSocket ms = new MulticastSocket(4000);
 			DatagramPacket packet = new DatagramPacket(buf, buf.length); // 수신된 정보를 패킷에 저장할 바이트 변수 위치와 길이 알려주기
-			InetAddress addr = InetAddress.getByName("127.0.0.1");
+			InetAddress addr = InetAddress.getByName("224.0.0.1");
 			DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, addr, 4000);
 			
-			socket.setReuseAddress(true);
-			System.out.println(socket.getReuseAddress());
 			System.out.println("Server is receiving.");
 			StringBuffer sb = new StringBuffer();
 			StringBuffer compare = new StringBuffer();
@@ -34,7 +34,7 @@ public class UDPtestAsServer {
 					sb.setLength(0);
 					buf = sb.append("ConnectionGood").toString().getBytes();
 					sendPacket.setData(buf);
-					socket.send(sendPacket);
+					ms.send(sendPacket);
 					System.out.println(new String(buf) + " Sended");
 				}
 				
@@ -43,6 +43,7 @@ public class UDPtestAsServer {
 				}
 			}
 			socket.close();
+			ms.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
