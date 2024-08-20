@@ -1,4 +1,4 @@
-package testConnection;
+package UDPtestAsClient;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -29,12 +29,18 @@ public class UDPtestAsClient {
 				DatagramPacket recvPacket = new DatagramPacket(recvBuf, recvBuf.length);
 				try {
 					MulticastSocket ms = new MulticastSocket(4000);
-					SocketAddress Saddr = new InetSocketAddress(InetAddress.getByName("224.0.0.1"), 4000);
+					ms.setReuseAddress(true);
+					ms.setSoTimeout(1000*60);
+					System.out.println(ms.getSoTimeout());
+					SocketAddress Saddr = new InetSocketAddress(InetAddress.getByName("224.128.1.5"), 4000);
 					ms.joinGroup(Saddr, null);
-					ms.receive(recvPacket);
-					System.out.println(new String(recvPacket.getData()).trim() + " Received" + recvPacket.getAddress() +" : "+recvPacket.getPort());
-					ms.leaveGroup(Saddr, null);
-					ms.close();
+					while(true) {
+						ms.receive(recvPacket);
+						System.out.println(new String(recvPacket.getData()).trim() + " Received" + recvPacket.getAddress() +" : "+recvPacket.getPort());
+						
+					}
+					//ms.leaveGroup(Saddr, null);
+					//ms.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
