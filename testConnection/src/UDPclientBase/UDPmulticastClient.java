@@ -1,28 +1,33 @@
-package UDPtestAsClient;
+package UDPclientBase;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class UDPtestAsClient {
+public class UDPmulticastClient {
 
 	public static void main(String[] args) {
-		String s = "Connection Test";
-		byte[] buf = s.getBytes();
+		System.out.println("[LOG]");
+		final String SERVER_ADDRESS = "127.0.0.1"; 
+		final int SERVER_PORT = 1235;
+
+		
 		byte[] recvBuf = new byte[256];
 		Scanner sc = new Scanner(System.in);
-		DatagramSocket socket;
 		try {
-			socket = new DatagramSocket(1235); // 송/수신 포트를 지정. 여기서는 보낼 포트를 지정
-			InetAddress addr = InetAddress.getByAddress(new byte[] {127,0,0,1});
-			DatagramPacket packet = new DatagramPacket(buf, buf.length, addr, 5000); // 보낼 준비, 파라미터는 순서대로 1. 보낼 바이트 배열, 2. 그 길이, 3. 보낼 위치, 4. 보낼 포트
+			
+			//MultiCast Connect
 			ExecutorService executorService = Executors.newFixedThreadPool(2);
 			executorService.execute(()->{
 				System.out.println("ExecutorService Init");
@@ -36,7 +41,7 @@ public class UDPtestAsClient {
 					ms.joinGroup(Saddr, null);
 					while(true) {
 						ms.receive(recvPacket);
-						System.out.println(new String(recvPacket.getData()).trim() + " Received" + recvPacket.getAddress() +" : "+recvPacket.getPort());
+						System.out.println("UDP received From Server -> " + new String(recvPacket.getData()).trim() + recvPacket.getAddress() +" : "+recvPacket.getPort());
 						
 					}
 					//ms.leaveGroup(Saddr, null);
@@ -45,14 +50,13 @@ public class UDPtestAsClient {
 					e.printStackTrace();
 				}
 			});
-			socket.send(packet);
-			System.out.println("Sended");
-			System.out.println("Input string to send");
-			buf = sc.nextLine().getBytes();
-			packet.setData(buf);
-			socket.send(packet);
-			socket.close();
-			System.out.println("closed");
+			
+			//TCP Connect
+			Socket tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT);
+			BufferedWriter tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
+			BufferedReader tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
+			tcpWriter.write("ConnectionTest"); tcpWriter.newLine(); tcpWriter.flush();
+			System.out.println("TCP received From Server -> " + tcpReader.readLine());
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
