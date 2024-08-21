@@ -28,7 +28,7 @@ public class UDPtestAsServer {
 					MulticastSocket ms = new MulticastSocket(4000);
 					ms.setTimeToLive(255);
 					System.out.println("TTL is " + ms.getTimeToLive() + " Is Closed = " + ms.isClosed());
-					InetAddress addr = InetAddress.getByName("224.128.1.5");
+					InetAddress addr = InetAddress.getByName("239.0.0.1");
 					DatagramPacket sendPacket = new DatagramPacket(sendBuf, sendBuf.length, addr, 4000);
 					while(true) {
 						sendBuf = "Send".getBytes();

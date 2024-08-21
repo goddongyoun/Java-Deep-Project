@@ -32,7 +32,7 @@ public class UDPtestAsClient {
 					ms.setReuseAddress(true);
 					ms.setSoTimeout(1000*60);
 					System.out.println(ms.getSoTimeout());
-					SocketAddress Saddr = new InetSocketAddress(InetAddress.getByName("224.128.1.5"), 4000);
+					SocketAddress Saddr = new InetSocketAddress(InetAddress.getByName("239.0.0.1"), 4000);
 					ms.joinGroup(Saddr, null);
 					while(true) {
 						ms.receive(recvPacket);
