@@ -14,7 +14,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ServerBase {
-
+	
+	static boolean SEND_LOCKED = false;
+	
+	static boolean needSend = false;
+	static String stringToBeSended;
+	static InetAddress addressToSend;
+	
 	public static void main(String[] args) {
 		try {
 			System.out.println("Server trying to start...");
@@ -24,16 +30,66 @@ public class ServerBase {
 			Socket tcpClientSock = new Socket();
 			BufferedReader tcpReader;
 			BufferedWriter tcpWriter;
-			final String MULTICAST_IP = "239.0.0.1";
-			final int MULTICAST_PORT = 4000;
+			//final String MULTICAST_IP = "239.0.0.1";
+			//final int MULTICAST_PORT = 4000;
+			DatagramSocket udpSock = new DatagramSocket(4000);
+			System.out.println("Port is " + udpSock.getPort());
 			
 			System.out.println("Server is receiving.");
 			
 			//멀티 스레드 고정 설정
 			ExecutorService executorService = Executors.newFixedThreadPool(3);
 			
-			//UDP multicast
 			executorService.execute(()->{
+				try {
+					byte[] recvBuf = new byte[256];
+					DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
+					udpSock.receive(udpRecvPack);
+					String recvMessage = new String(udpRecvPack.getData()).trim();
+					if(recvMessage.equals("ConnectionTest") && SEND_LOCKED == false) {
+						System.out.println("UDP received Connection Test " + udpRecvPack.getAddress());
+						addressToSend = udpRecvPack.getAddress();
+						stringToBeSended = "ConnectionGood";
+						needSend = true;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+			
+			executorService.execute(()->{
+				try {
+					//System.out.println("0 came");
+					byte[] sendBuf = new byte[255];
+					DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length);
+					udpSendPack.setPort(4001);
+					while(true){
+						Thread.sleep(10);
+						//System.out.println("Looping");
+						if(needSend == true) {
+							//System.out.println("1 came");
+							if(addressToSend != null && stringToBeSended != null) {
+								for(int i = 0; i<sendBuf.length; i++) {
+									sendBuf[i] = 0;
+								}
+								sendBuf = stringToBeSended.getBytes();
+								udpSendPack.setAddress(addressToSend);
+								udpSendPack.setData(sendBuf);
+								if(SEND_LOCKED == false) {
+									//System.out.println("Sended");
+									udpSock.send(udpSendPack);
+								}
+								needSend = false;
+							}
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+			
+			//UDP multicast
+			/*executorService.execute(()->{
 				try {
 					byte[] sendBuf = new byte[256];
 					MulticastSocket ms = new MulticastSocket();
@@ -51,7 +107,7 @@ public class ServerBase {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			});
+			});*/
 			
 			//UDP BroadCast Test
 			/*executorService.execute(()->{

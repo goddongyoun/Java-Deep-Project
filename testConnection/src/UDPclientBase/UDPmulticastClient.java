@@ -6,30 +6,47 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 //import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UDPmulticastClient {
 
+	static byte[] sendBuf = new byte[256];
+	
 	public static void main(String[] args) {
 		System.out.println("[LOG]");
-		final String SERVER_ADDRESS = "124.55.106.99";
-		//final String SERVER_ADDRESS = "127.0.0.1";
+		//final String SERVER_ADDRESS = "124.55.106.99";
+		final String SERVER_ADDRESS = "127.0.0.1";
 		final int SERVER_PORT = 1235;
 
-		byte[] recvBuf = new byte[256];
 		Scanner sc = new Scanner(System.in);
 		try {
-			//MultiCast Connect
-			ExecutorService executorService = Executors.newFixedThreadPool(2);
+			ExecutorService executorService = Executors.newFixedThreadPool(3);
 			executorService.execute(()->{
+				try {
+					sendBuf = "ConnectionTest".getBytes();
+					DatagramSocket udpSock = new DatagramSocket(4001);
+					DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(SERVER_ADDRESS), 4000);
+					udpSock.send(udpSendPack);
+					System.out.println("Sended");
+					udpSock.receive(udpSendPack);
+					System.out.println("UDP received From Server -> " + new String(udpSendPack.getData()).trim());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+			
+			//MultiCast Connect
+			/*executorService.execute(()->{
 				System.out.println("ExecutorService Init");
 				DatagramPacket recvPacket = new DatagramPacket(recvBuf, recvBuf.length);
 				try {
@@ -52,7 +69,7 @@ public class UDPmulticastClient {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			});
+			});*/
 			
 			//BroadCast TEST
 			/*DatagramSocket socket = null;
