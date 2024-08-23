@@ -2,18 +2,18 @@ package UDPclientBase;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
+//import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 //import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
+//import java.net.InetSocketAddress;
+//import java.net.MulticastSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketException;
+//import java.net.SocketAddress;
+//import java.net.SocketException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,8 +24,8 @@ public class UDPmulticastClient {
 	
 	public static void main(String[] args) {
 		System.out.println("[LOG]");
-		//final String SERVER_ADDRESS = "124.55.106.99";
-		final String SERVER_ADDRESS = "127.0.0.1";
+		final String SERVER_ADDRESS = "124.55.106.99";
+		//final String SERVER_ADDRESS = "127.0.0.1";
 		final int SERVER_PORT = 1235;
 
 		Scanner sc = new Scanner(System.in);
@@ -40,6 +40,7 @@ public class UDPmulticastClient {
 					System.out.println("Sended");
 					udpSock.receive(udpSendPack);
 					System.out.println("UDP received From Server -> " + new String(udpSendPack.getData()).trim());
+					udpSock.close();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

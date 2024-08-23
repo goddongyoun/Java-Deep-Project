@@ -44,13 +44,15 @@ public class ServerBase {
 				try {
 					byte[] recvBuf = new byte[256];
 					DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
-					udpSock.receive(udpRecvPack);
-					String recvMessage = new String(udpRecvPack.getData()).trim();
-					if(recvMessage.equals("ConnectionTest") && SEND_LOCKED == false) {
-						System.out.println("UDP received Connection Test " + udpRecvPack.getAddress());
-						addressToSend = udpRecvPack.getAddress();
-						stringToBeSended = "ConnectionGood";
-						needSend = true;
+					while(true) {
+						udpSock.receive(udpRecvPack);
+						String recvMessage = new String(udpRecvPack.getData()).trim();
+						if(recvMessage.equals("ConnectionTest") && SEND_LOCKED == false) {
+							System.out.println("UDP received Connection Test " + udpRecvPack.getAddress());
+							addressToSend = udpRecvPack.getAddress();
+							stringToBeSended = "ConnectionGood";
+							needSend = true;
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
