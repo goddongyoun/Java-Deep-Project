@@ -1,4 +1,4 @@
-package UDPclientBase;
+package ClientBase;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -7,27 +7,47 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
 //import java.net.DatagramSocket;
 import java.net.InetAddress;
 //import java.net.InetSocketAddress;
 //import java.net.MulticastSocket;
 import java.net.Socket;
+import java.net.URL;
 //import java.net.SocketAddress;
 //import java.net.SocketException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class UDPmulticastClient {
+public class ClientBase {
 
 	static byte[] sendBuf = new byte[256];
+	static String SERVER_ADDRESS = "124.55.106.99";
+	
+	static void checkLoopBack() {
+		try {
+            String apiUrl = "https://ifconfig.me/ip";
+            URL url = new URL(apiUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String externalIp = reader.readLine();
+            reader.close();
+            if(externalIp.equals("124.55.106.99")) {
+            	SERVER_ADDRESS = "127.0.0.1";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
 	
 	public static void main(String[] args) {
 		System.out.println("[LOG]");
-		final String SERVER_ADDRESS = "124.55.106.99";
-		//final String SERVER_ADDRESS = "127.0.0.1";
 		final int SERVER_PORT = 1235;
-
+		
+		checkLoopBack();
+		
 		Scanner sc = new Scanner(System.in);
 		try {
 			ExecutorService executorService = Executors.newFixedThreadPool(3);

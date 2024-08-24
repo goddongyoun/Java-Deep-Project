@@ -7,7 +7,7 @@ import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
+//import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -26,12 +26,14 @@ public class ServerBase {
 			System.out.println("Server trying to start...");
 			
 			//TCP
+			@SuppressWarnings("resource")
 			ServerSocket tcpSock = new ServerSocket(1235);
 			Socket tcpClientSock = new Socket();
 			BufferedReader tcpReader;
 			BufferedWriter tcpWriter;
 			//final String MULTICAST_IP = "239.0.0.1";
 			//final int MULTICAST_PORT = 4000;
+			@SuppressWarnings("resource")
 			DatagramSocket udpSock = new DatagramSocket(4000);
 			System.out.println("Port is " + udpSock.getPort());
 			
@@ -40,6 +42,7 @@ public class ServerBase {
 			//멀티 스레드 고정 설정
 			ExecutorService executorService = Executors.newFixedThreadPool(3);
 			
+			// UDP receiver
 			executorService.execute(()->{
 				try {
 					byte[] recvBuf = new byte[256];
@@ -59,6 +62,7 @@ public class ServerBase {
 				}
 			});
 			
+			// UDP sender
 			executorService.execute(()->{
 				try {
 					//System.out.println("0 came");
@@ -154,6 +158,7 @@ public class ServerBase {
 				tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpClientSock.getOutputStream()));
 				String saver = tcpReader.readLine();
 				if(saver.equals("ConnectionTest")) {
+					System.out.println(tcpClientSock.getInetAddress());
 					System.out.println("TCP received Connection Test " + tcpClientSock.getInetAddress());
 					tcpWriter.write("Connection Good"); tcpWriter.newLine(); tcpWriter.flush();
 				}
