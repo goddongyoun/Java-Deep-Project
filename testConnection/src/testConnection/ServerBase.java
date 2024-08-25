@@ -116,63 +116,6 @@ public class ServerBase {
 				}
 			});
 			
-			//UDP multicast
-			/*executorService.execute(()->{
-				try {
-					byte[] sendBuf = new byte[256];
-					MulticastSocket ms = new MulticastSocket();
-					ms.setTimeToLive(255);
-					System.out.println("TTL is " + ms.getTimeToLive() + " Is Closed = " + ms.isClosed());
-					InetAddress addr = InetAddress.getByName(MULTICAST_IP);
-					DatagramPacket sendPacket = new DatagramPacket(sendBuf, sendBuf.length, addr, 4000);
-					while(true) {
-						sendBuf = "Send".getBytes();
-						sendPacket.setData(sendBuf);
-						ms.send(sendPacket);
-						//System.out.println(new String(sendBuf) + " Sended");
-						Thread.sleep(1000);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});*/
-			
-			//UDP BroadCast Test
-			/*executorService.execute(()->{
-				DatagramSocket socket = null;
-				try {
-		            // 브로드캐스트를 위한 소켓 생성
-		            socket = new DatagramSocket();
-		            socket.setBroadcast(true); // 브로드캐스트 허용 설정
-		            
-		            // 브로드캐스트 메시지
-		            String message = "Hello, Broadcast!";
-		            byte[] buffer = message.getBytes();
-		            
-		            // 브로드캐스트 주소 및 포트
-		            InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-		            int port = 9876;
-		            
-		            // DatagramPacket 생성
-		            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, broadcastAddress, port);
-		            
-		            // 데이터 송신
-		            while(true) {
-			            socket.send(packet);
-			            System.out.println("Broadcast message sent!");
-			            Thread.sleep(1000);
-		            }
-		            
-		        } catch (Exception e) {
-		            e.printStackTrace();
-		        } finally {
-		            if (socket != null && !socket.isClosed()) {
-		                socket.close();
-		            }
-		        }
-			});*/
-			
-			
 			//TCP receiver
 			while(true) {
 				tcpClientSock = tcpSock.accept();
