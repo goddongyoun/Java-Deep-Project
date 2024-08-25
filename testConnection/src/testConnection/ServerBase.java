@@ -10,10 +10,34 @@ import java.net.InetAddress;
 //import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+class Room{
+	int gameRecogPort = 0;
+	
+	Room(int gameRecogPort){
+		this.gameRecogPort = gameRecogPort;
+		return;
+	}
+	
+}
+
 public class ServerBase {
+	
+	static int RecogPortNext = 0;
+	static List<Room> rooms = new ArrayList<>();
+	
+	static int RecogPortIncre() {
+		RecogPortNext++;
+		return RecogPortNext-1;
+	}
+	
+	static void MakeNewGame() {
+		rooms.add(new Room(RecogPortIncre()));
+	}
 	
 	static boolean SEND_LOCKED = false;
 	
@@ -53,7 +77,7 @@ public class ServerBase {
 						if(recvMessage.equals("ConnectionTest") && SEND_LOCKED == false) {
 							System.out.println("UDP received Connection Test " + udpRecvPack.getAddress());
 							addressToSend = udpRecvPack.getAddress();
-							stringToBeSended = "ConnectionGood";
+							stringToBeSended = "Connection Good";
 							needSend = true;
 						}
 					}
@@ -66,7 +90,7 @@ public class ServerBase {
 			executorService.execute(()->{
 				try {
 					//System.out.println("0 came");
-					byte[] sendBuf = new byte[255];
+					byte[] sendBuf = new byte[1];
 					DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length);
 					udpSendPack.setPort(4001);
 					while(true){
@@ -75,12 +99,10 @@ public class ServerBase {
 						if(needSend == true) {
 							//System.out.println("1 came");
 							if(addressToSend != null && stringToBeSended != null) {
-								for(int i = 0; i<sendBuf.length; i++) {
-									sendBuf[i] = 0;
-								}
 								sendBuf = stringToBeSended.getBytes();
 								udpSendPack.setAddress(addressToSend);
 								udpSendPack.setData(sendBuf);
+								//System.out.println(new String(sendBuf) + "108");
 								if(SEND_LOCKED == false) {
 									//System.out.println("Sended");
 									udpSock.send(udpSendPack);
@@ -158,14 +180,21 @@ public class ServerBase {
 				tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpClientSock.getOutputStream()));
 				String saver = tcpReader.readLine();
 				if(saver.equals("ConnectionTest")) {
-					System.out.println(tcpClientSock.getInetAddress());
 					System.out.println("TCP received Connection Test " + tcpClientSock.getInetAddress());
 					tcpWriter.write("Connection Good"); tcpWriter.newLine(); tcpWriter.flush();
+				}
+				else if(saver.equals("MakeGame")) {
+					System.out.println("TCP received Make Game");
+					MakeNewGame();
+					System.out.println("New Room Init RecogPort is " + (RecogPortNext-1));
+					tcpWriter.write("Game Init RecogPort is " + (RecogPortNext-1)); tcpWriter.flush();
 				}
 				else {
 					System.out.println("? " + saver + tcpClientSock.getInetAddress());
 					tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
 				}
+				tcpReader.close();
+				tcpWriter.close();
 				
 			}
 		} catch (Exception e) {

@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 
 public class ClientBase {
 
-	static byte[] sendBuf = new byte[256];
+	static byte[] sendBuf;
 	static String SERVER_ADDRESS = "124.55.106.99";
 	
 	static void checkLoopBack() {
@@ -51,15 +51,19 @@ public class ClientBase {
 		Scanner sc = new Scanner(System.in);
 		try {
 			ExecutorService executorService = Executors.newFixedThreadPool(3);
+			
+			//UDP
 			executorService.execute(()->{
 				try {
 					sendBuf = "ConnectionTest".getBytes();
+					byte[] recvBuf = new byte[256];
 					DatagramSocket udpSock = new DatagramSocket(4001);
 					DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(SERVER_ADDRESS), 4000);
+					DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
 					udpSock.send(udpSendPack);
 					System.out.println("Sended");
-					udpSock.receive(udpSendPack);
-					System.out.println("UDP received From Server -> " + new String(udpSendPack.getData()).trim());
+					udpSock.receive(udpRecvPack);
+					System.out.println("UDP received From Server -> " + new String(udpRecvPack.getData()).trim());
 					udpSock.close();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -123,8 +127,19 @@ public class ClientBase {
 			Socket tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT);
 			BufferedWriter tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
 			BufferedReader tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
+			
 			tcpWriter.write("ConnectionTest"); tcpWriter.newLine(); tcpWriter.flush();
 			String readSaver = tcpReader.readLine();
+			System.out.println("TCP received From Server -> " + readSaver);
+			
+			tcpSock.close();
+			
+			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT);
+			tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
+			tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
+			tcpWriter.write("MakeGame"); tcpWriter.newLine(); tcpWriter.flush();
+			System.out.println("MakeGame Sended");
+			readSaver = tcpReader.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
 			
 			tcpSock.close();
