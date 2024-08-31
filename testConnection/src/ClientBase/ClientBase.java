@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 public class ClientBase {
 
 	static byte[] sendBuf;
-	static String SERVER_ADDRESS = "124.55.106.99";
+	static String SERVER_ADDRESS = "219.254.146.234";
 	
 	static void checkLoopBack() {
 		try {
@@ -34,7 +34,7 @@ public class ClientBase {
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String externalIp = reader.readLine();
             reader.close();
-            if(externalIp.equals("124.55.106.99")) {
+            if(externalIp.equals("219.254.146.234")) {
             	SERVER_ADDRESS = "127.0.0.1";
             }
         } catch (Exception e) {
