@@ -77,6 +77,7 @@ public class ServerBase {
 						if(recvMessage.equals("ConnectionTest") && SEND_LOCKED == false) {
 							System.out.println("UDP received Connection Test " + udpRecvPack.getAddress());
 							addressToSend = udpRecvPack.getAddress();
+							//System.out.println(addressToSend);
 							stringToBeSended = "Connection Good";
 							needSend = true;
 						}
@@ -104,7 +105,7 @@ public class ServerBase {
 								udpSendPack.setData(sendBuf);
 								//System.out.println(new String(sendBuf) + "108");
 								if(SEND_LOCKED == false) {
-									//System.out.println("Sended");
+									System.out.println("Sended");
 									udpSock.send(udpSendPack);
 								}
 								needSend = false;

@@ -28,7 +28,7 @@ public class ClientBase {
 	static byte[] sendBuf;
 	static String SERVER_ADDRESS = "219.254.146.234";
 	final static int SERVER_PORT_TCP = 1235;
-	final static int SERVER_PORT_TCP_UDP  = 4000;
+	final static int SERVER_PORT_UDP  = 4000;
 	static ExecutorService executorService = Executors.newFixedThreadPool(3);
 	static Future<String> future_UDP;
 	
@@ -85,7 +85,8 @@ public class ClientBase {
 				sendBuf = "ConnectionTest".getBytes();
 				byte[] recvBuf = new byte[256];
 				DatagramSocket udpSock = new DatagramSocket(4001);
-				DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(SERVER_ADDRESS), 4000);
+				udpSock.setSoTimeout(5000);
+				DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT_UDP);
 				DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
 				udpSock.send(udpSendPack);
 				System.out.println("Sended");
@@ -128,11 +129,13 @@ public class ClientBase {
 				System.out.println("?");
 			}
 			
-			while(future_UDP.isDone() == false) {
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+			if(future_UDP != null) {
+				while(future_UDP.isDone() == false) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			
