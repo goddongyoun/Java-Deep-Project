@@ -3,6 +3,7 @@ package ClientBase;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 //import java.io.IOException;
+//import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
@@ -14,16 +15,22 @@ import java.net.InetAddress;
 //import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.URL;
+//import java.net.UnknownHostException;
 //import java.net.SocketAddress;
 //import java.net.SocketException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ClientBase {
 
 	static byte[] sendBuf;
 	static String SERVER_ADDRESS = "219.254.146.234";
+	final static int SERVER_PORT_TCP = 1235;
+	final static int SERVER_PORT_TCP_UDP  = 4000;
+	static ExecutorService executorService = Executors.newFixedThreadPool(3);
+	static Future<String> future_UDP;
 	
 	static void checkLoopBack() {
 		try {
@@ -42,36 +49,11 @@ public class ClientBase {
         }
 	}
 	
-	public static void main(String[] args) {
-		System.out.println("[LOG]");
-		final int SERVER_PORT = 1235;
-		
-		checkLoopBack();
-		
-		Scanner sc = new Scanner(System.in);
+	static void connectionTest_TCP() {
+		//TCP Connect
+		Socket tcpSock;
 		try {
-			ExecutorService executorService = Executors.newFixedThreadPool(3);
-			
-			//UDP
-			executorService.execute(()->{
-				try {
-					sendBuf = "ConnectionTest".getBytes();
-					byte[] recvBuf = new byte[256];
-					DatagramSocket udpSock = new DatagramSocket(4001);
-					DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(SERVER_ADDRESS), 4000);
-					DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
-					udpSock.send(udpSendPack);
-					System.out.println("Sended");
-					udpSock.receive(udpRecvPack);
-					System.out.println("UDP received From Server -> " + new String(udpRecvPack.getData()).trim());
-					udpSock.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
-			
-			//TCP Connect
-			Socket tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT);
+			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 			BufferedWriter tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
 			BufferedReader tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
 			
@@ -81,7 +63,7 @@ public class ClientBase {
 			
 			tcpSock.close();
 			
-			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT);
+			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 			tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
 			tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
 			tcpWriter.write("MakeGame"); tcpWriter.newLine(); tcpWriter.flush();
@@ -90,11 +72,73 @@ public class ClientBase {
 			System.out.println("TCP received From Server -> " + readSaver);
 			
 			tcpSock.close();
-			//if(readSaver.equals("KILL THIS SOCKET")) {
-			//}
-		}catch(Exception e) {
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	static void connectionTest_UDP() {
+		//UDP
+		future_UDP = executorService.submit(()->{
+			try {
+				sendBuf = "ConnectionTest".getBytes();
+				byte[] recvBuf = new byte[256];
+				DatagramSocket udpSock = new DatagramSocket(4001);
+				DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(SERVER_ADDRESS), 4000);
+				DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
+				udpSock.send(udpSendPack);
+				System.out.println("Sended");
+				udpSock.receive(udpRecvPack);
+				System.out.println("UDP received From Server -> " + new String(udpRecvPack.getData()).trim());
+				udpSock.close();
+				return "End";
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "End with ERR";
+			}
+		});
+	}
+	
+	public static void main(String[] args) {
+		System.out.println("[LOG]");
+		checkLoopBack();
+		
+		final int EXIT = 4;
+		
+		Scanner sc = new Scanner(System.in);
+		System.out.println("1. Connection Test(UDP)\n2. Connection Test(TCP)\n3. ?\n4. Exit\n");
+		
+		while(true) {
+			System.out.print("input >> ");
+			int user = sc.nextInt();
+			if(user == 1) {
+				connectionTest_UDP();
+			}
+			else if(user == 2) {
+				connectionTest_TCP();
+			}
+			else if(user == 3) {
+				System.out.println("?");
+			}
+			else if(user == EXIT) {
+				break;
+			}
+			else {
+				System.out.println("?");
+			}
+			
+			while(future_UDP.isDone() == false) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
+		executorService.shutdown();
 		sc.close();
 	}
 
