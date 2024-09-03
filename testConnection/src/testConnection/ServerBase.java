@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.sql.*;
 
 class Room{
 	int gameRecogPort = 0;
@@ -47,8 +48,13 @@ public class ServerBase {
 	
 	public static void main(String[] args) {
 		try {
-			System.out.println("Server trying to start...");
+			System.out.println("Trying to connect with DB...");
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/javadeep", "root", "521869");
+			Statement stmt = conn.createStatement();
+			System.out.println("connect success with DB");
 			
+			System.out.println("Server trying to start...");
 			//TCP
 			@SuppressWarnings("resource")
 			ServerSocket tcpSock = new ServerSocket(1235);
@@ -59,7 +65,7 @@ public class ServerBase {
 			//final int MULTICAST_PORT = 4000;
 			@SuppressWarnings("resource")
 			DatagramSocket udpSock = new DatagramSocket(4000);
-			System.out.println("Port is " + udpSock.getPort());
+			//System.out.println("Port is " + udpSock.getPort());
 			
 			System.out.println("Server is receiving.");
 			
