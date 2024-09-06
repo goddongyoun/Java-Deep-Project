@@ -14,6 +14,7 @@ import java.net.InetAddress;
 //import java.net.InetSocketAddress;
 //import java.net.MulticastSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URL;
 //import java.net.UnknownHostException;
 //import java.net.SocketAddress;
@@ -61,18 +62,20 @@ public class ClientBase {
 			String readSaver = tcpReader.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
 			
-			tcpSock.close();
-			
-			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
-			tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
 			tcpWriter.write("MakeGame"); tcpWriter.newLine(); tcpWriter.flush();
 			System.out.println("MakeGame Sended");
 			readSaver = tcpReader.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
 			
+			System.out.println("SocketClosed");
 			tcpSock.close();
-		} catch (Exception e) {
+		} 
+		catch (SocketException e) {
+			if(e.getMessage().equals("Connection reset")) {
+				System.out.println("서버가 연결을 끊었습니다.");
+			}
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -108,10 +111,10 @@ public class ClientBase {
 		final int EXIT = 4;
 		
 		Scanner sc = new Scanner(System.in);
-		System.out.println("1. Connection Test(UDP)\n2. Connection Test(TCP)\n3. ?\n4. Exit\n");
+		System.out.println("1. Connection Test(UDP)\n2. Connection Test(TCP)\n3. ?\n4. Exit");
 		
 		while(true) {
-			System.out.print("input >> ");
+			System.out.print("\ninput >> ");
 			int user = sc.nextInt();
 			if(user == 1) {
 				connectionTest_UDP();
