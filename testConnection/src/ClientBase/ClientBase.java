@@ -33,6 +33,8 @@ public class ClientBase {
 	static ExecutorService executorService = Executors.newFixedThreadPool(3);
 	static Future<String> future_UDP;
 	
+	static Scanner sc = new Scanner(System.in);
+	
 	static void checkLoopBack() {
 		try {
             String apiUrl = "https://ifconfig.me/ip";
@@ -57,12 +59,15 @@ public class ClientBase {
 			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 			BufferedWriter tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
 			BufferedReader tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
+			System.out.print("name : ");
+			sc.nextLine();
+			String name = sc.nextLine();
 			
 			tcpWriter.write("ConnectionTest"); tcpWriter.newLine(); tcpWriter.flush();
 			String readSaver = tcpReader.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
 			
-			tcpWriter.write("MakeGame"); tcpWriter.newLine(); tcpWriter.flush();
+			tcpWriter.write("MakeGame"); tcpWriter.newLine(); tcpWriter.write(name); tcpWriter.newLine(); tcpWriter.flush();
 			System.out.println("MakeGame Sended");
 			readSaver = tcpReader.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
@@ -110,7 +115,6 @@ public class ClientBase {
 		
 		final int EXIT = 4;
 		
-		Scanner sc = new Scanner(System.in);
 		System.out.println("1. Connection Test(UDP)\n2. Connection Test(TCP)\n3. ?\n4. Exit");
 		
 		while(true) {
@@ -145,7 +149,6 @@ public class ClientBase {
 		}
 		
 		executorService.shutdown();
-		sc.close();
 	}
 
 }

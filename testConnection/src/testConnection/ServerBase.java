@@ -1,5 +1,6 @@
 package testConnection;
 
+import java.util.Scanner;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -17,14 +18,41 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.sql.*;
 
+class User{
+	String name;
+	InetAddress ip;
+	
+	User(String _name, InetAddress _ip){
+		name = _name;
+		ip = _ip;
+	}
+}
+
 class Room{
 	int gameRecogPort = 0;
+	User users[] = new User[5];
+	int curUserNum = 0;
 	
 	Room(int gameRecogPort){
 		this.gameRecogPort = gameRecogPort;
 		return;
 	}
 	
+	// -1 Too Many users, -2 same Ip found, 0 success
+	int newUserCome(String name, InetAddress ip) {
+		if(curUserNum >= 5) {
+			return -1;
+		}
+		for(int i = 0; i <= curUserNum; i++) {
+			if(users[i] != null) {
+				if(users[i].ip.equals(ip)) {
+					return -2;
+				}
+			}
+		}
+		users[curUserNum++] = new User(name, ip);
+		return 0;
+	}
 }
 
 class SysoutColors{
@@ -38,6 +66,7 @@ class Clients implements Runnable{
 	Socket sock;
 	int isSender = -1;
 	int RecogPort = 0;
+	Room connectedRoom;
 	
 	Clients(Socket _sock){
 		sock = _sock;
@@ -59,8 +88,11 @@ class Clients implements Runnable{
 				else if(saver.equals("MakeGame")) {
 					System.out.println("TCP received Make Game");
 					RecogPort = ServerBase.MakeNewGame();
-					System.out.println("New Room Init RecogPort is " + (RecogPort-1));
-					tcpWriter.write("Game Init RecogPort is " + (RecogPort-1)); tcpWriter.newLine(); tcpWriter.flush();
+					String temp = tcpReader.readLine();
+					System.out.println(temp);
+					ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
+					System.out.println("New Room Init RecogPort is " + (RecogPort));
+					tcpWriter.write("Game Init RecogPort is " + (RecogPort)); tcpWriter.newLine(); tcpWriter.flush();
 					System.out.println("Sended. new game recog port");
 				}
 				else {
@@ -70,13 +102,13 @@ class Clients implements Runnable{
 			}
 		}
 		catch(SocketException e) {
-			System.out.println(SysoutColors.RED + "!! Unexpected Disconnected with " + sock.getRemoteSocketAddress() + e.getMessage() + SysoutColors.RESET);
+			System.out.println(SysoutColors.RED + "!! Unexpected Disconnected with " + sock.getRemoteSocketAddress() + " " + e.getMessage() + SysoutColors.RESET);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
 		finally {
-			System.out.println(SysoutColors.RED + "Disconnected with " + sock.getRemoteSocketAddress() + "Closed Socket" + SysoutColors.RESET);
+			System.out.println(SysoutColors.RED + "Disconnected with " + sock.getRemoteSocketAddress() + " Closed Socket" + SysoutColors.RESET);
 		}
 	}
 	
@@ -85,7 +117,7 @@ class Clients implements Runnable{
 public class ServerBase {
 	
 	static int RecogPortNext = 0;
-	static List<Room> rooms = new ArrayList<>();
+	public static List<Room> rooms = new ArrayList<>();
 	
 	static int RecogPortIncre() {
 		RecogPortNext++;
@@ -94,7 +126,7 @@ public class ServerBase {
 	
 	static int MakeNewGame() {
 		rooms.add(new Room(RecogPortIncre()));
-		return RecogPortNext;
+		return RecogPortNext-1;
 	}
 	
 	static boolean SEND_LOCKED = false;
@@ -175,6 +207,26 @@ public class ServerBase {
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
+				}
+			});
+			
+			executorService.execute(()->{
+				@SuppressWarnings("resource")
+				Scanner sc = new Scanner(System.in);
+				while(true) {
+					String scInput = sc.nextLine();
+					if(scInput.equals("list")) {
+						System.out.println("Printing list of rooms..");
+						for(int i = 0; i< RecogPortNext; i++) {
+							System.out.println("Room Num : " + i);
+							Room tempRoom = rooms.get(i);
+							for(int j = 0; j<tempRoom.curUserNum; j++) {
+								System.out.println(tempRoom.users[j].name + " " + tempRoom.users[j].ip);
+							}
+							System.out.println();
+						}
+						System.out.println("End of list of Rooms");
+					}
 				}
 			});
 			
