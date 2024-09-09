@@ -8,7 +8,6 @@ import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-//import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -31,6 +30,7 @@ class User{
 class Room{
 	int gameRecogPort = 0;
 	User users[] = new User[5];
+	final int MAX_USER = 5; 
 	int curUserNum = 0;
 	
 	Room(int gameRecogPort){
@@ -38,7 +38,10 @@ class Room{
 		return;
 	}
 	
-	// -1 Too Many users, -2 same Ip found, 0 success
+	/** 
+	 * -1 Too Many users, -2 same Ip found, 0 success
+	 * 
+	 */
 	int newUserCome(String name, InetAddress ip) {
 		if(curUserNum >= 5) {
 			return -1;
@@ -65,7 +68,7 @@ class SysoutColors{
 class Clients implements Runnable{
 	Socket sock;
 	int isSender = -1;
-	int RecogPort = 0;
+	int RecogPort = -1; // -1 means unconnected to any romm yet
 	Room connectedRoom;
 	
 	Clients(Socket _sock){
@@ -79,26 +82,87 @@ class Clients implements Runnable{
 		try {
 			tcpReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 			tcpWriter = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
-			String saver;
-			while((saver = tcpReader.readLine()) != null) {
-				if(saver.equals("ConnectionTest")) {
-					System.out.println("TCP received Connection Test " + sock.getInetAddress());
-					tcpWriter.write("Connection Good"); tcpWriter.newLine(); tcpWriter.flush();
+			String saver = tcpReader.readLine();
+			
+			if(saver.equals("MakeConnection")) { // first Connection Check / Unstructured Request Sockets will be closed
+				saver = tcpReader.readLine();
+				if(saver.equals("plsSend")) {
+					isSender = 1;
+					System.out.println(SysoutColors.GREEN + "Connection made to Send " + sock.getRemoteSocketAddress() + SysoutColors.RESET);
 				}
-				else if(saver.equals("MakeGame")) {
-					System.out.println("TCP received Make Game");
-					RecogPort = ServerBase.MakeNewGame();
-					String temp = tcpReader.readLine();
-					System.out.println(temp);
-					ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
-					System.out.println("New Room Init RecogPort is " + (RecogPort));
-					tcpWriter.write("Game Init RecogPort is " + (RecogPort)); tcpWriter.newLine(); tcpWriter.flush();
-					System.out.println("Sended. new game recog port");
+				else if(saver.equals("plsReceive")) {
+					isSender = 0;
+					System.out.println(SysoutColors.GREEN + "Connection made to Receive " + sock.getRemoteSocketAddress() + SysoutColors.RESET);
 				}
-				else {
-					System.out.println("? " + saver + sock.getInetAddress());
-					tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
+				tcpWriter.write("Connection Good"); tcpWriter.newLine(); tcpWriter.flush();
+			}
+			else {
+				System.out.println(SysoutColors.RED + "Unstructured Request. Socket will be closed -> " + sock.toString() + SysoutColors.RESET);
+				tcpWriter.write("Undefined Request. Try Again; Do not attack, your connection log will be saved"); tcpWriter.newLine(); tcpWriter.flush();
+				sock.close();
+				return;
+			}
+			
+			if(isSender == 0) {
+				while((saver = tcpReader.readLine()) != null) {
+					System.out.println("TCP received "+ saver + sock.getRemoteSocketAddress());
+					
+					if(saver.equals("MakeGame")) {
+						if(RecogPort == -1) {
+							RecogPort = ServerBase.MakeNewGame();
+							String temp = tcpReader.readLine();
+							System.out.println("Name : " + temp);
+							ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
+							System.out.println("New Room Init RecogPort is " + (RecogPort));
+							tcpWriter.write("Game Init RecogPort is " + (RecogPort)); tcpWriter.newLine(); tcpWriter.flush();
+							System.out.println("Sended. new game recog port");
+						}
+						else {
+							tcpReader.readLine();
+							tcpWriter.write("AlreadyConnected"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
+					else if(saver.equals("JoinGame")) {
+						if(RecogPort == -1) {
+							int tryingPort = Integer.parseInt(tcpReader.readLine());
+							String temp = tcpReader.readLine();
+							try {
+								int res = ServerBase.rooms.get(tryingPort).newUserCome(temp, sock.getInetAddress());
+								if(res == -1) {
+									tcpWriter.write("TooManyUsers"); tcpWriter.newLine(); tcpWriter.flush();
+								}
+								else if(res == -2) {
+									tcpWriter.write("SameIpFound"); tcpWriter.newLine(); tcpWriter.flush();
+								}
+								else if(res == 0) {
+									this.RecogPort = tryingPort;
+									tcpWriter.write("SuccessfullyJoind"); tcpWriter.newLine(); tcpWriter.flush();
+								}
+								else { //Invalid res value
+									tcpWriter.write("ERROR SB_137"); tcpWriter.newLine(); tcpWriter.flush();
+								}
+							} catch(IndexOutOfBoundsException e) {
+								tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
+							}
+						}
+						else {
+							tcpWriter.write("AlreadyConnected"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine(); tcpReader.readLine();
+						}
+					}
+					else {
+						System.out.println("? " + saver + sock.getInetAddress());
+						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
+					}
 				}
+			}
+			else if(isSender == 1) {
+				
+			}
+			else {
+				System.out.println(SysoutColors.RED + "isSender has Wrong value. Socket will be closed -> " + sock.toString() + SysoutColors.RESET);
+				sock.close();
+				return;
 			}
 		}
 		catch(SocketException e) {
@@ -140,6 +204,7 @@ public class ServerBase {
 			System.out.println("Trying to connect with DB...");
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/javadeep", "root", "521869");
+			@SuppressWarnings("unused")
 			Statement stmt = conn.createStatement();
 			System.out.println("connect success with DB");
 			
