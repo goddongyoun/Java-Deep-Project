@@ -134,6 +134,16 @@ public class ClientBase {
 		}
 	}
 	
+	static void outGame() {
+		try {
+			tcpWriter_toSend.write("OutGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			System.out.println(saver + " from Server");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
 		System.out.println("[LOG]");
 		checkLoopBack();
@@ -153,9 +163,9 @@ public class ClientBase {
 			e.printStackTrace();
 		}
 		
-		final int EXIT = 4;
+		final int EXIT = 5;
 		
-		System.out.println("1. Connection Test(UDP)\n2. Make Game(TCP)\n3. Join Game(Port, Name)\n4. Exit");
+		System.out.println("1. Connection Test(UDP)\n2. Make Game(TCP)\n3. Join Game(Port, Name)\n4. Game Out(If connected)\n5. Exit");
 		
 		while(true) {
 			System.out.print("\ninput >> ");
@@ -170,6 +180,9 @@ public class ClientBase {
 				System.out.print("Port >> ");
 				int port = sc.nextInt();
 				joinGame(port, name);
+			}
+			else if(user == 4) {
+				outGame();
 			}
 			else if(user == EXIT) {
 				break;

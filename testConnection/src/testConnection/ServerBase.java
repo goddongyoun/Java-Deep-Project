@@ -20,6 +20,7 @@ import java.sql.*;
 class User{
 	String name;
 	InetAddress ip;
+	int x, y;
 	
 	User(String _name, InetAddress _ip){
 		name = _name;
@@ -28,6 +29,7 @@ class User{
 }
 
 class Room{
+	public boolean unconnectable = false;
 	int gameRecogPort = 0;
 	User users[] = new User[5];
 	final int MAX_USER = 5; 
@@ -39,10 +41,13 @@ class Room{
 	}
 	
 	/** 
-	 * -1 Too Many users, -2 same Ip found, 0 success
+	 * -1 Too Many users, -2 same Ip found, -3 Unconnectable, 0 success
 	 * 
 	 */
 	int newUserCome(String name, InetAddress ip) {
+		if(unconnectable == true) {
+			return -3;
+		}
 		if(curUserNum >= 5) {
 			return -1;
 		}
@@ -56,6 +61,30 @@ class Room{
 		users[curUserNum++] = new User(name, ip);
 		return 0;
 	}
+	
+	/**
+	 * Request to user out
+	 * @param ip
+	 * @return -1 Couldn't found, 0 success, -4 No one in this room, pls remove this room
+	 */
+	int outOfUser(InetAddress ip) {
+		boolean found = false;
+		for(int i = 0; i<curUserNum; i++) {
+			if(users[i].ip.equals(ip)) {
+				found = true;
+				users[i] = null;
+				curUserNum--;
+				System.gc();
+			}
+		}
+		if(found == false) {
+			return -1;
+		}
+		if(curUserNum <= 0) {
+			return -4;
+		}
+		return 0;
+	}
 }
 
 class SysoutColors{
@@ -67,12 +96,14 @@ class SysoutColors{
 
 class Clients implements Runnable{
 	Socket sock;
-	int isSender = -1;
-	int RecogPort = -1; // -1 means unconnected to any romm yet
+	private int isSender = -1;
+	int RecogPort = -1; // -1 means unconnected to any room yet
 	Room connectedRoom;
+	InetAddress connectedIP = null;
 	
 	Clients(Socket _sock){
 		sock = _sock;
+		connectedIP = sock.getInetAddress();
 	}
 	
 	@Override
@@ -82,6 +113,7 @@ class Clients implements Runnable{
 		try {
 			tcpReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 			tcpWriter = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
+			
 			String saver = tcpReader.readLine();
 			
 			if(saver.equals("MakeConnection")) { // first Connection Check / Unstructured Request Sockets will be closed
@@ -98,7 +130,7 @@ class Clients implements Runnable{
 			}
 			else {
 				System.out.println(SysoutColors.RED + "Unstructured Request. Socket will be closed -> " + sock.toString() + SysoutColors.RESET);
-				tcpWriter.write("Undefined Request. Try Again; Do not attack, your connection log will be saved"); tcpWriter.newLine(); tcpWriter.flush();
+				tcpWriter.write("Undefined Request. Try Again"); tcpWriter.newLine(); tcpWriter.flush();
 				sock.close();
 				return;
 			}
@@ -127,7 +159,7 @@ class Clients implements Runnable{
 							int tryingPort = Integer.parseInt(tcpReader.readLine());
 							String temp = tcpReader.readLine();
 							try {
-								int res = ServerBase.rooms.get(tryingPort).newUserCome(temp, sock.getInetAddress());
+								int res = ServerBase.rooms.get(tryingPort).newUserCome(temp, connectedIP);
 								if(res == -1) {
 									tcpWriter.write("TooManyUsers"); tcpWriter.newLine(); tcpWriter.flush();
 								}
@@ -137,6 +169,9 @@ class Clients implements Runnable{
 								else if(res == 0) {
 									this.RecogPort = tryingPort;
 									tcpWriter.write("SuccessfullyJoind"); tcpWriter.newLine(); tcpWriter.flush();
+								}
+								else if(res == -3) { // tried to connect to unconnectable room
+									tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
 								}
 								else { //Invalid res value
 									tcpWriter.write("ERROR SB_137"); tcpWriter.newLine(); tcpWriter.flush();
@@ -150,6 +185,26 @@ class Clients implements Runnable{
 							tcpReader.readLine(); tcpReader.readLine();
 						}
 					}
+					else if(saver.equals("OutGame")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+						} else {
+							int res = ServerBase.rooms.get(RecogPort).outOfUser(connectedIP);
+							if(res == -1) {
+								tcpWriter.write("Couldn't found"); tcpWriter.newLine(); tcpWriter.flush();
+							} else if(res == 0) {
+								RecogPort = -1;
+								tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+							} else if(res == -4) {
+								ServerBase.rooms.get(RecogPort).unconnectable = true;
+								RecogPort = -1;
+								tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+							}
+							else {
+								tcpWriter.write("???"); tcpWriter.newLine(); tcpWriter.flush();
+							}
+						}
+					}
 					else {
 						System.out.println("? " + saver + sock.getInetAddress());
 						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
@@ -157,7 +212,7 @@ class Clients implements Runnable{
 				}
 			}
 			else if(isSender == 1) {
-				
+				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! empty
 			}
 			else {
 				System.out.println(SysoutColors.RED + "isSender has Wrong value. Socket will be closed -> " + sock.toString() + SysoutColors.RESET);
@@ -173,6 +228,15 @@ class Clients implements Runnable{
 		}
 		finally {
 			System.out.println(SysoutColors.RED + "Disconnected with " + sock.getRemoteSocketAddress() + " Closed Socket" + SysoutColors.RESET);
+			if(RecogPort != -1) {
+				int res = ServerBase.rooms.get(RecogPort).outOfUser(connectedIP);
+				if(res == 0) {
+					System.out.println("Successfully out " + connectedIP);
+				}
+				else if(res == -1) {
+					System.out.println("Couldn't found" + connectedIP);
+				}
+			}
 		}
 	}
 	
@@ -183,12 +247,25 @@ public class ServerBase {
 	static int RecogPortNext = 0;
 	public static List<Room> rooms = new ArrayList<>();
 	
+	static void RecogPortDecre() {
+		if((RecogPortNext-1) >= 0) {
+			RecogPortNext--;
+		}
+		return;
+	}
+	
 	static int RecogPortIncre() {
 		RecogPortNext++;
 		return RecogPortNext-1;
 	}
 	
 	static int MakeNewGame() {
+		for(int i = 0; i < RecogPortNext; i++) {
+			if(rooms.get(i).unconnectable == true) {
+				rooms.get(i).unconnectable = false;
+				return i;
+			}
+		}
 		rooms.add(new Room(RecogPortIncre()));
 		return RecogPortNext-1;
 	}
@@ -285,6 +362,9 @@ public class ServerBase {
 						for(int i = 0; i< RecogPortNext; i++) {
 							System.out.println("Room Num : " + i);
 							Room tempRoom = rooms.get(i);
+							if(tempRoom.unconnectable == true) {
+								System.out.println("Unconnectable Now");
+							}
 							for(int j = 0; j<tempRoom.curUserNum; j++) {
 								System.out.println(tempRoom.users[j].name + " " + tempRoom.users[j].ip);
 							}
