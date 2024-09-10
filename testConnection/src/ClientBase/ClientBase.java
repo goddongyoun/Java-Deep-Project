@@ -48,6 +48,7 @@ public class ClientBase {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("Loopback인지 확인할 수 없었으나 개발자가 아니라면 상관없으니 신경쓰지 마십시오.");
         }
 	}
 	
