@@ -21,14 +21,17 @@ import java.util.concurrent.Future;
 public class ClientBase {
 
 	static byte[] sendBuf;
-	static String SERVER_ADDRESS = "219.254.146.234";
+	static String SERVER_ADDRESS = "219.254.146.234"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
 	final static int SERVER_PORT_TCP = 1235;
 	final static int SERVER_PORT_UDP  = 4000;
 	static ExecutorService executorService = Executors.newFixedThreadPool(3);
 	static Future<String> future_UDP;
 	static Socket tcpSock_toSend;
+	static Socket tcpSock_toRecv;
 	static BufferedWriter tcpWriter_toSend;
 	static BufferedReader tcpReader_toSend;
+	static BufferedWriter tcpWriter_toRecv;
+	static BufferedReader tcpReader_toRecv;
 	
 	static String name;
 	
@@ -59,6 +62,15 @@ public class ClientBase {
 			System.out.println("MakeGame Sended");
 			String readSaver = tcpReader_toSend.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
+			System.out.println(readSaver);
+			int Port = readSaver.charAt(readSaver.length()-1) - '0';
+			
+			tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+			tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream()));
+			tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream()));
+			tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
+			System.out.println("TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
+			
 		} 
 		catch (SocketException e) {
 			if(e.getMessage().equals("Connection reset")) {
@@ -118,6 +130,11 @@ public class ClientBase {
 				System.out.println("이미 연결되어있습니다.");
 			}
 			else if(saver.equals("SuccessfullyJoind")) {
+				tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream()));
+				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream()));
+				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
+				System.out.println("TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 				System.out.println("방에 접속하였습니다.");
 			}
 			else { // anjdi Tlqkf?
@@ -140,6 +157,17 @@ public class ClientBase {
 			tcpWriter_toSend.write("OutGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
 			System.out.println(saver + " from Server");
+			tcpReader_toRecv = null;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	static void sendChat(String what) {
+		try {
+			tcpWriter_toSend.write("NewText"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(what); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			System.out.println(saver + " from Server");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -156,17 +184,43 @@ public class ClientBase {
 			System.out.print("name : ");
 			name = sc.nextLine();
 			tcpWriter_toSend.write("MakeConnection"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write("plsReceive"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
-			System.out.println("TCP received From Server -> " + tcpReader_toSend.readLine());
+			System.out.println("TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toSend.readLine());
+			
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
+			System.out.println("서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
+			System.exit(11001);
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.out.println("서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
+			System.exit(11001);
+		} finally {
 		}
 		
-		final int EXIT = 5;
+		final int EXIT = 99;
 		
-		System.out.println("1. Connection Test(UDP)\n2. Make Game(TCP)\n3. Join Game(Port, Name)\n4. Game Out(If connected)\n5. Exit");
+		System.out.println("1. Connection Test(UDP)\n2. Make Game(TCP)\n3. Join Game(Port, Name)\n4. Game Out(If connected)\n5. Chat(If connected)\n99. Exit");
+		
+		//!!! Important!! this method should be import to The Real Game client's code
+		executorService.execute(()->{
+			String saver = null;
+			while(true) {
+				try {
+					Thread.sleep(1);
+					if(tcpReader_toRecv != null) {
+						while((saver = tcpReader_toRecv.readLine()) != null) {
+							System.out.println("\n" + saver + " / chat");
+						}
+					}
+				} catch (IOException | InterruptedException e) {
+					System.out.println("채팅 연결 종료");
+				} finally {
+					tcpReader_toRecv = null;
+				}
+			}
+		});
+		//!!! Important ends!!
 		
 		while(true) {
 			System.out.print("\ninput >> ");
@@ -184,6 +238,12 @@ public class ClientBase {
 			}
 			else if(user == 4) {
 				outGame();
+			}
+			else if(user == 5) {
+				System.out.print("text >> ");
+				sc.nextLine();
+				String text = sc.nextLine();
+				sendChat(text);
 			}
 			else if(user == EXIT) {
 				break;
@@ -205,6 +265,7 @@ public class ClientBase {
 		}
 		
 		executorService.shutdown();
+		System.exit(0);
 	}
 
 }

@@ -34,6 +34,8 @@ class Room{
 	User users[] = new User[5];
 	final int MAX_USER = 5; 
 	int curUserNum = 0;
+	public List<String> chatLog = new ArrayList<>();
+	public int chatNum = -1;
 	
 	Room(int gameRecogPort){
 		this.gameRecogPort = gameRecogPort;
@@ -100,6 +102,8 @@ class Clients implements Runnable{
 	int RecogPort = -1; // -1 means unconnected to any room yet
 	Room connectedRoom;
 	InetAddress connectedIP = null;
+	int currentChatNum = 0;
+	String name = "undefined";
 	
 	Clients(Socket _sock){
 		sock = _sock;
@@ -116,17 +120,19 @@ class Clients implements Runnable{
 			
 			String saver = tcpReader.readLine();
 			
-			if(saver.equals("MakeConnection")) { // first Connection Check / Unstructured Request Sockets will be closed
+			if(saver.equals("MakeConnection")) { // first Connection Check ; Unstructured Request Sockets will be closed
 				saver = tcpReader.readLine();
 				if(saver.equals("plsSend")) {
 					isSender = 1;
+					saver = tcpReader.readLine();
+					RecogPort = saver.charAt(saver.length()-1) - '0';
 					System.out.println(SysoutColors.GREEN + "Connection made to Send " + sock.getRemoteSocketAddress() + SysoutColors.RESET);
 				}
 				else if(saver.equals("plsReceive")) {
 					isSender = 0;
 					System.out.println(SysoutColors.GREEN + "Connection made to Receive " + sock.getRemoteSocketAddress() + SysoutColors.RESET);
 				}
-				tcpWriter.write("Connection Good"); tcpWriter.newLine(); tcpWriter.flush();
+				tcpWriter.write("Connection Good, Mode is "+isSender); tcpWriter.newLine(); tcpWriter.flush();
 			}
 			else {
 				System.out.println(SysoutColors.RED + "Unstructured Request. Socket will be closed -> " + sock.toString() + SysoutColors.RESET);
@@ -144,9 +150,11 @@ class Clients implements Runnable{
 							RecogPort = ServerBase.MakeNewGame();
 							String temp = tcpReader.readLine();
 							System.out.println("Name : " + temp);
+							name = temp;
 							ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
 							System.out.println("New Room Init RecogPort is " + (RecogPort));
-							tcpWriter.write("Game Init RecogPort is " + (RecogPort)); tcpWriter.newLine(); tcpWriter.flush();
+							tcpWriter.write("Game Init RecogPort is " + (RecogPort)); tcpWriter.newLine(); 
+							tcpWriter.flush();
 							System.out.println("Sended. new game recog port");
 						}
 						else {
@@ -169,6 +177,7 @@ class Clients implements Runnable{
 								else if(res == 0) {
 									this.RecogPort = tryingPort;
 									tcpWriter.write("SuccessfullyJoind"); tcpWriter.newLine(); tcpWriter.flush();
+									name = temp;
 								}
 								else if(res == -3) { // tried to connect to unconnectable room
 									tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
@@ -205,6 +214,18 @@ class Clients implements Runnable{
 							}
 						}
 					}
+					else if(saver.equals("NewText")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();
+						}
+						else {
+							saver = tcpReader.readLine();
+							ServerBase.rooms.get(RecogPort).chatLog.add(name + " : " + saver);
+							ServerBase.rooms.get(RecogPort).chatNum++;
+							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
 					else {
 						System.out.println("? " + saver + sock.getInetAddress());
 						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
@@ -212,6 +233,17 @@ class Clients implements Runnable{
 				}
 			}
 			else if(isSender == 1) {
+				while(true) {
+					Thread.sleep(1);
+					if(RecogPort != -1) {
+						if(currentChatNum <= ServerBase.rooms.get(RecogPort).chatNum) {
+							for(; currentChatNum <= ServerBase.rooms.get(RecogPort).chatNum; currentChatNum++) {
+								tcpWriter.write(ServerBase.rooms.get(RecogPort).chatLog.get(currentChatNum)); tcpWriter.newLine(); tcpWriter.flush();
+							}
+							System.out.println("chat shooted");
+						}
+					}
+				}
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! empty
 			}
 			else {
