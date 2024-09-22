@@ -2,22 +2,17 @@ package ClientBase;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-//import java.io.IOException;
-//import java.io.IOException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
-//import java.net.DatagramSocket;
 import java.net.InetAddress;
-//import java.net.InetSocketAddress;
-//import java.net.MulticastSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URL;
-//import java.net.UnknownHostException;
-//import java.net.SocketAddress;
-//import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +26,13 @@ public class ClientBase {
 	final static int SERVER_PORT_UDP  = 4000;
 	static ExecutorService executorService = Executors.newFixedThreadPool(3);
 	static Future<String> future_UDP;
+	static Socket tcpSock_toSend;
+	static BufferedWriter tcpWriter_toSend;
+	static BufferedReader tcpReader_toSend;
+	
+	static String name;
+	
+	static Scanner sc = new Scanner(System.in);
 	
 	static void checkLoopBack() {
 		try {
@@ -51,28 +53,18 @@ public class ClientBase {
 	
 	static void connectionTest_TCP() {
 		//TCP Connect
-		Socket tcpSock;
 		try {
-			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			BufferedWriter tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
-			BufferedReader tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
-			
-			tcpWriter.write("ConnectionTest"); tcpWriter.newLine(); tcpWriter.flush();
-			String readSaver = tcpReader.readLine();
-			System.out.println("TCP received From Server -> " + readSaver);
-			
-			tcpSock.close();
-			
-			tcpSock = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			tcpWriter = new BufferedWriter(new OutputStreamWriter(tcpSock.getOutputStream()));
-			tcpReader = new BufferedReader(new InputStreamReader(tcpSock.getInputStream()));
-			tcpWriter.write("MakeGame"); tcpWriter.newLine(); tcpWriter.flush();
+			tcpWriter_toSend.write("MakeGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(name); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			System.out.println("MakeGame Sended");
-			readSaver = tcpReader.readLine();
+			String readSaver = tcpReader_toSend.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
-			
-			tcpSock.close();
-		} catch (Exception e) {
+		} 
+		catch (SocketException e) {
+			if(e.getMessage().equals("Connection reset")) {
+				System.out.println("서버가 연결을 끊었습니다.");
+			}
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -101,17 +93,82 @@ public class ClientBase {
 		});
 	}
 	
+	static void joinGame(int Port, String name) {
+		try {
+			tcpWriter_toSend.write("JoinGame"); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write(Integer.toString(Port)); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write(name); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.flush();
+			
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("TooManyUsers")) {
+				System.out.println("유저 꽉 참");
+			}
+			else if(saver.equals("SameIpFound")) {
+				System.out.println("같은 아이피가 발견되었습니다.");
+			}
+			else if(saver.equals("ERROR SB_137")) {
+				System.out.println("오류가 발견되었습니다 SB_137");
+			}
+			else if(saver.equals("InvalidRecogPort")) {
+				System.out.println("존재하지 않는 방 포트 입니다.");
+			}
+			else if(saver.equals("AlreadyConnected")) {
+				System.out.println("이미 연결되어있습니다.");
+			}
+			else if(saver.equals("SuccessfullyJoind")) {
+				System.out.println("방에 접속하였습니다.");
+			}
+			else { // anjdi Tlqkf?
+				System.out.println("??? ERROR CLI_133 " + saver);
+			}
+		}
+		catch (SocketException e) {
+			if(e.getMessage().equals("Connection reset")) {
+				System.out.println("서버가 연결을 끊었습니다.");
+			}
+		}
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	static void outGame() {
+		try {
+			tcpWriter_toSend.write("OutGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			System.out.println(saver + " from Server");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
 		System.out.println("[LOG]");
 		checkLoopBack();
 		
-		final int EXIT = 4;
+		try {
+			tcpSock_toSend = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+			tcpWriter_toSend = new BufferedWriter(new OutputStreamWriter(tcpSock_toSend.getOutputStream()));
+			tcpReader_toSend = new BufferedReader(new InputStreamReader(tcpSock_toSend.getInputStream()));
+			System.out.print("name : ");
+			name = sc.nextLine();
+			tcpWriter_toSend.write("MakeConnection"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write("plsReceive"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			System.out.println("TCP received From Server -> " + tcpReader_toSend.readLine());
+			
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
-		Scanner sc = new Scanner(System.in);
-		System.out.println("1. Connection Test(UDP)\n2. Connection Test(TCP)\n3. ?\n4. Exit\n");
+		final int EXIT = 5;
+		
+		System.out.println("1. Connection Test(UDP)\n2. Make Game(TCP)\n3. Join Game(Port, Name)\n4. Game Out(If connected)\n5. Exit");
 		
 		while(true) {
-			System.out.print("input >> ");
+			System.out.print("\ninput >> ");
 			int user = sc.nextInt();
 			if(user == 1) {
 				connectionTest_UDP();
@@ -120,7 +177,12 @@ public class ClientBase {
 				connectionTest_TCP();
 			}
 			else if(user == 3) {
-				System.out.println("?");
+				System.out.print("Port >> ");
+				int port = sc.nextInt();
+				joinGame(port, name);
+			}
+			else if(user == 4) {
+				outGame();
 			}
 			else if(user == EXIT) {
 				break;
@@ -142,7 +204,6 @@ public class ClientBase {
 		}
 		
 		executorService.shutdown();
-		sc.close();
 	}
 
 }
