@@ -5,6 +5,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
@@ -66,8 +68,8 @@ public class ClientBase {
 			int Port = readSaver.charAt(readSaver.length()-1) - '0';
 			
 			tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream()));
-			tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream()));
+			tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
+			tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
 			tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
 			System.out.println("TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 			
@@ -131,8 +133,8 @@ public class ClientBase {
 			}
 			else if(saver.equals("SuccessfullyJoind")) {
 				tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream()));
-				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream()));
+				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
+				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
 				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
 				System.out.println("TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 				System.out.println("방에 접속하였습니다.");
@@ -176,11 +178,17 @@ public class ClientBase {
 	public static void main(String[] args) {
 		System.out.println("[LOG]");
 		checkLoopBack();
+		try {
+			System.setOut(new PrintStream(System.out, true, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("setOutError - 184");
+			e.printStackTrace();
+		}
 		
 		try {
 			tcpSock_toSend = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			tcpWriter_toSend = new BufferedWriter(new OutputStreamWriter(tcpSock_toSend.getOutputStream()));
-			tcpReader_toSend = new BufferedReader(new InputStreamReader(tcpSock_toSend.getInputStream()));
+			tcpWriter_toSend = new BufferedWriter(new OutputStreamWriter(tcpSock_toSend.getOutputStream(), "UTF-8"));
+			tcpReader_toSend = new BufferedReader(new InputStreamReader(tcpSock_toSend.getInputStream(), "UTF-8"));
 			System.out.print("name : ");
 			name = sc.nextLine();
 			tcpWriter_toSend.write("MakeConnection"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write("plsReceive"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();

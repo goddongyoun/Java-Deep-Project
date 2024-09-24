@@ -5,6 +5,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -115,8 +117,8 @@ class Clients implements Runnable{
 		BufferedReader tcpReader;
 		BufferedWriter tcpWriter;
 		try {
-			tcpReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-			tcpWriter = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
+			tcpReader = new BufferedReader(new InputStreamReader(sock.getInputStream(), "UTF-8"));
+			tcpWriter = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream(), "UTF-8"));
 			
 			String saver = tcpReader.readLine();
 			
@@ -309,6 +311,12 @@ public class ServerBase {
 	static InetAddress addressToSend;
 	
 	public static void main(String[] args) {
+		try {
+			System.setOut(new PrintStream(System.out, true, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("setOutError - 184");
+			e.printStackTrace();
+		}
 		try {
 			System.out.println("Trying to connect with DB...");
 			Class.forName("com.mysql.cj.jdbc.Driver");
