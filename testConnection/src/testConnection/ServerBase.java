@@ -34,9 +34,11 @@ class Room{
 	User users[] = new User[5];
 	final int MAX_USER = 5; 
 	int curUserNum = 0;
+	String roomName  = null;
 	
-	Room(int gameRecogPort){
+	Room(int gameRecogPort, String name){
 		this.gameRecogPort = gameRecogPort;
+		roomName = name;
 		return;
 	}
 	
@@ -141,8 +143,9 @@ class Clients implements Runnable{
 					
 					if(saver.equals("MakeGame")) {
 						if(RecogPort == -1) {
-							RecogPort = ServerBase.MakeNewGame();
 							String temp = tcpReader.readLine();
+							RecogPort = ServerBase.MakeNewGame(temp);
+							temp = tcpReader.readLine();
 							System.out.println("Name : " + temp);
 							ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
 							System.out.println("New Room Init RecogPort is " + (RecogPort));
@@ -259,14 +262,14 @@ public class ServerBase {
 		return RecogPortNext-1;
 	}
 	
-	static int MakeNewGame() {
+	static int MakeNewGame(String nameOfRoom) {
 		for(int i = 0; i < RecogPortNext; i++) {
 			if(rooms.get(i).unconnectable == true) {
 				rooms.get(i).unconnectable = false;
 				return i;
 			}
 		}
-		rooms.add(new Room(RecogPortIncre()));
+		rooms.add(new Room(RecogPortIncre(), nameOfRoom));
 		return RecogPortNext-1;
 	}
 	

@@ -51,10 +51,10 @@ public class ClientBase {
         }
 	}
 	
-	static void connectionTest_TCP() {
+	static void MakeGame_TCP(String roomName) {
 		//TCP Connect
 		try {
-			tcpWriter_toSend.write("MakeGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(name); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			tcpWriter_toSend.write("MakeGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(roomName); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(name); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			System.out.println("MakeGame Sended");
 			String readSaver = tcpReader_toSend.readLine();
 			System.out.println("TCP received From Server -> " + readSaver);
@@ -174,7 +174,7 @@ public class ClientBase {
 				connectionTest_UDP();
 			}
 			else if(user == 2) {
-				connectionTest_TCP();
+				MakeGame_TCP("default room game");
 			}
 			else if(user == 3) {
 				System.out.print("Port >> ");
