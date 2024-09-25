@@ -83,8 +83,9 @@ public class CreateRoomDialog extends Dialog {
             String roomName = roomNameField.getText();
             int playerCount = playerCountSelect.getSelected();
             String password = passwordField.getText();
-            String roomCode = roomCodeLabel.getText().toString();
-
+            int roomCode = 0;
+            //String roomCode = roomCodeLabel.getText().toString();
+            
             Player host = new Player(game.getPlayerNickname());
             Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
 

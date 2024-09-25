@@ -64,12 +64,12 @@ public class JoinRoomDialog extends Dialog {
     @Override
     protected void result(Object object) {
         if ((Boolean)object) {
-            String roomCode = roomCodeField.getText().toUpperCase();
+            int roomCode = 0;
             String password = passwordField.getText();
 
             // TODO: 실제로는 서버에서 방 정보를 가져와야 함
             // 임시로 방을 생성하여 참여하는 것으로 구현
-            if (!roomCode.isEmpty()) {
+            if (roomCode != -1) {
                 Player player = new Player(game.getPlayerNickname());
                 Room room = new Room("Joined Room", roomCode, password, 6, player);
                 game.setCurrentRoom(room);
