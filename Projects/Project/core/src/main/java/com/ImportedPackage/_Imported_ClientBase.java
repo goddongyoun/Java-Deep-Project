@@ -35,11 +35,17 @@ public class _Imported_ClientBase {
 	static BufferedWriter tcpWriter_toRecv;
 	static BufferedReader tcpReader_toRecv;
 	
+	static boolean isReceiverOut = true;
+	
 	static String name = null;
 	
 	static Scanner sc = new Scanner(System.in);
 	
-	static void checkLoopBack() {
+	/**
+	 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	 * Do not use this method, This method should only be used inside the client. the Method will exist as public considering various situations, but do not use it.
+	 */
+	public static void checkLoopBack() {
 		try {
             String apiUrl = "https://ifconfig.me/ip";
             URL url = new URL(apiUrl);
@@ -57,7 +63,12 @@ public class _Imported_ClientBase {
         }
 	}
 	
-	static String MakeGame_TCP(String roomName) {
+	/**
+	 * 
+	 * @param roomName literally
+	 * @return
+	 */
+	public static String MakeGame_TCP(String roomName) {
 		//TCP Connect
 		try {
 			tcpWriter_toSend.write("MakeGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(roomName); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(name); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
@@ -87,7 +98,10 @@ public class _Imported_ClientBase {
 		}
 	}
 	
-	static void connectionTest_UDP() {
+	/**
+	 * DUMMY
+	 */
+	public static void connectionTest_UDP() {
 		//UDP
 		future_UDP = executorService.submit(()->{
 			try {
@@ -110,7 +124,13 @@ public class _Imported_ClientBase {
 		});
 	}
 	
-	static String joinGame(int Port, String name) {
+	/**
+	 * 
+	 * @param Port gameRoomPort
+	 * @param name what is your name to be displayed
+	 * @return
+	 */
+	public static String joinGame(int Port, String name) {
 		try {
 			tcpWriter_toSend.write("JoinGame"); tcpWriter_toSend.newLine(); 
 			tcpWriter_toSend.write(Integer.toString(Port)); tcpWriter_toSend.newLine(); 
@@ -165,7 +185,11 @@ public class _Imported_ClientBase {
 		}
 	}
 	
-	static String outGame() {
+	/**
+	 * 
+	 * @return "Failed outGame" means failed
+	 */
+	public static String outGame() {
 		try {
 			tcpWriter_toSend.write("OutGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
@@ -178,7 +202,12 @@ public class _Imported_ClientBase {
 		}
 	}
 	
-	static String sendChat(String what) {
+	/**
+	 * 
+	 * @param what
+	 * @return "Success" means success, "Faild sendChat" means failed
+	 */
+	public static String sendChat(String what) {
 		try {
 			tcpWriter_toSend.write("NewText"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write(what); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
@@ -191,12 +220,12 @@ public class _Imported_ClientBase {
 		}
 	}
 	
-	static int SHUTDOWN() {
+	public static int SHUTDOWN() {
 		executorService.shutdown();
 		return 1;
 	}
 	
-	public static void run(String playerName) {
+	public static void run(String playerName) throws Exception {
 		System.out.println("[LOG] <-- means 'from ClientBase'");
 		name = playerName;
 		if(name == null) {
@@ -222,11 +251,11 @@ public class _Imported_ClientBase {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.out.println("[LOG] 서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
-			System.exit(11001);
+			throw e;
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("[LOG] 서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
-			System.exit(11001);
+			throw e;
 		} finally {
 		}
 		
@@ -237,6 +266,7 @@ public class _Imported_ClientBase {
 		//!!! Important!! this method should be import to The Real Game client's code
 		executorService.execute(()->{
 			String saver = null;
+			isReceiverOut = false;
 			while(true) {
 				try {
 					Thread.sleep(1);
@@ -249,6 +279,7 @@ public class _Imported_ClientBase {
 					System.out.println("[LOG] 채팅 연결 종료");
 				} finally {
 					tcpReader_toRecv = null;
+					isReceiverOut = true;
 				}
 			}
 		});

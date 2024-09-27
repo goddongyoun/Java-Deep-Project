@@ -1,5 +1,6 @@
 package com.mygdx.game.ui;
 
+import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.Align;
 import com.mygdx.game.Main;
@@ -81,10 +82,21 @@ public class CreateRoomDialog extends Dialog {
         if ((Boolean)object) {
             String roomName = roomNameField.getText();
             String playerName = playerNameField.getText();
-            int playerCount = playerCountSelect.getSelected();
+            //int playerCount = playerCountSelect.getSelected();
+            int playerCount = 5; // Man playerCount is 5 in Server setting
             String password = passwordField.getText();
             int roomCode = 0; // 임시로 0으로 설정
-
+            
+            //Calling Server
+            try {
+				_Imported_ClientBase.run(playerName); // Calling the server for the first time so that the next request can be sent
+			} catch (Exception e) {
+				// Where the Server Failure window should be called !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				// Here
+				e.printStackTrace();
+			}
+            _Imported_ClientBase.MakeGame_TCP(roomName); // Calling the server to make a room as TCP
+            
             game.setPlayerNickname(playerName);
             Player host = new Player(playerName, 0, 0);
             Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);

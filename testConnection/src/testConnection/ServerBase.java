@@ -87,6 +87,7 @@ class Room{
 			return -1;
 		}
 		if(curUserNum <= 0) {
+			this.unconnectable = true;
 			return -4;
 		}
 		return 0;
