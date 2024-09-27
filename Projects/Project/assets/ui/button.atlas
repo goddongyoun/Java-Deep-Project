@@ -1,0 +1,61 @@
+ImgsForJavaProject.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+closeGameBtn
+  rotate: false
+  xy: 0, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+closeGameBtnHover
+  rotate: false
+  xy: 114, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+createLobbyBtn
+  rotate: false
+  xy: 228, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+createLobbyBtnHover
+  rotate: false
+  xy: 342, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+joinLobbyBtn
+  rotate: false
+  xy: 456, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+joinLobbyBtnHover
+  rotate: false
+  xy: 570, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+settingBtn
+  rotate: false
+  xy: 684, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1
+settingBtnHover
+  rotate: false
+  xy: 798, 0
+  size: 114, 36
+  orig: 114, 36
+  offset: 0, 0
+  index: -1

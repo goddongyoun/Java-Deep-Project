@@ -2,100 +2,166 @@ package com.mygdx.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.AssetManager;
 import com.mygdx.game.Main;
-import com.mygdx.game.util.FontManager;
 
 public class MainMenuUI extends Group implements Disposable {
     private Main game;
     private AssetManager assetManager;
-    private FontManager fontManager;
     private Skin skin;
     private Table buttonTable;
-    private float yPositionPercent = 0.4f;
+    private Image logoImage;
+    private TextureAtlas buttonAtlas;
+
+    private float logoPositionPercentX = 0.51f;
+    private float logoPositionPercentY = 0.7f;
+    private float buttonsPositionPercentX = 0.478f;
+    private float buttonsPositionPercentY = 0.27f;
+    private float logoSizePercent = 0.4f;
+    private float buttonSizePercent = 0.13f;
+    private float buttonSpacing = 15f;
 
     public MainMenuUI(final Main game) {
         this.game = game;
         this.assetManager = AssetManager.getInstance();
-        this.fontManager = FontManager.getInstance();
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+        this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
 
+        createLogo();
+        createButtons();
+    }
+
+    private void createLogo() {
+        Texture logoTexture = assetManager.getLogoTexture();
+        logoImage = new Image(logoTexture);
+        addActor(logoImage);
+    }
+
+    private void createButtons() {
         buttonTable = new Table();
         addActor(buttonTable);
 
-        Texture buttonTexture = assetManager.getButtonTexture();
-
-        createButton("", buttonTexture, 0, 0, 114, 32, 1.6f, 1.6f, new ClickListener() {
+        createButton("createLobbyBtn", new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 CreateRoomDialog dialog = new CreateRoomDialog(skin, game);
                 dialog.show(getStage());
             }
         });
-        createButton("", buttonTexture, 0, 38, 114, 32, 1.6f, 1.6f, new ClickListener() {
+        createButton("joinLobbyBtn", new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 JoinRoomDialog dialog = new JoinRoomDialog(skin, game);
                 dialog.show(getStage());
             }
         });
-        createButton("", buttonTexture, 0, 74, 114, 32, 1.6f, 1.6f, new ClickListener() {
+        createButton("settingBtn", new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 SettingsDialog dialog = new SettingsDialog(skin, game);
                 dialog.show(getStage());
             }
         });
-        createButton("", buttonTexture, 0, 111, 114, 32, 1.6f, 1.6f, new ClickListener() {
+        createButton("closeGameBtn", new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.exit();
             }
         });
-
-        updatePosition();
     }
 
-    private void createButton(String text, Texture buttonTexture, int x, int y, float width, float height, float scaleX, float scaleY, ClickListener listener) {
-        AnimatedImageButton button = new AnimatedImageButton(buttonTexture, x, y, (int)width, (int)height);
-        button.setSize(width * scaleX, height * scaleY);
+    private void createButton(String name, ClickListener listener) {
+        TextureRegionDrawable upDrawable = new TextureRegionDrawable(buttonAtlas.findRegion(name));
+        TextureRegionDrawable hoverDrawable = new TextureRegionDrawable(buttonAtlas.findRegion(name + "Hover"));
+
+        ImageButton.ImageButtonStyle style = new ImageButton.ImageButtonStyle();
+        style.up = upDrawable;
+        style.over = hoverDrawable;
+        style.down = hoverDrawable;
+
+        ImageButton button = new ImageButton(style);
         button.addListener(listener);
-
-        Label label = new Label(text, new Label.LabelStyle(fontManager.getFont(24), null));
-        label.setPosition(width / 2 - label.getWidth() / 2, height / 2 - label.getHeight() / 2);
-
-        Table cellTable = new Table();
-        cellTable.add(button).size(width * scaleX, height * scaleY);
-        cellTable.add(label).expand().fill().center();
-
-        buttonTable.add(cellTable).pad(10).row();
+        buttonTable.add(button).pad(buttonSpacing).row();
     }
 
-    public void updatePosition() {
-        float yPosition = Gdx.graphics.getHeight() * yPositionPercent;
-        setPosition(
-            (Gdx.graphics.getWidth() - buttonTable.getWidth()) / 2,
-            yPosition - buttonTable.getHeight() / 2
+    public void updateLayout() {
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+
+        // 로고 크기 및 위치 설정
+        float logoWidth = screenWidth * logoSizePercent;
+        float logoHeight = logoWidth * logoImage.getHeight() / logoImage.getWidth();
+        logoImage.setSize(logoWidth, logoHeight);
+        logoImage.setPosition(
+            screenWidth * logoPositionPercentX - logoWidth / 2,
+            screenHeight * logoPositionPercentY - logoHeight / 2
         );
-        buttonTable.setPosition(0, 0);
+
+        // 버튼 크기 및 위치 설정
+        float buttonWidth = screenWidth * buttonSizePercent;
+        float buttonHeight = buttonWidth * 32f / 114f;
+        for (Actor actor : buttonTable.getChildren()) {
+            if (actor instanceof ImageButton) {
+                ImageButton button = (ImageButton) actor;
+                button.setSize(buttonWidth, buttonHeight);
+            }
+        }
+        buttonTable.pack();
+        buttonTable.setPosition(
+            screenWidth * buttonsPositionPercentX - buttonTable.getWidth() / 2,
+            screenHeight * buttonsPositionPercentY - buttonTable.getHeight() / 2
+        );
     }
 
-    public void setYPositionPercent(float percent) {
-        this.yPositionPercent = percent;
-        updatePosition();
+    public void setLogoPositionPercentX(float percent) {
+        this.logoPositionPercentX = percent;
+        updateLayout();
+    }
+
+    public void setLogoPositionPercentY(float percent) {
+        this.logoPositionPercentY = percent;
+        updateLayout();
+    }
+
+    public void setButtonsPositionPercentX(float percent) {
+        this.buttonsPositionPercentX = percent;
+        updateLayout();
+    }
+
+    public void setButtonsPositionPercentY(float percent) {
+        this.buttonsPositionPercentY = percent;
+        updateLayout();
+    }
+
+    public void setLogoSizePercent(float percent) {
+        this.logoSizePercent = percent;
+        updateLayout();
+    }
+
+    public void setButtonSizePercent(float percent) {
+        this.buttonSizePercent = percent;
+        updateLayout();
+    }
+
+    public void setButtonSpacing(float spacing) {
+        this.buttonSpacing = spacing;
+        updateLayout();
     }
 
     @Override
     public void dispose() {
-        assetManager.dispose();
         skin.dispose();
+        buttonAtlas.dispose();
     }
 }

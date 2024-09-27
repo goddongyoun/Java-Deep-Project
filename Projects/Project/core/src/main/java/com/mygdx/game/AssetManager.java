@@ -7,10 +7,10 @@ public class AssetManager {
     private static AssetManager instance;
     private Texture buttonTexture;
     private Texture backgroundTexture;
+    private Texture logoTexture;
 
     private AssetManager() {
-        buttonTexture = new Texture(Gdx.files.internal("ui/buttons.png"));
-        backgroundTexture = new Texture(Gdx.files.internal("ui/background.png"));
+        loadAssets();
     }
 
     public static AssetManager getInstance() {
@@ -18,6 +18,20 @@ public class AssetManager {
             instance = new AssetManager();
         }
         return instance;
+    }
+
+    public void loadAssets() {
+        buttonTexture = new Texture(Gdx.files.internal("ui/buttons.png"));
+        backgroundTexture = new Texture(Gdx.files.internal("ui/background.png"));
+        logoTexture = new Texture(Gdx.files.internal("ui/logo.png"));
+
+        // 배경 이미지의 필터링 설정
+        backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+    }
+
+    public void reloadAssets() {
+        dispose();
+        loadAssets();
     }
 
     public Texture getButtonTexture() {
@@ -28,8 +42,13 @@ public class AssetManager {
         return backgroundTexture;
     }
 
+    public Texture getLogoTexture() {
+        return logoTexture;
+    }
+
     public void dispose() {
-        buttonTexture.dispose();
-        backgroundTexture.dispose();
+        if (buttonTexture != null) buttonTexture.dispose();
+        if (backgroundTexture != null) backgroundTexture.dispose();
+        if (logoTexture != null) logoTexture.dispose();
     }
 }

@@ -6,15 +6,14 @@ import com.mygdx.game.Main;
 import com.mygdx.game.Player;
 import com.mygdx.game.Room;
 import com.mygdx.game.screens.LobbyScreen;
-import com.mygdx.game.util.RoomUtils;
 import com.mygdx.game.util.FontManager;
 
 public class CreateRoomDialog extends Dialog {
     private Main game;
     private TextField roomNameField;
+    private TextField playerNameField;
     private SelectBox<Integer> playerCountSelect;
     private TextField passwordField;
-    private Label roomCodeLabel;
 
     public CreateRoomDialog(Skin skin, final Main game) {
         super("방 만들기", skin, "dialog");
@@ -33,6 +32,10 @@ public class CreateRoomDialog extends Dialog {
         roomNameField = new TextField("Default Room", textFieldStyle);
         contentTable.add(roomNameField).fillX().row();
 
+        contentTable.add(new Label("플레이어 이름:", labelStyle)).align(Align.left);
+        playerNameField = new TextField(game.getPlayerNickname(), textFieldStyle);
+        contentTable.add(playerNameField).fillX().row();
+
         contentTable.add(new Label("플레이어 수:", labelStyle)).align(Align.left);
         playerCountSelect = new SelectBox<>(selectBoxStyle);
         playerCountSelect.setItems(2, 3, 4, 5, 6);
@@ -42,10 +45,6 @@ public class CreateRoomDialog extends Dialog {
         contentTable.add(new Label("비밀번호 (선택):", labelStyle)).align(Align.left);
         passwordField = new TextField("", textFieldStyle);
         contentTable.add(passwordField).fillX().row();
-
-        contentTable.add(new Label("방 코드:", labelStyle)).align(Align.left);
-        roomCodeLabel = new Label(RoomUtils.generateRoomCode(), labelStyle);
-        contentTable.add(roomCodeLabel).fillX().row();
 
         button("만들기", true, createTextButtonStyle(skin, 18));
         button("취소", false, createTextButtonStyle(skin, 18));
@@ -81,13 +80,14 @@ public class CreateRoomDialog extends Dialog {
     protected void result(Object object) {
         if ((Boolean)object) {
             String roomName = roomNameField.getText();
+            String playerName = playerNameField.getText();
             int playerCount = playerCountSelect.getSelected();
             String password = passwordField.getText();
-            int roomCode = 0;
-            //String roomCode = roomCodeLabel.getText().toString();
-            
-            Player host = new Player(game.getPlayerNickname());
-            Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
+            int roomCode = 0; // 임시로 0으로 설정
+
+            game.setPlayerNickname(playerName);
+            Player host = new Player(playerName, 0, 0);
+            Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);
 
             game.setCurrentRoom(newRoom);
             game.setScreen(new LobbyScreen(game));

@@ -3,7 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.mygdx.game.screens.MainMenuScreen;
+import com.mygdx.game.screens.LoadingScreen;
 import com.mygdx.game.util.FontManager;
 
 public class Main extends Game {
@@ -19,7 +19,11 @@ public class Main extends Game {
     @Override
     public void create() {
         Gdx.graphics.setWindowedMode(WINDOW_WIDTH, WINDOW_HEIGHT);
-        setScreen(new MainMenuScreen(this));
+
+        // 폰트 미리 로드
+        FontManager.getInstance().preloadFonts(16, 18, 24, 32); // 필요한 폰트 크기들
+
+        setScreen(new LoadingScreen(this));
     }
 
     @Override

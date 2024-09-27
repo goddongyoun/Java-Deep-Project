@@ -5,13 +5,13 @@ import java.util.List;
 
 public class Room {
     private String title;
-    private int code;
+    private String code;
     private String password;
     private int maxPlayers;
     private List<Player> players;
     private Player host;
 
-    public Room(String title, int code, String password, int maxPlayers, Player host) {
+    public Room(String title, String code, String password, int maxPlayers, Player host) {
         this.title = title;
         this.code = code;
         this.password = password;
@@ -29,7 +29,7 @@ public class Room {
         this.title = title;
     }
 
-    public int getCode() {
+    public String getCode() {
         return code;
     }
 
