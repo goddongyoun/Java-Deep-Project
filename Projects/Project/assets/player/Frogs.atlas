@@ -1,0 +1,327 @@
+Frogs.png
+size: 3840, 1280
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+FrogIdleL1
+  rotate: false
+  xy: 0, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL2
+  rotate: false
+  xy: 320, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL3
+  rotate: false
+  xy: 640, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL4
+  rotate: false
+  xy: 960, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL5
+  rotate: false
+  xy: 1280, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL6
+  rotate: false
+  xy: 1600, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL7
+  rotate: false
+  xy: 1920, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL8
+  rotate: false
+  xy: 2240, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL9
+  rotate: false
+  xy: 2560, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL10
+  rotate: false
+  xy: 2880, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleL11
+  rotate: false
+  xy: 3200, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR1
+  rotate: false
+  xy: 3520, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR2
+  rotate: false
+  xy: 0, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR3
+  rotate: false
+  xy: 320, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR4
+  rotate: false
+  xy: 640, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR5
+  rotate: false
+  xy: 960, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR6
+  rotate: false
+  xy: 1280, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR7
+  rotate: false
+  xy: 1600, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR8
+  rotate: false
+  xy: 1920, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR9
+  rotate: false
+  xy: 2240, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR10
+  rotate: false
+  xy: 2560, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogIdleR11
+  rotate: false
+  xy: 2880, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL1
+  rotate: false
+  xy: 3200, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL2
+  rotate: false
+  xy: 3520, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL3
+  rotate: false
+  xy: 0, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL4
+  rotate: false
+  xy: 320, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL5
+  rotate: false
+  xy: 640, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL6
+  rotate: false
+  xy: 960, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL7
+  rotate: false
+  xy: 1280, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL8
+  rotate: false
+  xy: 1600, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL9
+  rotate: false
+  xy: 1920, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL10
+  rotate: false
+  xy: 2240, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL11
+  rotate: false
+  xy: 2560, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunL12
+  rotate: false
+  xy: 2880, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR1
+  rotate: false
+  xy: 3200, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR2
+  rotate: false
+  xy: 3520, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR3
+  rotate: false
+  xy: 0, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR4
+  rotate: false
+  xy: 320, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR5
+  rotate: false
+  xy: 640, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR6
+  rotate: false
+  xy: 960, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR7
+  rotate: false
+  xy: 1280, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR8
+  rotate: false
+  xy: 1600, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR9
+  rotate: false
+  xy: 1920, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR10
+  rotate: false
+  xy: 2240, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR11
+  rotate: false
+  xy: 2560, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+FrogRunR12
+  rotate: false
+  xy: 2880, 960
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1

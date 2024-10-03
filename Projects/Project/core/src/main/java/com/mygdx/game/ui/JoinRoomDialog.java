@@ -12,6 +12,7 @@ public class JoinRoomDialog extends Dialog {
     private Main game;
     private TextField roomCodeField;
     private TextField passwordField;
+    private TextField playerNameField;
     private Label messageLabel;
 
     public JoinRoomDialog(Skin skin, final Main game) {
@@ -35,6 +36,10 @@ public class JoinRoomDialog extends Dialog {
         passwordField.setPasswordCharacter('*');
         passwordField.setPasswordMode(true);
         contentTable.add(passwordField).fillX().row();
+
+        contentTable.add(new Label("플레이어 이름:", labelStyle)).align(Align.left);
+        playerNameField = new TextField(game.getPlayerNickname(), textFieldStyle);
+        contentTable.add(playerNameField).fillX().row();
 
         messageLabel = new Label("", labelStyle);
         contentTable.add(messageLabel).colspan(2).pad(10).row();
@@ -66,11 +71,14 @@ public class JoinRoomDialog extends Dialog {
         if ((Boolean)object) {
             String roomCode = roomCodeField.getText().toUpperCase();
             String password = passwordField.getText();
+            String playerName = playerNameField.getText();
 
             // TODO: 실제로는 서버에서 방 정보를 가져와야 함
             // 임시로 방을 생성하여 참여하는 것으로 구현
             if (!roomCode.isEmpty()) {
-                Player player = new Player(game.getPlayerNickname(), 0, 0);
+                game.setPlayerNickname(playerName);
+                // Player 생성자에 적절한 크기 값을 전달합니다. 여기서는 임시로 32를 사용합니다.
+                Player player = new Player(playerName, 0, 0, 32);
                 Room room = new Room("Joined Room", roomCode, password, 6, player);
                 game.setCurrentRoom(room);
                 game.setScreen(new LobbyScreen(game));

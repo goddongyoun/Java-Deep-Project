@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.mygdx.game.screens.LoadingScreen;
 import com.mygdx.game.util.FontManager;
+import com.badlogic.gdx.graphics.Color;
 
 public class Main extends Game {
     public static final int WINDOW_WIDTH = 1280;
@@ -15,13 +16,13 @@ public class Main extends Game {
     private float sfxVolume = 1f;
     private String playerNickname = "Player";
     private Room currentRoom;
+    private Color nicknameColor = Color.BLACK;
 
     @Override
     public void create() {
         Gdx.graphics.setWindowedMode(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        // 폰트 미리 로드
-        FontManager.getInstance().preloadFonts(16, 18, 24, 32); // 필요한 폰트 크기들
+        FontManager.getInstance().preloadFonts(16, 18, 24, 32);
 
         setScreen(new LoadingScreen(this));
     }
@@ -55,4 +56,7 @@ public class Main extends Game {
 
     public Room getCurrentRoom() { return currentRoom; }
     public void setCurrentRoom(Room room) { this.currentRoom = room; }
+
+    public Color getNicknameColor() { return nicknameColor; }
+    public void setNicknameColor(Color color) { this.nicknameColor = color; }
 }
