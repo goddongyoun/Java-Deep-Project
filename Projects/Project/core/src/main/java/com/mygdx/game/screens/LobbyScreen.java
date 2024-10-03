@@ -2,28 +2,61 @@ package com.mygdx.game.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
 import com.mygdx.game.Room;
+import com.mygdx.game.ui.AnimatedImageButton;
 import com.mygdx.game.ui.LobbyMap;
+import com.mygdx.game.util.FontManager;
+import com.mygdx.game.ui.MissionDialog;
 
 public class LobbyScreen implements Screen {
     private Main game;
     private Stage stage;
     private Skin skin;
-    private Table topTable;
     private LobbyMap lobbyMap;
+    private SpriteBatch batch;
+    private Texture roomInfoBackground;
+    private BitmapFont roomInfoFont;
+    private OrthographicCamera camera;
+    private Viewport viewport;
+    private GlyphLayout layout;
+    private TextureAtlas buttonAtlas;
+    private Table buttonTable;
+    private MissionDialog missionDialog;
 
     public LobbyScreen(final Main game) {
         this.game = game;
-        this.stage = new Stage(new ScreenViewport());
+        this.camera = new OrthographicCamera();
+        this.viewport = new FitViewport(Main.WINDOW_WIDTH, Main.WINDOW_HEIGHT, camera);
+        this.batch = new SpriteBatch();
+        this.stage = new Stage(viewport, this.batch);
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+        this.layout = new GlyphLayout();
+        this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
+
+        // 방 정보 배경 이미지 로드
+        this.roomInfoBackground = new Texture(Gdx.files.internal("ui/room_info.png"));
+
+        // 방 정보 폰트 생성
+        this.roomInfoFont = FontManager.getInstance().getFont(19);
+        this.roomInfoFont.setColor(Color.BLACK);
+
+        // 미션 다이얼로그 생성
+        missionDialog = new MissionDialog("Mission", skin, stage);
 
         createUI();
 
@@ -31,58 +64,64 @@ public class LobbyScreen implements Screen {
     }
 
     private void createUI() {
-        Table mainTable = new Table();
-        mainTable.setFillParent(true);
-        stage.addActor(mainTable);
-
-        createTopTable();
-        mainTable.add(topTable).expandX().fillX().pad(10).row();
-
         lobbyMap = new LobbyMap(game);
-        mainTable.add(lobbyMap).expand().fill();
+        stage.addActor(lobbyMap);
+
+        createButtons();
     }
 
-    private void createTopTable() {
-        topTable = new Table();
+    private void createButtons() {
+        buttonTable = new Table();
+        buttonTable.top().right().padRight(20).padTop(20);
+        buttonTable.setFillParent(true);
 
-        Room currentRoom = game.getCurrentRoom();
-        Label roomInfoLabel = new Label(
-            currentRoom.getTitle() + " (" + currentRoom.getPlayers().size() + "/" + currentRoom.getMaxPlayers() + ") Code: " + currentRoom.getCode(),
-            skin
-        );
-        topTable.add(roomInfoLabel).expandX().align(Align.left);
+        Texture buttonTexture = buttonAtlas.findRegion("createLobbyBtn").getTexture();
 
-        Table buttonTable = new Table();
-        TextButton startButton = new TextButton("Start Game", skin);
-        TextButton editButton = new TextButton("Edit Room", skin);
-        TextButton leaveButton = new TextButton("Leave Room", skin);
+        AnimatedImageButton startButton = new AnimatedImageButton(buttonTexture,
+            buttonAtlas.findRegion("createLobbyBtn").getRegionX(),
+            buttonAtlas.findRegion("createLobbyBtn").getRegionY(),
+            buttonAtlas.findRegion("createLobbyBtn").getRegionWidth(),
+            buttonAtlas.findRegion("createLobbyBtn").getRegionHeight());
 
-        startButton.addListener(new ChangeListener() {
+        AnimatedImageButton editButton = new AnimatedImageButton(buttonTexture,
+            buttonAtlas.findRegion("settingBtn").getRegionX(),
+            buttonAtlas.findRegion("settingBtn").getRegionY(),
+            buttonAtlas.findRegion("settingBtn").getRegionWidth(),
+            buttonAtlas.findRegion("settingBtn").getRegionHeight());
+
+        AnimatedImageButton leaveButton = new AnimatedImageButton(buttonTexture,
+            buttonAtlas.findRegion("closeGameBtn").getRegionX(),
+            buttonAtlas.findRegion("closeGameBtn").getRegionY(),
+            buttonAtlas.findRegion("closeGameBtn").getRegionWidth(),
+            buttonAtlas.findRegion("closeGameBtn").getRegionHeight());
+
+        startButton.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                // TODO: Implement game start logic
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.log("LobbyScreen", "Start Game button clicked");
             }
         });
 
-        editButton.addListener(new ChangeListener() {
+        editButton.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                // TODO: Implement room edit logic
+            public void clicked(InputEvent event, float x, float y) {
+                missionDialog.showMission(stage);  // 미션 팝업을 화면에 띄움
             }
         });
 
-        leaveButton.addListener(new ChangeListener() {
+        leaveButton.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.log("LobbyScreen", "Leave Room button clicked");
                 game.setScreen(new MainMenuScreen(game));
             }
         });
 
-        buttonTable.add(startButton).pad(5);
-        buttonTable.add(editButton).pad(5);
-        buttonTable.add(leaveButton).pad(5);
+        buttonTable.add(startButton).padBottom(10).row();
+        buttonTable.add(editButton).padBottom(10).row();
+        buttonTable.add(leaveButton);
 
-        topTable.add(buttonTable).align(Align.right);
+        stage.addActor(buttonTable);
     }
 
     @Override
@@ -90,15 +129,61 @@ public class LobbyScreen implements Screen {
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        lobbyMap.update(delta);
+        camera.update();
 
+        // 맵 업데이트 및 그리기
+        lobbyMap.update(delta);
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        lobbyMap.draw(batch, 1);
+        batch.end();
+
+        // UI 요소 (버튼 등) 그리기
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
+
+        // 방 정보 그리기
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        drawRoomInfo();
+        batch.end();
+    }
+
+    private void drawRoomInfo() {
+        Room currentRoom = game.getCurrentRoom();
+        if (currentRoom == null) return;
+
+        float backgroundWidth = roomInfoBackground.getWidth();
+        float backgroundHeight = roomInfoBackground.getHeight();
+        float scale = 1.0f;
+
+        float x = (camera.viewportWidth - backgroundWidth * scale) / 2;
+        float y = camera.viewportHeight - backgroundHeight * scale - 20;
+
+        batch.draw(roomInfoBackground, x, y, backgroundWidth * scale, backgroundHeight * scale);
+
+        String roomTitle = "방 제목: " + currentRoom.getTitle();
+        String playerInfo = String.format("플레이어: %d / %d", currentRoom.getPlayers().size(), currentRoom.getMaxPlayers());
+        String roomCode = "방 코드: " + currentRoom.getCode();
+
+        float textY = y + backgroundHeight * scale - 40;
+        float centerX = x + (backgroundWidth * scale) / 2;
+
+        roomInfoFont.setColor(Color.BLACK);
+        layout.setText(roomInfoFont, roomTitle);
+        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY);
+
+        layout.setText(roomInfoFont, playerInfo);
+        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY - 30);
+
+        layout.setText(roomInfoFont, roomCode);
+        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY - 60);
     }
 
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+        viewport.update(width, height);
+        camera.position.set(Main.WINDOW_WIDTH / 2, Main.WINDOW_HEIGHT / 2, 0);
         lobbyMap.resize(width, height);
     }
 
@@ -123,5 +208,8 @@ public class LobbyScreen implements Screen {
         stage.dispose();
         skin.dispose();
         lobbyMap.dispose();
+        batch.dispose();
+        roomInfoBackground.dispose();
+        buttonAtlas.dispose();
     }
 }
