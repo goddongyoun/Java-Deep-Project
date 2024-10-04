@@ -1,5 +1,6 @@
 package com.mygdx.game.screens;
 
+import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -107,6 +108,7 @@ public class LobbyScreen implements Screen {
         leaveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	_Imported_ClientBase.outGame();
                 Gdx.app.log("LobbyScreen", "Leave Room button clicked");
                 game.setScreen(new MainMenuScreen(game));
             }

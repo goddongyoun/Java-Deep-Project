@@ -60,7 +60,8 @@ class Room{
 		for(int i = 0; i <= curUserNum; i++) {
 			if(users[i] != null) {
 				if(users[i].ip.equals(ip)) {
-					return -2;
+					return 0;
+					//return -2;
 				}
 			}
 		}

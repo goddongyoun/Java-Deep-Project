@@ -82,7 +82,7 @@ public class _Imported_ClientBase {
 			tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
 			tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
 			tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
-			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
+//			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 			return "Success makeGame";
 		} 
 		catch (SocketException e) {
@@ -220,12 +220,23 @@ public class _Imported_ClientBase {
 		}
 	}
 	
+	private static boolean isShuttingdown = false;
+	
 	public static int SHUTDOWN() {
-		executorService.shutdown();
+		isShuttingdown = true;
+		executorService.shutdownNow();
 		return 1;
 	}
 	
+	private static boolean alreadyRunning = false;
+	
 	public static void run(String playerName) throws Exception {
+		if(alreadyRunning == false) {
+			alreadyRunning = true;
+		}
+		else {
+			return;
+		}
 		System.out.println("[LOG] <-- means 'from ClientBase'");
 		name = playerName;
 		if(name == null) {
@@ -267,17 +278,28 @@ public class _Imported_ClientBase {
 		executorService.execute(()->{
 			String saver = null;
 			isReceiverOut = false;
-			while(true) {
-				try {
-					Thread.sleep(1);
-					if(tcpReader_toRecv != null) {
-						while((saver = tcpReader_toRecv.readLine()) != null) {
-							System.out.println("\n" + saver + " / [LOG] chat");
-						}
-					}
-				} catch (IOException | InterruptedException e) {
-					System.out.println("[LOG] 채팅 연결 종료");
-				} finally {
+			while (true) {
+	            try {
+	                Thread.sleep(1);
+	                if (isShuttingdown) {
+	                    tcpReader_toRecv.close();
+	                    break;
+	                }
+	                
+	                if (tcpReader_toRecv != null) {
+	                    saver = tcpReader_toRecv.readLine();
+	                    if (saver != null) {
+	                        System.out.println("\n" + saver + " / [LOG] chat");
+	                    }
+	                }
+	            } catch (IOException e) {
+	                System.out.println("[LOG] 채팅 연결 종료");
+	                break;
+	            } catch (InterruptedException e) {
+	                Thread.currentThread().interrupt();
+	                System.out.println("[LOG] 스레드가 인터럽트되었습니다.");
+	                break; 
+	            } finally {
 					tcpReader_toRecv = null;
 					isReceiverOut = true;
 				}
