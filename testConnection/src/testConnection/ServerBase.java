@@ -125,6 +125,7 @@ class Clients implements Runnable{
 			tcpWriter = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream(), "UTF-8"));
 			
 			String saver = tcpReader.readLine();
+			System.out.println("first message => '" + saver + "' From "+ sock.getRemoteSocketAddress());
 			
 			if(saver.equals("MakeConnection")) { // first Connection Check ; Unstructured Request Sockets will be closed
 				saver = tcpReader.readLine();

@@ -48,7 +48,7 @@ public class LobbyScreen implements Screen {
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
 
         // 방 정보 배경 이미지 로드
-        this.roomInfoBackground = new Texture(Gdx.files.internal("ui/room_info.png"));
+        this.roomInfoBackground = new Texture(Gdx.files.internal("ui/Room_info.png"));
 
         // 방 정보 폰트 생성
         this.roomInfoFont = FontManager.getInstance().getFont(19);
