@@ -26,6 +26,7 @@ public class LobbyMap extends Actor {
     private Player localPlayer;
     private Player npc; //npc 테스트로 추가
     private Array<TiledMapTileLayer> collisionLayers;
+    private boolean blockMoving = false;
 
     private static final float WORLD_WIDTH = 1280;
     private static final float WORLD_HEIGHT = 720;
@@ -83,6 +84,10 @@ public class LobbyMap extends Actor {
     }
 
     public void update(float delta) {
+        if(blockMoving){
+            return;
+        }
+
         Vector2 oldPosition = localPlayer.getPosition().cpy();
         localPlayer.update(delta);
         handleCollisions(oldPosition);
@@ -150,6 +155,10 @@ public class LobbyMap extends Actor {
 
         //npc 그리기
         npc.render(batch);
+    }
+
+    public void setBlockMoving(boolean blockMoving){
+        this.blockMoving=blockMoving;
     }
 
     public void resize(int width, int height) {

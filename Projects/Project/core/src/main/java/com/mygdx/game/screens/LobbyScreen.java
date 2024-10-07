@@ -106,6 +106,7 @@ public class LobbyScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 missionDialog.showMission(stage);  // 미션 팝업을 화면에 띄움
+                lobbyMap.setBlockMoving(true);
             }
         });
 
