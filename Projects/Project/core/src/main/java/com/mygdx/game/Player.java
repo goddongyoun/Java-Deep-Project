@@ -36,6 +36,7 @@ public class Player {
     private boolean facingLeft = false;
     private boolean isReady;
     private PlayerState currentState;
+    private boolean blockMoving = false;
 
     private BitmapFont font;
     private Color nicknameColor;
@@ -62,6 +63,7 @@ public class Player {
         initializeFont();
         loadTextures();
     }
+
 
     private void initializeFont() {
         this.font = FontManager.getInstance().getFont(fontSize);
@@ -133,20 +135,23 @@ public class Player {
         stateTime += delta;
 
         velocity.setZero();
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            velocity.x -= 1;
-            facingLeft = true;
-            currentState = PlayerState.RUNNING;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            velocity.x += 1;
-            facingLeft = false;
-            currentState = PlayerState.RUNNING;
-        } else {
-            currentState = PlayerState.IDLE;
-        }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) velocity.y += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) velocity.y -= 1;
+        if(!blockMoving) {
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+                velocity.x -= 1;
+                facingLeft = true;
+                currentState = PlayerState.RUNNING;
+            } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+                velocity.x += 1;
+                facingLeft = false;
+                currentState = PlayerState.RUNNING;
+            } else {
+                currentState = PlayerState.IDLE;
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.UP)) velocity.y += 1;
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) velocity.y -= 1;
+        }
 
         if (!velocity.isZero()) {
             velocity.nor();
@@ -275,5 +280,9 @@ public class Player {
     // 윤곽선 색상을 설정하는 메서드
     public void setOutlineColor(Color color) {
         this.outlineColor = color;
+    }
+
+    public void setBlockMoving(boolean blockMoving){
+        this.blockMoving=blockMoving;
     }
 }

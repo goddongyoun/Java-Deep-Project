@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
+import com.mygdx.game.Player;
 import com.mygdx.game.Room;
 import com.mygdx.game.ui.AnimatedImageButton;
 import com.mygdx.game.ui.LobbyMap;
@@ -37,6 +38,7 @@ public class LobbyScreen implements Screen {
     private TextureAtlas buttonAtlas;
     private Table buttonTable;
     private MissionDialog missionDialog;
+    private Player player;
 
     public LobbyScreen(final Main game) {
         this.game = game;
@@ -47,6 +49,7 @@ public class LobbyScreen implements Screen {
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         this.layout = new GlyphLayout();
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
+        this.player = player;
 
         // 방 정보 배경 이미지 로드
         this.roomInfoBackground = new Texture(Gdx.files.internal("ui/room_info.png"));
@@ -56,7 +59,8 @@ public class LobbyScreen implements Screen {
         this.roomInfoFont.setColor(Color.BLACK);
 
         // 미션 다이얼로그 생성
-        missionDialog = new MissionDialog("Mission", skin, stage);
+//        missionDialog = new MissionDialog("Mission", skin, stage);
+//        missionDialog.GameInitialization();
 
         createUI();
 
@@ -105,8 +109,8 @@ public class LobbyScreen implements Screen {
         editButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                missionDialog = new MissionDialog("Mission", skin, stage);
                 missionDialog.showMission(stage);  // 미션 팝업을 화면에 띄움
-                lobbyMap.setBlockMoving(true);
             }
         });
 

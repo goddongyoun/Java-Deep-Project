@@ -34,7 +34,7 @@ public class MissionDialog extends Dialog {
     private float monsterBallSpeed = 500; // 몬스터볼 속도
     private boolean isNewRound = true;
     private int remainingBalls = 2;  // 총 5개의 몬스터볼 및 남은 몬스터볼 갯수
-
+    private boolean isHitMonster = false;
 
     private boolean roundClear = false;
     private boolean roundFail = false;  // 라운드 실패 여부
@@ -117,7 +117,7 @@ public class MissionDialog extends Dialog {
         // 몬스터볼 초기 위치 설정 (화면 아래 정중앙)
         monsterBallInitialX = (this.getWidth() - monsterBallImage.getWidth()) / 2;
         monsterBallInitialY = 0;
-        monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY);
+        setBallPosition(monsterBallImage,monsterBallInitialX,monsterBallInitialY);
 
         // 팝업 창을 중앙에 배치
         this.setPosition(
@@ -131,7 +131,6 @@ public class MissionDialog extends Dialog {
     private void nextRound() {
         // 테이블에서 이전 몬스터만 삭제하고 새로운 몬스터 추가
         Table contentTable = getContentTable();
-
         // 현재 몬스터 제거
         if (currentMonster != null) {
             contentTable.removeActor(currentMonster);
@@ -179,100 +178,111 @@ public class MissionDialog extends Dialog {
 
     @Override
     public void act(float delta) {
-        super.act(delta);
+        //이 if문은 몬스터를 맞췄을 시 모든 동작을 1초 딜레이 주고 넘어가기 위함임
+        if(!isHitMonster) {
+            super.act(delta);
 
-        // 이미 실패한 상태라면 추가적인 처리를 중지
-        if (roundFail) {
-            return;  // roundFail이 true일 경우 더 이상의 처리 중지
-        }
-
-        // 첫 번째 act 호출에서만 초기 위치 설정을 사용하고 그 이후는 움직임 적용
-        if (isNewRound) {
-            isNewRound = false;  // 새로운 라운드가 아니라는 표시
-            float initialX = MathUtils.random(0, this.getWidth() - currentMonster.getWidth());
-            currentMonster.setPosition(initialX, 260);  // Y 좌표는 고정
-            Gdx.app.log("MissionDialog", "x좌표 : " + initialX);
-            return;  // 첫 번째 프레임에서 초기 위치만 적용하고 종료
-        }
-
-        // 몬스터 이미지 움직임
-        float x = currentMonster.getX();
-        float y = 260;
-
-        // 몬스터 좌우로 움직임 설정
-        if (currentMonsterMoving) {
-            x += currentMonsterSpeedX * delta;
-            // 오른쪽으로 이동 중일 때, 화면 끝 또는 랜덤 확률로 방향 전환
-            if (x > this.getWidth() - currentMonster.getWidth() || Math.random() < 0.006) {
-                currentMonsterMoving = false; // 왼쪽 방향으로 전환
+            // 이미 실패한 상태라면 추가적인 처리를 중지
+            if (roundFail) {
+                return;  // roundFail이 true일 경우 더 이상의 처리 중지
             }
-        } else {
-            x -= currentMonsterSpeedX * delta;
-            // 왼쪽으로 이동 중일 때, 화면 끝 또는 랜덤 확률로 방향 전환
-            if (x < 0 || Math.random() < 0.006) {
-                currentMonsterMoving = true; // 오른쪽 방향으로 전환
+
+            // 첫 번째 act 호출에서만 초기 위치 설정을 사용하고 그 이후는 움직임 적용
+            if (isNewRound) {
+                isNewRound = false;  // 새로운 라운드가 아니라는 표시
+                float initialX = MathUtils.random(0, this.getWidth() - currentMonster.getWidth());
+                currentMonster.setPosition(initialX, 260);  // Y 좌표는 고정
+                return;  // 첫 번째 프레임에서 초기 위치만 적용하고 종료
             }
-        }
-        currentMonster.setPosition(x, y);
 
-//        // A 키가 눌리면 몬스터볼 움직이기 시작
-//        if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
-//            isMonsterBallMoving = true;
-//            remainingBalls--;  // 몬스터볼 갯수 감소
-//            Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
-//        }
+            // 몬스터 이미지 움직임
+            float x = currentMonster.getX();
+            float y = 260;
 
-        // 키 입력 및 조준 방향 설정
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            aimingAngle += aimingAngleSpeed;  // 왼쪽으로 조준 각도 증가
-            if (aimingAngle > 140) aimingAngle = 140;  // 최대 각도 제한
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            aimingAngle -= aimingAngleSpeed;  // 오른쪽으로 조준 각도 감소
-            if (aimingAngle < 40) aimingAngle = 40;  // 최소 각도 제한
-        }
-        monsterBallImage.setRotation(aimingAngle-90);
+            // 몬스터 좌우로 움직임 설정
+            if (currentMonsterMoving) {
+                x += currentMonsterSpeedX * delta;
+                // 오른쪽으로 이동 중일 때, 화면 끝 또는 랜덤 확률로 방향 전환
+                if (x > this.getWidth() - currentMonster.getWidth() || Math.random() < 0.006) {
+                    currentMonsterMoving = false; // 왼쪽 방향으로 전환
+                }
+            } else {
+                x -= currentMonsterSpeedX * delta;
+                // 왼쪽으로 이동 중일 때, 화면 끝 또는 랜덤 확률로 방향 전환
+                if (x < 0 || Math.random() < 0.006) {
+                    currentMonsterMoving = true; // 오른쪽 방향으로 전환
+                }
+            }
+            currentMonster.setPosition(x, y);
 
-        // A 키가 눌리면 몬스터볼 발사
-        if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
-            isMonsterBallMoving = true;
-            remainingBalls--;  // 몬스터볼 갯수 감소
-            Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
+            // 몬스터볼 좌 우 조준
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && !isMonsterBallMoving) {
+                aimingAngle += aimingAngleSpeed;  // 왼쪽으로 조준 각도 증가
+                if (aimingAngle > 140) aimingAngle = 140;  // 최대 각도 제한
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !isMonsterBallMoving) {
+                aimingAngle -= aimingAngleSpeed;  // 오른쪽으로 조준 각도 감소
+                if (aimingAngle < 40) aimingAngle = 40;  // 최소 각도 제한
+            }
+            monsterBallImage.setRotation(aimingAngle - 90);
 
-        // 각도에 따라 몬스터볼의 x, y 속도를 설정 (90도 보정)
-            float radians = MathUtils.degreesToRadians * aimingAngle;
-            monsterBallSpeedX = monsterBallSpeed * MathUtils.cos(radians);
-            monsterBallSpeedY = monsterBallSpeed * MathUtils.sin(radians);
-        }
+            // A 키가 눌리면 몬스터볼 발사
+            if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
+                isMonsterBallMoving = true;
+                remainingBalls--;  // 몬스터볼 갯수 감소
+                Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
 
-        // 몬스터볼이 움직일 때 x, y 좌표 업데이트
-        if (isMonsterBallMoving) {
-            float monsterBallX = monsterBallImage.getX() + monsterBallSpeedX * delta;
-            float monsterBallY = monsterBallImage.getY() + monsterBallSpeedY * delta;
-            monsterBallImage.setPosition(monsterBallX, monsterBallY);
+                // 각도에 따라 몬스터볼의 x, y 속도를 설정 (90도 보정)
+                float radians = MathUtils.degreesToRadians * aimingAngle;
+                monsterBallSpeedX = monsterBallSpeed * MathUtils.cos(radians);
+                monsterBallSpeedY = monsterBallSpeed * MathUtils.sin(radians);
+            }
 
-            // 화면 밖으로 나가면 위치 초기화
-            if (monsterBallY > this.getHeight() || monsterBallX < 0 || monsterBallX > this.getWidth()) {
+            // 몬스터볼이 움직일 때 x, y 좌표 업데이트
+            if (isMonsterBallMoving) {
+                float monsterBallX = monsterBallImage.getX() + monsterBallSpeedX * delta;
+                float monsterBallY = monsterBallImage.getY() + monsterBallSpeedY * delta;
+                setBallPosition(monsterBallImage,monsterBallX,monsterBallY);
+
+                // 화면 밖으로 나가면 위치 초기화
+                if (monsterBallY > this.getHeight() || monsterBallX < 0 || monsterBallX > this.getWidth()) {
+                    isMonsterBallMoving = false;
+                    setBallPosition(monsterBallImage, monsterBallInitialX, monsterBallInitialY); // 초기 위치로 되돌림
+                    aimingAngle = 90; // 각도를 초기화 (필요시)
+                }
+            }
+
+            // 현재 라운드의 몬스터와 몬스터볼이 닿았는지 확인 (충돌 감지)
+            if (!roundClear && isCollision(currentMonster, monsterBallImage)) {
                 isMonsterBallMoving = false;
-                monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY);  // 초기 위치로 되돌림
-                aimingAngle = 90; // 각도를 초기화 (필요시)
+                isHitMonster = true;
+                setBallPosition(monsterBallImage, monsterBallInitialX, monsterBallInitialY);
+                roundClear = true;
+                Gdx.app.log("MissionDialog", "Round " + currentRound + " Clear!");
+                currentRound++;
+                nextRound();
+
+//                // 일정 시간 딜레이 후 다음 라운드로 이동
+//                Timer.schedule(new Timer.Task() {
+//                    @Override
+//                    public void run() {
+//                        isHitMonster = false;
+//                        currentRound++;  // 다음 라운드로 설정
+//                        nextRound();
+//                    }
+//                }, 1f);  // 1초 딜레이를 준 후 다음 라운드 시작
+            }
+
+            // 남은 몬스터볼이 없고, 라운드 클리어가 안되어 있으며, 몬스터볼이 더이상 움직이지 않는 경우(마지막으로 던진 몬스터볼이 끝까지 날라갔는지 체크) 라운드 실패로 처리
+            if (remainingBalls == 0 && !roundClear && !isMonsterBallMoving) {
+                roundFail = true;  // 몬스터볼이 모두 소진된 상태에서 충돌이 없으면 실패로 처리
+                Gdx.app.log("MissionDialog", "Game Over!");  // 게임 실패 메시지 출력
             }
         }
+    }
 
-        // 현재 라운드의 몬스터와 몬스터볼이 닿았는지 확인 (충돌 감지)
-        if (!roundClear && isCollision(currentMonster, monsterBallImage)) {
-            roundClear = true;
-            Gdx.app.log("MissionDialog", "Round " + currentRound + " Clear!");
-            currentRound++;  // 다음 라운드로 이동
-            monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY); // 초기 위치로
-            nextRound();  // 다음 라운드 호출
-        }
-
-        // 남은 몬스터볼이 없고, 라운드 클리어가 안되어 있으며, 몬스터볼이 더이상 움직이지 않는 경우(마지막으로 던진 몬스터볼이 끝까지 날라갔는지 체크) 라운드 실패로 처리
-        if (remainingBalls == 0 && !roundClear && !isMonsterBallMoving) {
-            roundFail = true;  // 몬스터볼이 모두 소진된 상태에서 충돌이 없으면 실패로 처리
-            Gdx.app.log("MissionDialog", "Game Over!");  // 게임 실패 메시지 출력
-        }
+    private void setBallPosition(Image monsterBall, float locationX, float locationY) {
+        monsterBall.setPosition(locationX, locationY);
     }
 
     // 몬스터와 몬스터볼의 충돌을 감지하는 메서드
@@ -283,13 +293,16 @@ public class MissionDialog extends Dialog {
     }
 
     // 게임을 다시 시작하는 메서드 (초기화)
-    private void GameInitialization() {
+    public void GameInitialization() {
         currentRound = 1;  // 라운드를 1로 초기화
         roundClear = false;  // 라운드 클리어 상태 초기화
         roundFail = false;  // 라운드 실패 상태 초기화
         remainingBalls = 2;  // 남은 몬스터볼 갯수 초기화
+        aimingAngle = 90;
         currentMonsterMoving = false;
-        monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY);
+        isMonsterBallMoving = false;
+        setBallPosition(monsterBallImage,monsterBallInitialX,monsterBallInitialY);
+        monsterBallImage.setRotation(aimingAngle);
         if (currentMonster != null) {
             currentMonster.remove();  // 현재 몬스터 제거
         }
