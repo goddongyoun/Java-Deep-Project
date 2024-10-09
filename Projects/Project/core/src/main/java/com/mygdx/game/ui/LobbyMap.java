@@ -83,6 +83,7 @@ public class LobbyMap extends Actor {
     }
 
     public void update(float delta) {
+
         Vector2 oldPosition = localPlayer.getPosition().cpy();
         localPlayer.update(delta);
         handleCollisions(oldPosition);

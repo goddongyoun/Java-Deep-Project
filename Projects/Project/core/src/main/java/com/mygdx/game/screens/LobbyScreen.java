@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
+import com.mygdx.game.Player;
 import com.mygdx.game.Room;
 import com.mygdx.game.ui.AnimatedImageButton;
 import com.mygdx.game.ui.LobbyMap;
@@ -39,6 +40,7 @@ public class LobbyScreen implements Screen {
     private Table buttonTable;
     private MissionDialog missionDialog;
     private MissionDialog2 missionDialog2;
+    private Player player;
 
     public LobbyScreen(final Main game) {
         this.game = game;
@@ -49,6 +51,7 @@ public class LobbyScreen implements Screen {
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         this.layout = new GlyphLayout();
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
+        this.player = player;
 
         // 방 정보 배경 이미지 로드
         this.roomInfoBackground = new Texture(Gdx.files.internal("ui/room_info.png"));

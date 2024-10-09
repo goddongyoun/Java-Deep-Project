@@ -294,6 +294,11 @@ public class MissionDialog extends Dialog {
     public void act(float delta) {
         super.act(delta);
 
+        // 이미 실패한 상태라면 추가적인 처리를 중지
+        if (roundFail) {
+            return;  // roundFail이 true일 경우 더 이상의 처리 중지
+        }
+
         // 플레이어 초기 위치 설정 (화면 아래 정중앙)
         shooterInitialX = ((this.getWidth() - shooterImage.getWidth()) / 2)-(shooterImage.getWidth() / 2.5f);
         shooterInitialY = 15;
