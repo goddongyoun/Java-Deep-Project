@@ -2,10 +2,12 @@ package com.mygdx.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -15,7 +17,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.util.FontManager;
 
 public class MissionDialog extends Dialog {
     private Image currentMonster;  // 현재 표시된 몬스터 이미지
@@ -23,21 +29,43 @@ public class MissionDialog extends Dialog {
     private boolean currentMonsterMoving = false;
     private int currentRound = 1;  // 현재 라운드 (1부터 시작)
 
+    private Image aimImage;
+    private TextButton closeButton;
+    private Image closeButtonImage;
+    private Image fieldImage;
+    private Image borderImage;
+    private Image shooterImage;
     private Image monsterBallImage;
     private float monsterBallSpeedX;
     private float monsterBallSpeedY;
     private boolean isMonsterBallMoving = false;
     private float monsterBallInitialX;
-    private float monsterBallInitialY;
+    private float monsterBallInitialY = 0;
+    private float shooterInitialX;
+    private float shooterInitialY = 0;
+    private float aimInitialX;
+    private float aimInitialY = 0;
     private float aimingAngle = 90;
     private float aimingAngleSpeed = 1.0f; // 각도 변경 속도 (조정 가능)
     private float monsterBallSpeed = 500; // 몬스터볼 속도
     private boolean isNewRound = true;
     private int remainingBalls = 2;  // 총 5개의 몬스터볼 및 남은 몬스터볼 갯수
-
+    private float stateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
 
     private boolean roundClear = false;
     private boolean roundFail = false;  // 라운드 실패 여부
+
+    Texture aim = new Texture(Gdx.files.internal("images/aim.png"));
+    Texture closeButtonTexture = new Texture(Gdx.files.internal("images/mission_button1.png"));
+    Texture closeButtonTextureHover = new Texture(Gdx.files.internal("images/mission_button2.png"));
+    Texture field = new Texture(Gdx.files.internal("images/mission-field.png"));
+    Texture border = new Texture(Gdx.files.internal("images/mission_box.png"));
+    Texture shooter1 = new Texture(Gdx.files.internal("images/mssn1Shooter1.png"));
+    Texture shooter2 = new Texture(Gdx.files.internal("images/mssn1Shooter2.png"));
+    TextureAtlas monsters = new TextureAtlas(Gdx.files.internal("images/m1monsters.atlas")); //아틀라스 이미지 불러오기
+    Array<TextureRegion> monsterAArray;
+    private Animation<TextureRegion> monsterAAnimation;
+    TextureRegionDrawable monsterADrawable;
 
     private Stage stage; // Stage 참조를 멤버 변수로 추가
 
@@ -49,23 +77,6 @@ public class MissionDialog extends Dialog {
         this.setModal(true);
         this.setMovable(true);
         this.setResizable(false);
-
-        // 미션 설명 텍스트 추가
-        Label missionLabel = new Label("Complete the following mission:", skin);
-
-        // 미션 내용 추가
-        Label missionDetails = new Label("Throw the monster ball to defeat the monster", skin);
-
-        // 확인 버튼 추가
-        TextButton closeButton = new TextButton("Close", skin);
-
-        // 버튼 클릭 이벤트 처리
-        closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                MissionDialog.this.hide(); // 팝업 창 닫기
-            }
-        });
 
         // ESC 키를 눌렀을 때 닫기 버튼 동작을 실행
         this.addListener(new InputListener() {
@@ -83,19 +94,67 @@ public class MissionDialog extends Dialog {
         Table contentTable = getContentTable();
 
         // 몬스터볼 이미지 로드
-        Texture monsterBall = new Texture(Gdx.files.internal("images/ball.jpg"));
+        Texture monsterBall = new Texture(Gdx.files.internal("images/ball.png"));
         monsterBallImage = new Image(monsterBall);
         monsterBallImage.setSize(50, 50);
 
+        // 플레이어 이미지
+        shooterImage = new Image(shooter1);
+        shooterImage.setSize(50, 50);
 
-        // 팝업 내부 UI 요소들이 팝업 크기에 맞게 확장되도록 설정
-        contentTable.add(monsterBallImage).width(50).height(50).expand().fill().pad(10);
-        contentTable.add(closeButton).expandX().pad(10);  // X축으로 확장되도록 설정
+        //테두리 창 이미지
+        borderImage = new Image(border);
+        borderImage.setSize(640,360);
 
-        button(closeButton); // 버튼 추가
+        //배경 이미지
+        fieldImage = new Image(field);
+        //NinePatch란? 이미지를 9개의 부분으로 나누어 테두리와 안쪽 영역을 확장하는 방식. 테두리의 크기가 변경에 대응하기 위함
+        NinePatch fieldPatch = new NinePatch(field, 10, 10, 10, 10);
+        NinePatchDrawable fieldDrawable = new NinePatchDrawable(fieldPatch); //Drawable은 LibGdx에서 이미지를 화면에 그릴 수 있는 객체
+//        fieldImage.setSize(640,360);
+
+        //닫기 버튼
+        closeButtonImage = new Image(closeButtonTexture);
+        closeButtonImage.setSize(50,50);
+        // 닫기 버튼
+        closeButton = new TextButton("", skin);
+        Drawable closeButtonDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTexture));
+        Drawable closeButtonHoverDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTextureHover));
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+        buttonStyle.up = closeButtonDrawable;
+        buttonStyle.down = closeButtonHoverDrawable;
+        buttonStyle.over = closeButtonHoverDrawable;
+        buttonStyle.font = FontManager.getInstance().getFont(16);
+        //스타일은 up,down,font 이 3개는 필수로 초기화되어있어야 함
+        // 설정한 스타일들을 적용
+        closeButton.setStyle(buttonStyle);
+
+        // 버튼 클릭 이벤트 처리
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                MissionDialog.this.hide(); // 팝업 창 닫기
+            }
+        });
+
+        //조준선
+        aimImage = new Image(aim);
+        aimImage.setSize(150,150);
+
+        contentTable.add(fieldImage).width(640).height(365).expand().fill().pad(30); //필드 이미지를 배경으로 설정
+        contentTable.add(monsterBallImage).width(30).height(30).expand().fill().pad(10);
+        contentTable.add(shooterImage).width(80).height(80).expand().fill().pad(10);
+        contentTable.add(borderImage).width(640).height(365).expand().fill().pad(10); //테두리 적용
+        contentTable.add(closeButton).width(45).height(45).expand().fill().pad(10);
+        contentTable.add(aimImage).width(150).height(150).expand().fill().pad(10);
+        //expand(): 셀이 가능한 공간을 확장해서 차지하도록 설정합니다. 셀 자체는 크기가 늘어나지만, 그 안의 위젯은 원래 크기를 유지합니다.
+        //fill(): 셀의 크기가 확장된 후, 위젯이 그 확장된 셀을 채우도록 설정합니다. 즉, 셀의 크기에 맞춰 위젯의 크기도 늘어납니다.
 
         // 크기를 명시적으로 설정하여 다이얼로그가 팝업 크기를 따르도록 함
         this.getCell(contentTable).width(640).height(360);
+        // 미션 클래스 자체의 배경을 제거
+        this.setBackground((Drawable) null);
+        // drawable : 이미지나 그래픽 개체를 그릴 수 있는 인터페이스 즉 화면에 무언가를 그릴 수 있는 객체
 
         // 스테이지에 다이얼로그 추가
         stage.addActor(this);
@@ -116,8 +175,27 @@ public class MissionDialog extends Dialog {
 
         // 몬스터볼 초기 위치 설정 (화면 아래 정중앙)
         monsterBallInitialX = (this.getWidth() - monsterBallImage.getWidth()) / 2;
-        monsterBallInitialY = 0;
+        monsterBallInitialY = 25;
         monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY);
+
+        // 조준선 초기 위치 설정
+        aimInitialX = (this.getWidth() - aimImage.getWidth())/2;
+        aimInitialY = 15;
+        aimImage.setPosition(aimInitialX,aimInitialY);
+
+        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-closeButton.getHeight());
+
+        // 플레이어 초기 위치 설정 (화면 아래 정중앙)
+        shooterInitialX = ((this.getWidth() - shooterImage.getWidth()) / 2)-(shooterImage.getWidth() / 2.5f);
+        shooterInitialY = 15;
+        shooterImage.setPosition(shooterInitialX, shooterInitialY);
+
+        //닫기 버튼 위치 설정
+        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()/1.2f),this.getHeight()-(closeButton.getHeight()/1.2f));
+
+        //테두리 위치 설정
+        borderImage.setPosition(0,-5);
+        fieldImage.setPosition(0,-5);
 
         // 팝업 창을 중앙에 배치
         this.setPosition(
@@ -132,6 +210,11 @@ public class MissionDialog extends Dialog {
         // 테이블에서 이전 몬스터만 삭제하고 새로운 몬스터 추가
         Table contentTable = getContentTable();
 
+//        this.invalidate();
+//        this.layout();
+
+        shooterImage.setDrawable(new TextureRegionDrawable(new TextureRegion(shooter1))); //슈터 이미지 초기화
+
         // 현재 몬스터 제거
         if (currentMonster != null) {
             contentTable.removeActor(currentMonster);
@@ -140,21 +223,47 @@ public class MissionDialog extends Dialog {
 
         // 라운드에 따른 몬스터 이미지 설정
         Texture monsterTexture;
+        monsterAArray = new Array<TextureRegion>();
+
         switch (currentRound) {
             case 1:
-                monsterTexture = new Texture(Gdx.files.internal("images/Pa2ri.jpg"));  // 파이리
+                //두 이미지를 찾고 배열에 담기
+                monsterAArray.add(monsters.findRegion("mssn1MstrA1"));
+                monsterAArray.add(monsters.findRegion("mssn1MstrA2"));
+
+                // 애니메이션 객체 생성
+                monsterAAnimation = new Animation<TextureRegion>(0.1f,monsterAArray,Animation.PlayMode.LOOP);
+                monsterADrawable = new TextureRegionDrawable(monsterAAnimation.getKeyFrame(0));
                 currentMonsterSpeedX = 200f;
                 break;
             case 2:
-                monsterTexture = new Texture(Gdx.files.internal("images/ggobugi.jpg"));  // 꼬부기
+                //두 이미지를 찾고 배열에 담기
+                monsterAArray.add(monsters.findRegion("mssn1MstrB1"));
+                monsterAArray.add(monsters.findRegion("mssn1MstrB2"));
+
+                // 애니메이션 객체 생성
+                monsterAAnimation = new Animation<TextureRegion>(0.1f,monsterAArray,Animation.PlayMode.LOOP);
+                monsterADrawable = new TextureRegionDrawable(monsterAAnimation.getKeyFrame(0));
                 currentMonsterSpeedX = 300f;
                 break;
             case 3:
-                monsterTexture = new Texture(Gdx.files.internal("images/StrangeSeed.jpg"));  // 이상해씨
+                //두 이미지를 찾고 배열에 담기
+                monsterAArray.add(monsters.findRegion("mssn1MstrC1"));
+                monsterAArray.add(monsters.findRegion("mssn1MstrC2"));
+
+                // 애니메이션 객체 생성
+                monsterAAnimation = new Animation<TextureRegion>(0.1f,monsterAArray,Animation.PlayMode.LOOP);
+                monsterADrawable = new TextureRegionDrawable(monsterAAnimation.getKeyFrame(0));
                 currentMonsterSpeedX = 400f;
                 break;
             case 4:
-                monsterTexture = new Texture(Gdx.files.internal("images/pikachu.png"));  // 피카츄
+                //두 이미지를 찾고 배열에 담기
+                monsterAArray.add(monsters.findRegion("mssn1MstrD1"));
+                monsterAArray.add(monsters.findRegion("mssn1MstrD2"));
+
+                // 애니메이션 객체 생성
+                monsterAAnimation = new Animation<TextureRegion>(0.1f,monsterAArray,Animation.PlayMode.LOOP);
+                monsterADrawable = new TextureRegionDrawable(monsterAAnimation.getKeyFrame(0));
                 currentMonsterSpeedX = 500f;
                 break;
             default:
@@ -163,12 +272,16 @@ public class MissionDialog extends Dialog {
         }
 
         // 새로운 몬스터 이미지 생성 및 추가
-        currentMonster = new Image(monsterTexture);
-        currentMonster.setSize(70, 70);
+        currentMonster = new Image(monsterADrawable);
+        currentMonster.setSize(91, 91);
+
         // 몬스터볼 이미지의 회전 중심을 이미지의 중앙으로 설정
         monsterBallImage.setOrigin(monsterBallImage.getWidth() / 2, monsterBallImage.getHeight() / 2);
-        monsterBallImage.setRotation(aimingAngle);
-        contentTable.add(currentMonster).width(70).height(70).expand().fill().pad(10).row();  // 새로운 몬스터 추가
+
+        // 조준선 회전 중심 설정
+        aimImage.setOrigin(aimImage.getWidth() / 2, monsterBallImage.getHeight() / 2);
+        aimImage.setRotation(aimingAngle-90);
+        contentTable.add(currentMonster).width(91).height(91).expand().fill().pad(10).row();  // 새로운 몬스터 추가
 
         // roundClear 초기화
         roundClear = false;
@@ -180,6 +293,32 @@ public class MissionDialog extends Dialog {
     @Override
     public void act(float delta) {
         super.act(delta);
+
+        // 플레이어 초기 위치 설정 (화면 아래 정중앙)
+        shooterInitialX = ((this.getWidth() - shooterImage.getWidth()) / 2)-(shooterImage.getWidth() / 2.5f);
+        shooterInitialY = 15;
+        shooterImage.setPosition(shooterInitialX, shooterInitialY);
+
+        //닫기 버튼 위치 설정
+        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+5));
+
+        //테두리 위치 설정
+        borderImage.setPosition(0,-5);
+        fieldImage.setPosition(0,-5);
+
+        // 조준선 초기 위치 설정
+        aimInitialX = (this.getWidth() - aimImage.getWidth())/2;
+        aimInitialY = 15;
+        aimImage.setPosition(aimInitialX,aimInitialY);
+
+        //애니메이션 시간 업데이트
+        stateTime += delta;
+        if(monsterAAnimation!=null) {
+            //현재 애니메이션 프레임 가져오기
+            TextureRegion currentFrame = monsterAAnimation.getKeyFrame(stateTime, true);
+            //nextRound메소드에서 초기화한 Image내의 monsterDrawable을 현재 프레임으로 설정
+            ((TextureRegionDrawable) currentMonster.getDrawable()).setRegion(currentFrame);
+        }
 
         // 이미 실패한 상태라면 추가적인 처리를 중지
         if (roundFail) {
@@ -197,30 +336,23 @@ public class MissionDialog extends Dialog {
 
         // 몬스터 이미지 움직임
         float x = currentMonster.getX();
-        float y = 260;
+        float y = 230;
 
         // 몬스터 좌우로 움직임 설정
         if (currentMonsterMoving) {
             x += currentMonsterSpeedX * delta;
             // 오른쪽으로 이동 중일 때, 화면 끝 또는 랜덤 확률로 방향 전환
-            if (x > this.getWidth() - currentMonster.getWidth() || Math.random() < 0.006) {
+            if (x > (this.getWidth()-70) - currentMonster.getWidth() || Math.random() < 0.006) {
                 currentMonsterMoving = false; // 왼쪽 방향으로 전환
             }
         } else {
             x -= currentMonsterSpeedX * delta;
             // 왼쪽으로 이동 중일 때, 화면 끝 또는 랜덤 확률로 방향 전환
-            if (x < 0 || Math.random() < 0.006) {
+            if (x < 60 || Math.random() < 0.006) {
                 currentMonsterMoving = true; // 오른쪽 방향으로 전환
             }
         }
         currentMonster.setPosition(x, y);
-
-//        // A 키가 눌리면 몬스터볼 움직이기 시작
-//        if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
-//            isMonsterBallMoving = true;
-//            remainingBalls--;  // 몬스터볼 갯수 감소
-//            Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
-//        }
 
         // 키 입력 및 조준 방향 설정
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
@@ -231,10 +363,11 @@ public class MissionDialog extends Dialog {
             aimingAngle -= aimingAngleSpeed;  // 오른쪽으로 조준 각도 감소
             if (aimingAngle < 40) aimingAngle = 40;  // 최소 각도 제한
         }
-        monsterBallImage.setRotation(aimingAngle-90);
+        aimImage.setRotation(aimingAngle-90);
 
         // A 키가 눌리면 몬스터볼 발사
         if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
+            shooterImage.setDrawable(new TextureRegionDrawable(new TextureRegion(shooter2)));
             isMonsterBallMoving = true;
             remainingBalls--;  // 몬스터볼 갯수 감소
             Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
@@ -253,6 +386,7 @@ public class MissionDialog extends Dialog {
 
             // 화면 밖으로 나가면 위치 초기화
             if (monsterBallY > this.getHeight() || monsterBallX < 0 || monsterBallX > this.getWidth()) {
+                shooterImage.setDrawable(new TextureRegionDrawable(new TextureRegion(shooter1)));
                 isMonsterBallMoving = false;
                 monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY);  // 초기 위치로 되돌림
                 aimingAngle = 90; // 각도를 초기화 (필요시)
@@ -284,12 +418,29 @@ public class MissionDialog extends Dialog {
 
     // 게임을 다시 시작하는 메서드 (초기화)
     private void GameInitialization() {
+        shooterImage.setDrawable(new TextureRegionDrawable(new TextureRegion(shooter1))); //슈터 이미지 초기화
         currentRound = 1;  // 라운드를 1로 초기화
         roundClear = false;  // 라운드 클리어 상태 초기화
         roundFail = false;  // 라운드 실패 상태 초기화
         remainingBalls = 2;  // 남은 몬스터볼 갯수 초기화
         currentMonsterMoving = false;
         monsterBallImage.setPosition(monsterBallInitialX, monsterBallInitialY);
+        // 플레이어 초기 위치 설정 (화면 아래 정중앙)
+        shooterInitialX = ((this.getWidth() - shooterImage.getWidth()) / 2)-(shooterImage.getWidth() / 2.5f);
+        shooterInitialY = 15;
+        shooterImage.setPosition(shooterInitialX, shooterInitialY);
+
+        //닫기 버튼 위치 설정
+        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()/1.2f),this.getHeight()-(closeButton.getHeight()/1.2f));
+
+        //테두리 위치 설정
+        borderImage.setPosition(0,-5);
+        fieldImage.setPosition(0,-5);
+
+        // 조준선 초기 위치 설정
+        aimInitialX = (this.getWidth() - aimImage.getWidth())/2;
+        aimInitialY = 15;
+        aimImage.setPosition(aimInitialX,aimInitialY);
         if (currentMonster != null) {
             currentMonster.remove();  // 현재 몬스터 제거
         }

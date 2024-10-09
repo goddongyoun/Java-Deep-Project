@@ -22,6 +22,7 @@ import com.mygdx.game.ui.AnimatedImageButton;
 import com.mygdx.game.ui.LobbyMap;
 import com.mygdx.game.util.FontManager;
 import com.mygdx.game.ui.MissionDialog;
+import com.mygdx.game.ui.MissionDialog2;
 
 public class LobbyScreen implements Screen {
     private Main game;
@@ -37,6 +38,7 @@ public class LobbyScreen implements Screen {
     private TextureAtlas buttonAtlas;
     private Table buttonTable;
     private MissionDialog missionDialog;
+    private MissionDialog2 missionDialog2;
 
     public LobbyScreen(final Main game) {
         this.game = game;
@@ -56,7 +58,6 @@ public class LobbyScreen implements Screen {
         this.roomInfoFont.setColor(Color.BLACK);
 
         // 미션 다이얼로그 생성
-        missionDialog = new MissionDialog("Mission", skin, stage);
 
         createUI();
 
@@ -98,13 +99,16 @@ public class LobbyScreen implements Screen {
         startButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.log("LobbyScreen", "Start Game button clicked");
+//                Gdx.app.log("LobbyScreen", "Start Game button clicked");
+                missionDialog2 = new MissionDialog2("", skin, stage);
+                missionDialog2.showMission(stage);
             }
         });
 
         editButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                missionDialog = new MissionDialog("", skin, stage);
                 missionDialog.showMission(stage);  // 미션 팝업을 화면에 띄움
             }
         });
