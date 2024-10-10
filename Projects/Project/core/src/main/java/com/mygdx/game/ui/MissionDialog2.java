@@ -142,11 +142,10 @@ public class MissionDialog2 extends Dialog {
 
     private Stage stage;
     private Table contentTable;
-    private TextureAtlas breaks = new TextureAtlas(Gdx.files.internal("mission2/breaks.atlas"));
 
     // Block과 BlockBreaker 배열
     Array<Block> blockObjects = new Array<>();
-    Array<BlockBreaker> breakers = new Array<>();
+    Array<BlockBreaker> breakerObjects = new Array<>();
 
     // 이미지 저장용 리스트 선언
     Array<Image> blockImages = new Array<>();
@@ -222,52 +221,6 @@ public class MissionDialog2 extends Dialog {
         contentTable.add(blockStack).width(100).height(100).expand().fill();
         contentTable.add(blockStack2).width(100).height(100).expand().fill();
 
-//        for (int i = 0; i < numBlocks; i++) {
-//            block = new Block(1, "diamond");
-//            breaker = new BlockBreaker(block);
-//            blockObjects.add(block);
-//            breakers.add(breaker);
-//            currentBlockImage = blockObjects.get(i).getCurrentBlockImage();
-//            currentBreakImage = breakers.get(i).getCurrentBreakImage();
-//            blockImage = new Image(currentBlockImage);
-//            breakImage = new Image(currentBreakImage);
-//            blockStack = new Stack();
-//            blockStack.add(blockImage);
-//            blockStack.add(breakImage);
-//            contentTable.add(blockStack).width(70).height(70).expandX().fill();
-//            blockStacks.add(blockStack);
-//            Gdx.app.log("block","getblock : "+blockObjects.get(i).getStage());
-//            Gdx.app.log("break","getbreak : "+breakers.get(i).getCurrentBreakImage());
-//            Gdx.app.log("","get blockstacks : "+blockStacks.get(i));
-//        }
-
-//        // 블럭과 블럭 깨기 객체 생성 (이 부분은 상황에 따라 다를 수 있습니다)
-//        for (int i = 0; i < numBlocks; i++) {
-//            Block block = new Block(1, "다이아몬드"); // 블록 객체 생성, 초기 값 설정
-//            BlockBreaker breaker = new BlockBreaker(block); // BlockBreaker 객체 생성
-//            blocks.add(block); // Block 객체 배열에 추가
-//            breakers.add(breaker); // BlockBreaker 객체 배열에 추가
-//        }
-//
-//        // Table에 블록 이미지와 깨기 이미지를 추가하는 반복문
-//        for (int i = 0; i < numBlocks; i++) {
-//            // Block 이미지 생성
-//            TextureRegion currentBlockImage = blocks.get(i).getCurrentBlockImage();
-//            Image blockImage = new Image(currentBlockImage);
-//            blockImage.setSize(50, 50);
-//            blockImages.add(blockImage);  // blockImages 리스트에 추가
-//
-//            // BlockBreaker 이미지 생성
-//            TextureRegion currentBreakImage = breakers.get(i).getCurrentBreakImage();
-//            Image breakImage = new Image(currentBreakImage);
-//            breakImage.setSize(50, 50);
-//            breakImages.add(breakImage);  // breakImages 리스트에 추가
-//
-//            // Table에 이미지 추가
-//            contentTable.add(blockImage).width(50).height(50).expand().fill();
-//            contentTable.add(breakImage).width(50).height(50).expand().fill();
-//        }
-
         this.getCell(contentTable).width(640).height(360);
 
         stage.addActor(this);
@@ -286,21 +239,10 @@ public class MissionDialog2 extends Dialog {
             (stage.getHeight() - this.getHeight()) / 2
         );
 
-        this.show(stage);
-    }
-
-    @Override
-    public void act(float delta) {
-        super.act(delta);
-
-        blockStack.setPosition(100,100);
-        blockStack2.setPosition(200,100);
-
         if(block.getStage() <= 4) {
             blockStack.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    contentTable.removeActor(blockStack);
                     breaker.onClick();
                     currentBlockImage = block.getCurrentBlockImage();
                     currentBreakImage = breaker.getCurrentBreakImage();
@@ -310,7 +252,6 @@ public class MissionDialog2 extends Dialog {
                     breakImage.setSize(100, 100);
                     blockStack.add(blockImage);
                     blockStack.add(breakImage);
-                    contentTable.add(blockStack).width(100).height(100).expand().fill();
                 }
             });
         }
@@ -319,7 +260,6 @@ public class MissionDialog2 extends Dialog {
             blockStack2.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    contentTable.removeActor(blockStack2);
                     breaker2.onClick();
                     currentBlockImage2 = block2.getCurrentBlockImage();
                     currentBreakImage2 = breaker2.getCurrentBreakImage();
@@ -329,9 +269,18 @@ public class MissionDialog2 extends Dialog {
                     breakImage2.setSize(100, 100);
                     blockStack2.add(blockImage2);
                     blockStack2.add(breakImage2);
-                    contentTable.add(blockStack2).width(100).height(100).expand().fill();
                 }
             });
         }
+
+        this.show(stage);
+    }
+
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+
+        blockStack.setPosition(100,100);
+        blockStack2.setPosition(200,100);
     }
 }
