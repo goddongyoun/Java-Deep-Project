@@ -1,23 +1,28 @@
 package com.mygdx.game.ui;
 
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 public class MissionDialog2 extends Dialog {
     // 블럭 클래스
     public class Block {
         private int stage; // 1 ~ 5 단계
-        private String mineral; // 다이아몬드, 에메랄드, 금, 철, 청금석, 레드스톤, 심층암 중 하나
+        public String mineral; // 다이아몬드, 에메랄드, 금, 철, 청금석, 레드스톤, 심층암 중 하나
         private TextureAtlas blocks = new TextureAtlas(Gdx.files.internal("mission2/blocks.atlas"));; // 블록 이미지가 저장된 TextureAtlas
         private Array<TextureRegion> blocksArray = new Array<TextureRegion>();; // 블록 이미지를 저장할 배열
 
@@ -54,10 +59,10 @@ public class MissionDialog2 extends Dialog {
                     case "iron":
                         blocksArray.add(blocks.findRegion("Block4_Iron"));
                         break;
-                    case "blueGold":
+                    case "bluegold":
                         blocksArray.add(blocks.findRegion("Block4_Lapis"));
                         break;
-                    case "redStone":
+                    case "redstone":
                         blocksArray.add(blocks.findRegion("Block4_Red"));
                         break;
                     case "ggwang":
@@ -98,6 +103,13 @@ public class MissionDialog2 extends Dialog {
         public TextureRegion getCurrentBlockImage() {
             return blocksArray.first();
         }
+
+        public boolean gotMineral(){
+            if(this.mineral != "ggwang" && this.stage == 5) {
+                return true;
+            }
+            return false;
+        }
     }
 
     // 블럭 깨기 클래스
@@ -131,7 +143,7 @@ public class MissionDialog2 extends Dialog {
                 breakStage = 0;
                 block.setStage(block.getStage() + 1);
             }
-            Gdx.app.log("onclick","breakStage"+breakStage);
+//            Gdx.app.log("onclick","breakStage"+breakStage);
         }
 
         // 현재 블럭 깨기 이미지를 반환
@@ -142,41 +154,51 @@ public class MissionDialog2 extends Dialog {
 
     private Stage stage;
     private Table contentTable;
-
     // Block과 BlockBreaker 배열
     Array<Block> blockObjects = new Array<>();
     Array<BlockBreaker> breakerObjects = new Array<>();
-
     // 이미지 저장용 리스트 선언
     Array<Image> blockImages = new Array<>();
     Array<Image> breakImages = new Array<>();
-
     // 블럭 + 블럭깨기 합치기 위한 스택 배열 선언
     Array<Stack> blockStacks = new Array<>();
-
     // Block과 BlockBreaker 객체의 수
-    int numBlocks = 1; // 예를 들어 5개의 블럭
-
+    int numBlocks = 4; // 예를 들어 5개의 블럭
     private Block block;
-    private Block block2;
     private BlockBreaker breaker;
-    private BlockBreaker breaker2;
-
     private TextureRegion currentBlockImage;
-    private TextureRegion currentBlockImage2;
     private TextureRegion currentBreakImage;
-    private TextureRegion currentBreakImage2;
+    private Texture border = new Texture(Gdx.files.internal("mission2/border.png"));
+    private Texture missionBorder = new Texture(Gdx.files.internal("images/mission_box.png"));
+    private Texture block0 = new Texture(Gdx.files.internal("mission2/block0.png"));
+    private TextureRegionDrawable block0Drawable = new TextureRegionDrawable(block0);
+    private TextureRegionDrawable borderDrawable = new TextureRegionDrawable(border);
+    private Image block0Image;
+    private Image borderImage;
     private Image blockImage;
     private Image breakImage;
-    private Image blockImage2;
-    private Image breakImage2;
+    private Image missionImage;
     private Stack blockStack;
-    private Stack blockStack2;
+    private float initialX=0;
+    private float initialY=0;
+    private float x = initialX;
+    private float y = initialY;
+    private int index=0;
+    private int mineralCount = 0;
+    private boolean gameClear = false;
+    private int blockLength = 50;
+    private int boxLength = blockLength * numBlocks;
+    private int gap = 20;
+    private boolean borderOn = false;
+
+    Random random = new Random();
 
     public MissionDialog2(String title, Skin skin, Stage stage) {
         super(title, skin);
         this.stage = stage;
         contentTable = getContentTable();
+
+//        Drawable borderDrawable = borderImage.getDrawable();
 
         // ESC 키를 눌렀을 때 닫기 버튼 동작을 실행
         this.addListener(new InputListener() {
@@ -190,38 +212,83 @@ public class MissionDialog2 extends Dialog {
             }
         });
 
-        block = new Block(1,"emerald");
-        block2 = new Block(1,"diamond");
-        breaker = new BlockBreaker(block);
-        breaker2 = new BlockBreaker(block2);
+        // 반복문 밖에서 리스트를 생성하고 섞음
+        ArrayList<String> blockTypes = new ArrayList<>();
+        blockTypes.add("diamond");
+        blockTypes.add("emerald");
+        blockTypes.add("gold");
+        blockTypes.add("iron");
+        blockTypes.add("bluegold");
+        blockTypes.add("redstone");
 
-        currentBlockImage = block.getCurrentBlockImage();
-        currentBlockImage2 = block2.getCurrentBlockImage();
-        currentBreakImage = breaker.getCurrentBreakImage();
-        currentBreakImage2 = breaker2.getCurrentBreakImage();
+        // 리스트를 섞어서 랜덤 순서로 배치
+        Collections.shuffle(blockTypes);
+        int blockTypeCount = 0;
 
-        blockImage = new Image(currentBlockImage);
-        blockImage2 = new Image(currentBlockImage2);
-        breakImage = new Image(currentBreakImage);
-        breakImage2 = new Image(currentBreakImage2);
+        //boolean 배열을 생성함
+        boolean[] randomTrueFlags = new boolean[numBlocks * numBlocks];
+        //true로 설정된 요소의 개수를 추적하는 변수임
+        int trueCount = 0;
 
-        blockImage.setSize(100, 100);
-        blockImage2.setSize(100, 100);
-        breakImage.setSize(100, 100);
-        breakImage2.setSize(100, 100);
+        // 반복문 실행 전에 6번 true로 설정
+        while (trueCount < 6) {
+            //블럭 인덱스 크기 내에서 랜덤한 변수를 생성해서 저장함
+            int randomIndex = random.nextInt(numBlocks * numBlocks);
+            //뽑은 랜덤 인덱스값이 기존에 없는 인덱스값인것을 확인, 기존에 없는 인덱스 값이면 해당 인덱스를 true로 지정해줌
+            if (!randomTrueFlags[randomIndex]) {
+                randomTrueFlags[randomIndex] = true;
+                trueCount++;
+            }
+        }
 
-        blockStack = new Stack();
-        blockStack.add(blockImage);
-        blockStack.add(breakImage);
+        for (int i = 0; i < numBlocks * numBlocks; i++) {
+            if (randomTrueFlags[i]) {
+                // 섞인 blockTypes 리스트에서 하나씩 선택
+                block = new Block(1, blockTypes.get(blockTypeCount));
+                blockTypeCount++;
+            } else {
+                // 나머지 블럭은 모두 "ggwang"으로 생성
+                block = new Block(1, "ggwang");
+            }
 
-        blockStack2 = new Stack();
-        blockStack2.add(blockImage2);
-        blockStack2.add(breakImage2);
+            blockObjects.add(block);
 
-        contentTable.add(blockStack).width(100).height(100).expand().fill();
-        contentTable.add(blockStack2).width(100).height(100).expand().fill();
+            breaker = new BlockBreaker(block);
+            breakerObjects.add(breaker);
 
-        this.getCell(contentTable).width(640).height(360);
+            currentBlockImage = block.getCurrentBlockImage();
+            blockImage = new Image(currentBlockImage);
+            blockImage.setSize(blockLength, blockLength);
+
+            currentBreakImage = breaker.getCurrentBreakImage();
+            breakImage = new Image(currentBreakImage);
+            breakImage.setSize(blockLength, blockLength);
+
+            borderImage = new Image(border);
+            borderImage.setSize(blockLength, blockLength);
+            borderImage.setVisible(false);
+
+            blockStack = new Stack();
+            blockStack.add(blockImage);
+            blockStack.add(breakImage);
+            blockStack.add(borderImage);
+
+            blockStacks.add(blockStack);
+        }
+
+//        missionImage = new Image(border);
+//        contentTable.add(missionImage).width(boxLength+gap).height(boxLength+gap).expand().fill();
+
+        //생성된 블럭 스택들을 table에 차례로 추가하기
+        for(int i=0;i<numBlocks*numBlocks;i++){
+            contentTable.add(blockStacks.get(i)).width(blockLength).height(blockLength).expand().fill().pad(10);
+        }
+
+        initialX = 10;
+        initialY = 10;
+
+        this.getCell(contentTable).width(boxLength+gap).height(boxLength+gap);
+//        this.setBackground((Drawable) null);
 
         stage.addActor(this);
     }
@@ -239,36 +306,59 @@ public class MissionDialog2 extends Dialog {
             (stage.getHeight() - this.getHeight()) / 2
         );
 
-        if(block.getStage() <= 4) {
-            blockStack.addListener(new ClickListener() {
+        for(int i=0;i<numBlocks*numBlocks;i++){
+            final int finalI = i;
+            // 호버 이벤트 추가
+            blockStacks.get(i).addListener(new InputListener() {
                 @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    breaker.onClick();
-                    currentBlockImage = block.getCurrentBlockImage();
-                    currentBreakImage = breaker.getCurrentBreakImage();
-                    blockImage = new Image(currentBlockImage);
-                    breakImage = new Image(currentBreakImage);
-                    blockImage.setSize(100, 100);
-                    breakImage.setSize(100, 100);
-                    blockStack.add(blockImage);
-                    blockStack.add(breakImage);
+                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                    // 호버 시 테두리 이미지 변경
+                    blockStacks.get(finalI).getChild(2).setVisible(true);
+                    borderOn = true;
+                    Gdx.app.log("", finalI + "번째 객체 호버상태");
+                }
+
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                    // 호버 시 테두리 이미지 변경
+                    blockStacks.get(finalI).getChild(2).setVisible(false);
+                    borderOn = false;
                 }
             });
         }
 
-        if(block2.getStage() <= 4) {
-            blockStack2.addListener(new ClickListener() {
+        //각 블럭 객체당 별도의 클릭 시 블럭 깨기 이벤트
+        for (int i=0;i<numBlocks*numBlocks;i++){
+            final int finalI = i;
+            blockStacks.get(i).addListener(new ClickListener(){
                 @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    breaker2.onClick();
-                    currentBlockImage2 = block2.getCurrentBlockImage();
-                    currentBreakImage2 = breaker2.getCurrentBreakImage();
-                    blockImage2 = new Image(currentBlockImage2);
-                    breakImage2 = new Image(currentBreakImage2);
-                    blockImage2.setSize(100, 100);
-                    breakImage2.setSize(100, 100);
-                    blockStack2.add(blockImage2);
-                    blockStack2.add(breakImage2);
+                public void clicked(InputEvent event, float x, float y){
+                    //블럭 4단계를 넘어가면 클릭 이벤트 비활성화
+                    if(blockObjects.get(finalI).getStage() >= 5){
+                        return;
+                    }
+
+                    breakerObjects.get(finalI).onClick();
+
+                    currentBlockImage = blockObjects.get(finalI).getCurrentBlockImage();
+                    blockImage = new Image(currentBlockImage);
+                    blockImage.setSize(blockLength,blockLength);
+
+                    currentBreakImage = breakerObjects.get(finalI).getCurrentBreakImage();
+                    breakImage = new Image(currentBreakImage);
+                    breakImage.setSize(blockLength,blockLength);
+
+                    borderImage = new Image(border);
+                    borderImage.setSize(blockLength, blockLength);
+
+                    blockStacks.get(finalI).add(blockImage);
+                    blockStacks.get(finalI).add(breakImage);
+                    blockStacks.get(finalI).add(borderImage);
+
+                    if(blockObjects.get(finalI).gotMineral()){
+                        mineralCount++;
+                        Gdx.app.log("","mineralCount : "+mineralCount);
+                    }
                 }
             });
         }
@@ -280,7 +370,25 @@ public class MissionDialog2 extends Dialog {
     public void act(float delta) {
         super.act(delta);
 
-        blockStack.setPosition(100,100);
-        blockStack2.setPosition(200,100);
+//        missionImage.setPosition(0,0);
+
+        x = initialX;
+        y = initialY;
+        for(int i=0;i<numBlocks;i++){
+            for(int j=0;j<numBlocks;j++){
+                index = i * numBlocks + j; // 1차원 배열을 2차원 배열처럼 사용할 수 있도록 함
+                blockStacks.get(index).setPosition(x,y);
+
+                x += blockStacks.get(index).getWidth();
+            }
+            x = initialX;
+            y += blockStacks.get(i).getHeight();
+        }
+
+        //광물 다 모으면 게임 클리어
+        if(mineralCount==6 && !gameClear){
+            Gdx.app.log("","game clear!");
+            gameClear = true;
+        }
     }
 }
