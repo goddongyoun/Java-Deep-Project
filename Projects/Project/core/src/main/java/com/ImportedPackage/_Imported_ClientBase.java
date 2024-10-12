@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class _Imported_ClientBase {
-
+	
 	static byte[] sendBuf;
 	static String SERVER_ADDRESS = "219.254.146.234"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
 	final static int SERVER_PORT_TCP = 1235;
@@ -54,7 +54,7 @@ public class _Imported_ClientBase {
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String externalIp = reader.readLine();
             reader.close();
-            if(externalIp.equals("219.254.146.234")) {
+            if(externalIp.equals(SERVER_ADDRESS)) {
             	SERVER_ADDRESS = "127.0.0.1";
             }
         } catch (Exception e) {
@@ -158,6 +158,10 @@ public class _Imported_ClientBase {
 				System.out.println("[LOG] 이미 연결되어있습니다.");
 				return saver;
 			}
+			else if(saver.equals("SameNameFound")) {
+				System.out.println("[LOG] 같은 닉네임이 발견되었습니다.");
+				return saver;
+			}
 			else if(saver.equals("SuccessfullyJoind")) {
 				tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
@@ -226,6 +230,65 @@ public class _Imported_ClientBase {
 		isShuttingdown = true;
 		executorService.shutdownNow();
 		return 1;
+	}
+	
+	public static class Player {
+		public String name = null;
+		public int x;
+		public int y;
+		
+		public Player(String name, int x, int y) {
+	        this.name = name;
+	        this.x = x;
+	        this.y = y;
+	    }
+		
+	}
+	
+    public static Player[] players = new Player[5];
+    
+	public static int getLocation() {
+		try {
+			tcpWriter_toSend.write("GetLoc"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("NotJoinedYet")) {
+				System.out.println("[LOG] 방에 연결되지 않았습니다.");
+				return -1;
+			}
+			else {
+				String[] parts = saver.split(" ");
+	            int playerCount = Integer.parseInt(parts[0]);
+
+	            for (int i = 0; i < playerCount; i++) {
+	                String[] coords = parts[i + 1].split("/");
+	                String name = coords[0]; // name
+	                int x = Integer.parseInt(coords[1]); // x
+	                int y = Integer.parseInt(coords[2]); // y
+	                
+	                if (players[i] == null) {
+	                    players[i] = new Player(name, x, y);
+	                } else {
+	                    players[i].name = name;
+	                    players[i].x = x;
+	                    players[i].y = y;
+	                }
+	            }
+	            
+	            System.out.println("[LOG] 현재 플레이어 정보:");
+	            for (Player player : players) {
+	                if (player != null) {
+	                    System.out.println("이름: " + player.name + ", x: " + player.x + ", y: " + player.y);
+	                }
+	            }
+	            System.out.println("[LOG] 현재 플레이어 정보 끝.");
+	            
+	            return 0;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return -2;
+		} finally {
+		}
 	}
 	
 	private static boolean alreadyRunning = false;

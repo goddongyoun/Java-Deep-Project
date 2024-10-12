@@ -21,12 +21,21 @@ import java.sql.*;
 
 class User{
 	String name;
+	int[] loc = new int[2];
 	InetAddress ip;
-	int x, y;
 	
 	User(String _name, InetAddress _ip){
 		name = _name;
 		ip = _ip;
+	}
+	
+	void setLocation(int x, int y) {
+		loc[0] = x;
+		loc[1] = y;
+	}
+	
+	int[] getLocation() {
+		return loc;
 	}
 }
 
@@ -57,11 +66,14 @@ class Room{
 		if(curUserNum >= 5) {
 			return -1;
 		}
-		for(int i = 0; i <= curUserNum; i++) {
+		for(int i = 0; i < curUserNum; i++) {
 			if(users[i] != null) {
 				if(users[i].ip.equals(ip)) {
 					return 0;
 					//return -2;
+				}
+				else if(users[i].name.equals(name)) {
+					return -4;
 				}
 			}
 		}
@@ -93,6 +105,40 @@ class Room{
 		}
 		return 0;
 	}
+	
+	int[][] getLocations() {
+		int[][] locations = new int[curUserNum][2];
+		int idx = 0;
+		for (int i = 0; i < users.length; i++) {
+			if (users[i] != null) {
+				locations[idx++] = users[i].getLocation();
+			}
+		}
+		return locations;
+	}
+	
+	public String getLocToSortString() {
+		StringBuilder sb = new StringBuilder();
+        sb.append(curUserNum);
+
+        for (int i = 0; i < curUserNum; i++) {
+            User user = users[i];
+            sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/").append(user.getLocation()[1]);
+        }
+
+        return sb.toString();
+	}
+	
+	int setLocation(InetAddress ip, int x, int y) {
+		for (int i = 0; i < curUserNum; i++) {
+			if (users[i] != null && users[i].ip.equals(ip)) {
+				users[i].setLocation(x, y);
+				return 0;
+			}
+		}
+		return -1;
+	}
+	
 }
 
 class SysoutColors{
@@ -190,6 +236,9 @@ class Clients implements Runnable{
 								else if(res == -3) { // tried to connect to unconnectable room
 									tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
 								}
+								else if(res == -4) { // tried to connect to unconnectable room
+									tcpWriter.write("SameNameFound"); tcpWriter.newLine(); tcpWriter.flush();
+								}
 								else { //Invalid res value
 									tcpWriter.write("ERROR SB_137"); tcpWriter.newLine(); tcpWriter.flush();
 								}
@@ -232,6 +281,33 @@ class Clients implements Runnable{
 							ServerBase.rooms.get(RecogPort).chatLog.add(name + " : " + saver);
 							ServerBase.rooms.get(RecogPort).chatNum++;
 							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
+					else if(saver.equals("NewLoc")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();tcpReader.readLine();
+						}
+						else {
+							int tempx = Integer.parseInt(tcpReader.readLine());
+							int tempy = Integer.parseInt(tcpReader.readLine());
+							int res = ServerBase.rooms.get(RecogPort).setLocation(connectedIP, tempx, tempy);
+							if(res == 0) {
+								tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+							}
+							else {
+								tcpWriter.write("Failed"); tcpWriter.newLine(); tcpWriter.flush();
+							}
+						}
+					}
+					else if(saver.equals("GetLoc")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();tcpReader.readLine();
+						}
+						else {
+							saver = ServerBase.rooms.get(RecogPort).getLocToSortString();
+							tcpWriter.write(saver); tcpWriter.newLine(); tcpWriter.flush();
 						}
 					}
 					else {
