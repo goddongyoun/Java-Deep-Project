@@ -291,6 +291,26 @@ public class _Imported_ClientBase {
 		}
 	}
 	
+	public static int updateLoc(int x, int y) {
+		try {
+			tcpWriter_toSend.write("NewLoc"); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(Integer.toString(x)); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(Integer.toString(y)); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("Success")) {
+				return 0;
+			}
+			else {
+				return -1;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return -2;
+		} 
+	}
+	
 	private static boolean alreadyRunning = false;
 	
 	public static void run(String playerName) throws Exception {
