@@ -59,7 +59,7 @@ class Room{
 	}
 	
 	/** 
-	 * -1 Too Many users, -2 same Ip found, -3 Unconnectable, 0 success
+	 * -1 Too Many users, -2 same Ip found, -3 Unconnectable, -4 Same Name Found, 0 success
 	 * 
 	 */
 	int newUserCome(String name, InetAddress ip) {
@@ -71,16 +71,17 @@ class Room{
 		}
 		for(int i = 0; i < curUserNum; i++) {
 			if(users[i] != null) {
-				if(users[i].ip.equals(ip)) {
-					return 0;
-					//return -2;
+				/*if(users[i].ip.equals(ip)) {
+					return -2;
 				}
-				else if(users[i].name.equals(name)) {
+				else*/ if(users[i].name.equals(name)) {
+					System.out.println("Same Name");
 					return -4;
 				}
 			}
 		}
 		users[curUserNum++] = new User(name, ip);
+		System.out.println("Now curUserNum is " + curUserNum + " from " + gameRecogPort);
 		return 0;
 	}
 	
@@ -92,6 +93,9 @@ class Room{
 	int outOfUser(InetAddress ip) {
 		boolean found = false;
 		for(int i = 0; i<curUserNum; i++) {
+			if(users[i] == null) {
+				continue;
+			}
 			if(users[i].ip.equals(ip)) {
 				found = true;
 				users[i] = null;
@@ -121,20 +125,27 @@ class Room{
 	}
 	
 	public String getLocToSortString() {
-		StringBuilder sb = new StringBuilder();
-        sb.append(curUserNum);
-
-        for (int i = 0; i < curUserNum; i++) {
-            User user = users[i];
-            sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/").append(user.getLocation()[1]);
+		StringBuilder sb = null;
+        for(int z = 0; z<1; z++) {
+    		sb = new StringBuilder();
+            sb.append(curUserNum);
+        	for (int i = 0; i < curUserNum; i++) {
+    			try {
+    				User user = users[i];
+    				sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/")
+    						.append(user.getLocation()[1]);
+    			} catch (Exception e) {
+    				break;
+    			}
+    		}
         }
 
         return sb.toString();
 	}
 	
-	int setLocation(InetAddress ip, int x, int y) {
+	int setLocation(String name, int x, int y) {
 		for (int i = 0; i < curUserNum; i++) {
-			if (users[i] != null && users[i].ip.equals(ip)) {
+			if (users[i] != null && users[i].name.equals(name)) {
 				users[i].setLocation(x, y);
 				return 0;
 			}
@@ -243,7 +254,7 @@ class Clients implements Runnable{
 								else if(res == -3) { // tried to connect to unconnectable room
 									tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
 								}
-								else if(res == -4) { // tried to connect to unconnectable room
+								else if(res == -4) {
 									tcpWriter.write("SameNameFound"); tcpWriter.newLine(); tcpWriter.flush();
 								}
 								else { //Invalid res value
@@ -298,7 +309,8 @@ class Clients implements Runnable{
 						else {
 							int tempx = Integer.parseInt(tcpReader.readLine());
 							int tempy = Integer.parseInt(tcpReader.readLine());
-							int res = ServerBase.rooms.get(RecogPort).setLocation(connectedIP, tempx, tempy);
+							String tempName = tcpReader.readLine();
+							int res = ServerBase.rooms.get(RecogPort).setLocation(tempName, tempx, tempy);
 							if(res == 0) {
 								tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
 							}

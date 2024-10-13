@@ -17,14 +17,15 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.util.FontManager;
 
-public class Player {
+public class PlayerOfMulti {
+
     private String nickname;
     private Vector2 position;
     private Vector2 velocity;
     private float speedX = 160f;
     private float speedY = 120f;
     private Rectangle bounds;
-    public float size;
+    private float size;
     private int x, y;
 
     private TextureAtlas atlas;
@@ -48,7 +49,7 @@ public class Player {
         IDLE, RUNNING
     }
 
-    public Player(String nickname, float x, float y, float size) {
+    public PlayerOfMulti(String nickname, float x, float y, float size) {
         this.nickname = nickname;
         this.position = new Vector2(x, y);
         this.velocity = new Vector2();
@@ -130,35 +131,25 @@ public class Player {
         pixmap.dispose();
     }
 
-    public void update(float delta) {
+    public void update(int x, int y, float delta) {
         stateTime += delta;
-
-        velocity.setZero();
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            velocity.x -= 1;
+        
+        if (x < position.x) {
             facingLeft = true;
             currentState = PlayerState.RUNNING;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            velocity.x += 1;
+        } else if (x > position.x) {
             facingLeft = false;
             currentState = PlayerState.RUNNING;
         } else {
             currentState = PlayerState.IDLE;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) velocity.y += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) velocity.y -= 1;
-
-        if (!velocity.isZero()) {
-            velocity.nor();
+        if (y != position.y) {
             currentState = PlayerState.RUNNING;
-        } else {
-            currentState = PlayerState.IDLE;
         }
 
-        position.x += velocity.x * speedX * delta;
-        position.y += velocity.y * speedY * delta;
-
+        position.x = x;
+        position.y = y;
         bounds.setPosition(position);
     }
 

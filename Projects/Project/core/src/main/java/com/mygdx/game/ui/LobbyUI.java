@@ -100,7 +100,7 @@ public class LobbyUI extends Table {
     private void updateUI() {
         Room currentRoom = game.getCurrentRoom();
         if (currentRoom != null) {
-            startGameButton.setVisible(currentRoom.getHost().getNickname().equals(game.getPlayerNickname()));
+            startGameButton.setVisible(currentRoom.getme().getNickname().equals(game.getPlayerNickname()));
         }
     }
 }

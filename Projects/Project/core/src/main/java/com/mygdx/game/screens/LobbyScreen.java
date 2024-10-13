@@ -36,6 +36,7 @@ public class LobbyScreen implements Screen {
     private GlyphLayout layout;
     private TextureAtlas buttonAtlas;
     private Table buttonTable;
+    private Room room;
 
     public LobbyScreen(final Main game) {
         this.game = game;
@@ -46,6 +47,7 @@ public class LobbyScreen implements Screen {
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         this.layout = new GlyphLayout();
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
+        this.room = game.getCurrentRoom();
 
         // 방 정보 배경 이미지 로드
         this.roomInfoBackground = new Texture(Gdx.files.internal("ui/Room_info.png"));
@@ -160,7 +162,7 @@ public class LobbyScreen implements Screen {
         batch.draw(roomInfoBackground, x, y, backgroundWidth * scale, backgroundHeight * scale);
 
         String roomTitle = "방 제목: " + currentRoom.getTitle();
-        String playerInfo = String.format("플레이어: %d / %d", currentRoom.getPlayers().size(), currentRoom.getMaxPlayers());
+        String playerInfo = String.format("플레이어: %d / %d", currentRoom.pCount+1, currentRoom.getMaxPlayers());
         String roomCode = "방 코드: " + currentRoom.getCode();
 
         float textY = y + backgroundHeight * scale - 40;

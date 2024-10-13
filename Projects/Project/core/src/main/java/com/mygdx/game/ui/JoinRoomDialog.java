@@ -109,8 +109,8 @@ public class JoinRoomDialog extends Dialog {
                 if(_Imported_ClientBase.joinGame(roomCode, playerName).equals("SuccessfullyJoind")) {
                 	game.setPlayerNickname(playerName);
                     // Player 생성자에 적절한 크기 값을 전달합니다. 여기서는 임시로 32를 사용합니다.
-                    Player player = new Player(playerName, 0, 0, 32);
-                    Room room = new Room("Joined Room", roomCode, password, 6, player);
+                    Player player = new Player(playerName, Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2, 32);
+                    Room room = new Room("Joined Room", roomCode, password, 5, player);
                     
                     game.setCurrentRoom(room);
                     game.setScreen(new LobbyScreen(game));

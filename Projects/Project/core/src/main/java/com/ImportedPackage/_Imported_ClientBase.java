@@ -254,6 +254,7 @@ public class _Imported_ClientBase {
 	}
 	
     public static Player[] players = new Player[5];
+    public static int playerCount;
     
 	public static int getLocation() {
 		try {
@@ -265,7 +266,7 @@ public class _Imported_ClientBase {
 			}
 			else {
 				String[] parts = saver.split(" ");
-	            int playerCount = Integer.parseInt(parts[0]);
+	            playerCount = Integer.parseInt(parts[0]);
 
 	            for (int i = 0; i < playerCount; i++) {
 	                String[] coords = parts[i + 1].split("/");
@@ -281,6 +282,7 @@ public class _Imported_ClientBase {
 	                    players[i].y = y;
 	                }
 	            }
+	            
 	            
 	            System.out.println("[LOG] 현재 플레이어 정보:");
 	            for (Player player : players) {
@@ -304,6 +306,7 @@ public class _Imported_ClientBase {
 			tcpWriter_toSend.write("NewLoc"); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.write(Integer.toString(x)); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.write(Integer.toString(y)); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(name); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
 			if(saver.equals("Success")) {
