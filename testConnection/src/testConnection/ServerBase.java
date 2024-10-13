@@ -14,7 +14,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.sql.*;
@@ -178,7 +181,11 @@ class Clients implements Runnable{
 				if(saver.equals("plsSend")) {
 					isSender = 1;
 					saver = tcpReader.readLine();
-					RecogPort = saver.charAt(saver.length()-1) - '0';
+					String[] parts = saver.split("/");
+			        if (parts.length > 1) {
+			            RecogPort = ServerBase.strToI_map.get(parts[1]);
+			            System.out.println("RecogPort(Int): " + RecogPort);
+			        }
 					System.out.println(SysoutColors.GREEN + "Connection made to Send " + sock.getRemoteSocketAddress() + SysoutColors.RESET);
 				}
 				else if(saver.equals("plsReceive")) {
@@ -207,7 +214,7 @@ class Clients implements Runnable{
 							name = temp;
 							ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
 							System.out.println("New Room Init RecogPort is " + (RecogPort));
-							tcpWriter.write("Game Init RecogPort is " + (RecogPort)); tcpWriter.newLine(); 
+							tcpWriter.write("Game Init RecogPort is /" + (ServerBase.iToStr_map.get(RecogPort))); tcpWriter.newLine(); 
 							tcpWriter.flush();
 							System.out.println("Sended. new game recog port");
 						}
@@ -218,10 +225,10 @@ class Clients implements Runnable{
 					}
 					else if(saver.equals("JoinGame")) {
 						if(RecogPort == -1) {
-							int tryingPort = Integer.parseInt(tcpReader.readLine());
+							String tryingPort = tcpReader.readLine();
 							String temp = tcpReader.readLine();
 							try {
-								int res = ServerBase.rooms.get(tryingPort).newUserCome(temp, connectedIP);
+								int res = ServerBase.rooms.get(ServerBase.strToI_map.get(tryingPort)).newUserCome(temp, connectedIP);
 								if(res == -1) {
 									tcpWriter.write("TooManyUsers"); tcpWriter.newLine(); tcpWriter.flush();
 								}
@@ -229,7 +236,7 @@ class Clients implements Runnable{
 									tcpWriter.write("SameIpFound"); tcpWriter.newLine(); tcpWriter.flush();
 								}
 								else if(res == 0) {
-									this.RecogPort = tryingPort;
+									this.RecogPort = ServerBase.strToI_map.get(tryingPort);
 									tcpWriter.write("SuccessfullyJoind"); tcpWriter.newLine(); tcpWriter.flush();
 									name = temp;
 								}
@@ -362,6 +369,19 @@ public class ServerBase {
 	
 	static int RecogPortNext = 0;
 	public static List<Room> rooms = new ArrayList<>();
+	public static Map<String, Integer> strToI_map = new HashMap<>();
+	public static Map<Integer, String> iToStr_map = new HashMap<>();
+	
+	private static String setRanStr() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(6);
+        
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
 	
 	static void RecogPortDecre() {
 		if((RecogPortNext-1) >= 0) {
@@ -406,6 +426,13 @@ public class ServerBase {
 			@SuppressWarnings("unused")
 			Statement stmt = conn.createStatement();
 			System.out.println("connect success with DB");
+			
+			for (int i = 0; i <= 99; i++) {
+				String tempSaver = setRanStr();
+	            strToI_map.put(tempSaver, i);
+	            iToStr_map.put(i, tempSaver);
+	        }
+			System.out.println("Completed to reset roomcodes...");
 			
 			System.out.println("Server trying to start...");
 			//TCP

@@ -86,7 +86,7 @@ public class CreateRoomDialog extends Dialog {
             String playerName = playerNameField.getText();
             int playerCount = playerCountSelect.getSelected();
             String password = passwordField.getText();
-            int roomCode = 0; // 임시로 0으로 설정
+            String roomCode = null; // 임시로 0으로 설정
 
             try {
                 // Trying To Connect
@@ -127,14 +127,21 @@ public class CreateRoomDialog extends Dialog {
                 
                 return;
             }
-            if(_Imported_ClientBase.MakeGame_TCP(roomName).equals("Success makeGame")) {
-                
-                game.setPlayerNickname(playerName);
-                Player host = new Player(playerName, 0, 0, 32);
-                Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);
+            String saver = _Imported_ClientBase.MakeGame_TCP(roomName); //The returning string looks like 'Success makeGame/ABC123', so the string has to be split by '/'.
+            String[] parts = saver.split("/");
+            if(parts[0].equals("Success makeGame")) {
+            	if(parts.length > 1) {
+            		roomCode = parts[1];
+                    game.setPlayerNickname(playerName);
+                    Player host = new Player(playerName, 0, 0, 32);
+                    Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
 
-                game.setCurrentRoom(newRoom);
-                game.setScreen(new LobbyScreen(game));
+                    game.setCurrentRoom(newRoom);
+                    game.setScreen(new LobbyScreen(game));
+            	}
+            	else { // just in case
+            		System.out.println("ROOM CODE INVALID?");
+            	}
             }
         }
     }

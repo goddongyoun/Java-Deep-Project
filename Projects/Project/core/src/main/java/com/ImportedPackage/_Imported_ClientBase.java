@@ -76,25 +76,33 @@ public class _Imported_ClientBase {
 			String readSaver = tcpReader_toSend.readLine();
 			System.out.println("[LOG] TCP received From Server -> " + readSaver);
 			System.out.println(readSaver + "[LOG] ");
-			int Port = readSaver.charAt(readSaver.length()-1) - '0';
 			
-			tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
-			tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
-			tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
-//			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
-			return "Success makeGame";
+			String[] parts = readSaver.split("/");
+			String recogPort = null;
+	        if (parts.length > 1) {
+	            recogPort = parts[1];
+	            System.out.println("RecogPort: " + recogPort);
+	            tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
+				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
+				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+recogPort); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
+//				System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
+				return "Success makeGame/" + recogPort;
+	        } else {
+	            System.out.println("[LOG] ??? ERROR CLI_86 정보를 찾을 수 없습니다.");
+				return "Failed makeGame/ERROR";
+	        }
 		} 
 		catch (SocketException e) {
 			if(e.getMessage().equals("Connection reset")) {
 				System.out.println("[LOG] 서버가 연결을 끊었습니다.");
 			}
-			return "Failed makeGame";
+			return "Failed makeGame/ERROR";
 		}
 		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return "Failed makeGame";
+			return "Failed makeGame/ERROR";
 		}
 	}
 	
@@ -130,10 +138,10 @@ public class _Imported_ClientBase {
 	 * @param name what is your name to be displayed
 	 * @return
 	 */
-	public static String joinGame(int Port, String name) {
+	public static String joinGame(String Port, String name) {
 		try {
-			tcpWriter_toSend.write("JoinGame"); tcpWriter_toSend.newLine(); 
-			tcpWriter_toSend.write(Integer.toString(Port)); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write("JoinGame"); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(Port); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.write(name); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.flush();
 			
