@@ -24,6 +24,7 @@ import com.mygdx.game.ui.LobbyMap;
 import com.mygdx.game.util.FontManager;
 import com.mygdx.game.ui.MissionDialog;
 import com.mygdx.game.ui.MissionDialog2;
+import com.mygdx.game.ui.MissionDialog3;
 
 public class LobbyScreen implements Screen {
     private Main game;
@@ -40,6 +41,7 @@ public class LobbyScreen implements Screen {
     private Table buttonTable;
     private MissionDialog missionDialog;
     private MissionDialog2 missionDialog2;
+    private MissionDialog3 missionDialog3;
     private Player player;
 
     public LobbyScreen(final Main game) {
@@ -93,6 +95,8 @@ public class LobbyScreen implements Screen {
             buttonAtlas.findRegion("settingBtn").getRegionWidth(),
             buttonAtlas.findRegion("settingBtn").getRegionHeight());
 
+        TextButton mission3Btn = new TextButton("미션3 어몽구스",skin);
+
         AnimatedImageButton leaveButton = new AnimatedImageButton(buttonTexture,
             buttonAtlas.findRegion("closeGameBtn").getRegionX(),
             buttonAtlas.findRegion("closeGameBtn").getRegionY(),
@@ -116,6 +120,14 @@ public class LobbyScreen implements Screen {
             }
         });
 
+        mission3Btn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                missionDialog3 = new MissionDialog3("", skin, stage);
+                missionDialog3.showMission(stage);  // 미션 팝업을 화면에 띄움
+            }
+        });
+
         leaveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -126,6 +138,7 @@ public class LobbyScreen implements Screen {
 
         buttonTable.add(startButton).padBottom(10).row();
         buttonTable.add(editButton).padBottom(10).row();
+        buttonTable.add(mission3Btn).padBottom(10).row();
         buttonTable.add(leaveButton);
 
         stage.addActor(buttonTable);

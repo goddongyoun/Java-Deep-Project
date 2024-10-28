@@ -1,0 +1,40 @@
+cards.png
+size: 992, 193
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+demonstration
+  rotate: false
+  xy: 0, 0
+  size: 538, 102
+  orig: 538, 102
+  offset: 0, 0
+  index: -1
+nowTryIt
+  rotate: false
+  xy: 538, 0
+  size: 372, 98
+  orig: 372, 98
+  offset: 0, 0
+  index: -1
+stage1
+  rotate: false
+  xy: 0, 102
+  size: 326, 82
+  orig: 326, 82
+  offset: 0, 0
+  index: -1
+stage2
+  rotate: false
+  xy: 326, 102
+  size: 320, 82
+  orig: 320, 82
+  offset: 0, 0
+  index: -1
+stage3
+  rotate: false
+  xy: 646, 102
+  size: 346, 91
+  orig: 346, 91
+  offset: 0, 0
+  index: -1

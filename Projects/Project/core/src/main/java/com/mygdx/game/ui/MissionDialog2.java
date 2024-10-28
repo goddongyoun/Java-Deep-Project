@@ -23,7 +23,7 @@ public class MissionDialog2 extends Dialog {
     public class Block {
         private int stage; // 1 ~ 5 단계
         public String mineral; // 다이아몬드, 에메랄드, 금, 철, 청금석, 레드스톤, 심층암 중 하나
-        private TextureAtlas blocks = new TextureAtlas(Gdx.files.internal("mission2/blocks.atlas"));; // 블록 이미지가 저장된 TextureAtlas
+        private TextureAtlas blocks = new TextureAtlas(Gdx.files.internal("minecraft/blocks.atlas"));; // 블록 이미지가 저장된 TextureAtlas
         private Array<TextureRegion> blocksArray = new Array<TextureRegion>();; // 블록 이미지를 저장할 배열
 
         // 생성자
@@ -116,7 +116,7 @@ public class MissionDialog2 extends Dialog {
     public class BlockBreaker {
         private int breakStage = 0; // 블럭 깨기 단계 (1 ~ 10)
         private Block block; // 연결된 Block 객체
-        private TextureAtlas breaks = new TextureAtlas(Gdx.files.internal("mission2/breaks.atlas"));
+        private TextureAtlas breaks = new TextureAtlas(Gdx.files.internal("minecraft/breaks.atlas"));
         private Array<TextureRegion> breaksArray = new Array<>();
 
         // 생성자: 블럭 객체를 받아서 블럭 깨기 이미지를 설정
@@ -168,9 +168,9 @@ public class MissionDialog2 extends Dialog {
     private BlockBreaker breaker;
     private TextureRegion currentBlockImage;
     private TextureRegion currentBreakImage;
-    private Texture border = new Texture(Gdx.files.internal("mission2/border.png"));
+    private Texture border = new Texture(Gdx.files.internal("minecraft/border.png"));
     private Texture missionBorder = new Texture(Gdx.files.internal("images/mission_box.png"));
-    private Texture block0 = new Texture(Gdx.files.internal("mission2/block0.png"));
+    private Texture block0 = new Texture(Gdx.files.internal("minecraft/block0.png"));
     private TextureRegionDrawable block0Drawable = new TextureRegionDrawable(block0);
     private TextureRegionDrawable borderDrawable = new TextureRegionDrawable(border);
     private Image block0Image;
