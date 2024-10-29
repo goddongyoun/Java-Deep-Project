@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
@@ -30,22 +31,29 @@ public class MissionDialog3 extends Dialog {
     Table contentTable = getContentTable();
 
     private Texture borderTexture = new Texture(Gdx.files.internal("publicImages/mission_box.png"));
+    private Texture backgroundTexture = new Texture(Gdx.files.internal("amongus/mission-3-background-pivot.png"));
     private TextureAtlas roundsAtlas = new  TextureAtlas("publicImages/rounds.atlas");
     private TextureAtlas amongusColors = new TextureAtlas("amongus/amongusColors.atlas");
+    private TextureAtlas backgroundAtlas = new TextureAtlas("amongus/m3background.atlas");
     private Array<TextureRegion> amongusArray1 = new Array<TextureRegion>();
     private Array<TextureRegion> amongusArray2 = new Array<TextureRegion>();
     private Array<TextureRegion> amongusArray3 = new Array<TextureRegion>();
     private Array<TextureRegion> amongusArray4 = new Array<TextureRegion>();
+    private Array<TextureRegion> m3backgroundArray = new Array<>();
     private TextureRegionDrawable amongusDrawable1;
     private TextureRegionDrawable amongusDrawable2;
     private TextureRegionDrawable amongusDrawable3;
     private TextureRegionDrawable amongusDrawable4;
     private TextureRegionDrawable borderDrawable;
+    private TextureRegionDrawable backgroundDrawable;
+    private Animation<TextureRegion> m3Animation;
+    private float m3bStateTime = 0f;
     private Image amongus1;
     private Image amongus2;
     private Image amongus3;
     private Image amongus4;
     private Image border;
+    private Image background;
 
     private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
     private TextureRegionDrawable successDrawable;
@@ -69,21 +77,23 @@ public class MissionDialog3 extends Dialog {
     private TextureRegionDrawable nowTryItDrawable = new TextureRegionDrawable(cardsAtlas.findRegion("nowTryIt"));
     private Image card;
 
-    private int amongusWidth = 100;
-    private int amongusHeight = 100;
+    private int amongusWidth = 84;
+    private int amongusHeight = 84;
     private int currentRound = 1;
     private int totalAmongus = 4;
     private int totalRound = 3;
     private int totalSequence = 9;
     private int thisRoundSequenceCount = 0; // 해당 라운드 순서 횟수
     private int correctCount = 0;
-    private int amongusXGap = 100;
-    private int amongusYGap = 100;
+    private int amongusXGap = 144;
+    private int amongusYGap = 82;
+    private int setX = 82;
+    private int setY = 18;
     private IntArray randomSequence = new IntArray();
     private IntArray intputSequence = new IntArray();
 
-    private float initialX = 200;
-    private float initialY = 70;
+    private float initialX = 178;
+    private float initialY = 90;
 
     private boolean gameClear = false;
     private boolean roundClear = false;
@@ -123,6 +133,13 @@ public class MissionDialog3 extends Dialog {
         failDrawable = new TextureRegionDrawable(failAnimation.getKeyFrame(0));
         fail = new Image(failDrawable);
 
+        for(int i=1;i<=19;i++){
+            m3backgroundArray.add(backgroundAtlas.findRegion("m3background" + i));
+        }
+        m3Animation = new Animation<TextureRegion>(0.1f,m3backgroundArray,Animation.PlayMode.LOOP);
+        backgroundDrawable = new TextureRegionDrawable(m3Animation.getKeyFrame(0));
+        background = new Image(backgroundDrawable);
+
         amongusArray1.add(amongusColors.findRegion("mission3_Blue1"));
         amongusArray1.add(amongusColors.findRegion("mission3_Blue2"));
         amongusArray2.add(amongusColors.findRegion("mission3_Green1"));
@@ -149,6 +166,7 @@ public class MissionDialog3 extends Dialog {
 
         card = new Image(stage1Drawable);
 
+        contentTable.add(background).width(620).height(340).expand().fill();
         contentTable.add(border).width(640).height(360).expand().fill();
         contentTable.add(amongus1).width(amongusWidth).height(amongusHeight).expand().fill();
         contentTable.add(amongus2).width(amongusWidth).height(amongusHeight).expand().fill();
@@ -162,6 +180,8 @@ public class MissionDialog3 extends Dialog {
         success.setVisible(false);
 
         this.getCell(contentTable).width(640).height(360).expand().fill();
+        // 미션 클래스 자체의 배경을 제거
+        this.setBackground((Drawable) null);
         stage.addActor(this);
 
         nextRound();
@@ -206,6 +226,10 @@ public class MissionDialog3 extends Dialog {
             (this.getWidth() - border.getWidth()) / 2,
             (this.getHeight() - border.getHeight()) / 2
         );
+        background.setPosition(
+            (this.getWidth() - background.getWidth()) / 2,
+            (this.getHeight() - background.getHeight()) / 2
+        );
 
         if(failArray!=null && fail.isVisible() && isShowGameStatus) {
             //애니메이션 시간 업데이트
@@ -221,11 +245,16 @@ public class MissionDialog3 extends Dialog {
             TextureRegion currentFrame = successAnimation.getKeyFrame(successStateTime, false);
             ((TextureRegionDrawable) success.getDrawable()).setRegion(currentFrame);
         }
+        //애니메이션 시간 업데이트
+        m3bStateTime += delta;
+        //현재 애니메이션 프레임 가져오기
+        TextureRegion currentFrame = m3Animation.getKeyFrame(m3bStateTime, true);
+        ((TextureRegionDrawable) background.getDrawable()).setRegion(currentFrame);
 
         amongus1.setPosition(initialX, initialY);
-        amongus2.setPosition(initialX+amongusXGap, initialY);
-        amongus3.setPosition(initialX+50, initialY+amongusYGap);
-        amongus4.setPosition(initialX+amongusXGap+50, initialY+amongusYGap);
+        amongus2.setPosition(initialX+amongusXGap, initialY-setY);
+        amongus3.setPosition(initialX+setX, initialY+amongusYGap);
+        amongus4.setPosition(initialX+amongusXGap+setX, initialY+amongusYGap-setY);
 
         if(intputSequence.size==thisRoundSequenceCount) {
             Gdx.app.log("","round : "+currentRound);
@@ -342,12 +371,12 @@ public class MissionDialog3 extends Dialog {
         amongus1.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if(isPixelHit(amongus1,(int)x,(int)y)) return false;
-                Gdx.app.log("Debug", "amongus1 X: " + amongus1.getX() +
-                    ", amongus1 Y: " + amongus1.getY() +
-                    ", amongus1Width: " + amongus1.getWidth() +
-                    ", amongus1Height: " + amongus1.getHeight());
-                Gdx.app.log("",""+isPixelHit(amongus1,(int)x,(int)y));
+//                if(isPixelHit(amongus1,(int)x,(int)y)) return false;
+//                Gdx.app.log("Debug", "amongus1 X: " + amongus1.getX() +
+//                    ", amongus1 Y: " + amongus1.getY() +
+//                    ", amongus1Width: " + amongus1.getWidth() +
+//                    ", amongus1Height: " + amongus1.getHeight());
+//                Gdx.app.log("",""+isPixelHit(amongus1,(int)x,(int)y));
 
                 amongus1.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray1.get(1))));
 
@@ -363,7 +392,6 @@ public class MissionDialog3 extends Dialog {
         amongus2.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-
 
                 amongus2.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray2.get(1))));
 

@@ -1,0 +1,138 @@
+m3background.png
+size: 12000, 5400
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+m3background1
+  rotate: false
+  xy: 0, 0
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background2
+  rotate: false
+  xy: 2400, 0
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background3
+  rotate: false
+  xy: 4800, 0
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background4
+  rotate: false
+  xy: 7200, 0
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background5
+  rotate: false
+  xy: 9600, 0
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background6
+  rotate: false
+  xy: 0, 1350
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background7
+  rotate: false
+  xy: 2400, 1350
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background8
+  rotate: false
+  xy: 4800, 1350
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background9
+  rotate: false
+  xy: 7200, 1350
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background10
+  rotate: false
+  xy: 9600, 1350
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background11
+  rotate: false
+  xy: 0, 2700
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background12
+  rotate: false
+  xy: 2400, 2700
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background13
+  rotate: false
+  xy: 4800, 2700
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background14
+  rotate: false
+  xy: 7200, 2700
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background15
+  rotate: false
+  xy: 9600, 2700
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background16
+  rotate: false
+  xy: 0, 4050
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background17
+  rotate: false
+  xy: 2400, 4050
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background18
+  rotate: false
+  xy: 4800, 4050
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
+m3background19
+  rotate: false
+  xy: 7200, 4050
+  size: 2400, 1350
+  orig: 2400, 1350
+  offset: 0, 0
+  index: -1
