@@ -1,0 +1,61 @@
+amongusColors.png
+size: 960, 960
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+mission3_Blue1
+  rotate: false
+  xy: 0, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Blue2
+  rotate: false
+  xy: 320, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Green1
+  rotate: false
+  xy: 640, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Green2
+  rotate: false
+  xy: 0, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Red1
+  rotate: false
+  xy: 320, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Red2
+  rotate: false
+  xy: 640, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Yellow1
+  rotate: false
+  xy: 0, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+mission3_Yellow2
+  rotate: false
+  xy: 320, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
