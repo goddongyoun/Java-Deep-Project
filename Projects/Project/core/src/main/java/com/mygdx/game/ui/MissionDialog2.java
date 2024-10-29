@@ -306,26 +306,26 @@ public class MissionDialog2 extends Dialog {
             (stage.getHeight() - this.getHeight()) / 2
         );
 
-        for(int i=0;i<numBlocks*numBlocks;i++){
-            final int finalI = i;
-            // 호버 이벤트 추가
-            blockStacks.get(i).addListener(new InputListener() {
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                    // 호버 시 테두리 이미지 변경
-                    blockStacks.get(finalI).getChild(2).setVisible(true);
-                    borderOn = true;
-                    Gdx.app.log("", finalI + "번째 객체 호버상태");
-                }
-
-                @Override
-                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                    // 호버 시 테두리 이미지 변경
-                    blockStacks.get(finalI).getChild(2).setVisible(false);
-                    borderOn = false;
-                }
-            });
-        }
+//        for(int i=0;i<numBlocks*numBlocks;i++){
+//            final int finalI = i;
+//            // 호버 이벤트 추가
+//            blockStacks.get(i).addListener(new InputListener() {
+//                @Override
+//                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+//                    // 호버 시 테두리 이미지 변경
+//                    blockStacks.get(finalI).getChild(2).setVisible(true);
+//                    borderOn = true;
+//                    Gdx.app.log("", finalI + "번째 객체 호버상태");
+//                }
+//
+//                @Override
+//                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+//                    // 호버 시 테두리 이미지 변경
+//                    blockStacks.get(finalI).getChild(2).setVisible(false);
+//                    borderOn = false;
+//                }
+//            });
+//        }
 
         //각 블럭 객체당 별도의 클릭 시 블럭 깨기 이벤트
         for (int i=0;i<numBlocks*numBlocks;i++){
@@ -348,12 +348,12 @@ public class MissionDialog2 extends Dialog {
                     breakImage = new Image(currentBreakImage);
                     breakImage.setSize(blockLength,blockLength);
 
-                    borderImage = new Image(border);
-                    borderImage.setSize(blockLength, blockLength);
+//                    borderImage = new Image(border);
+//                    borderImage.setSize(blockLength, blockLength);
 
                     blockStacks.get(finalI).add(blockImage);
                     blockStacks.get(finalI).add(breakImage);
-                    blockStacks.get(finalI).add(borderImage);
+//                    blockStacks.get(finalI).add(borderImage);
 
                     if(blockObjects.get(finalI).gotMineral()){
                         mineralCount++;
