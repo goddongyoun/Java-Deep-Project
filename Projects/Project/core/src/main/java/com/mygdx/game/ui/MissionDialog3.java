@@ -2,10 +2,13 @@ package com.mygdx.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -339,6 +342,13 @@ public class MissionDialog3 extends Dialog {
         amongus1.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if(isPixelHit(amongus1,(int)x,(int)y)) return false;
+                Gdx.app.log("Debug", "amongus1 X: " + amongus1.getX() +
+                    ", amongus1 Y: " + amongus1.getY() +
+                    ", amongus1Width: " + amongus1.getWidth() +
+                    ", amongus1Height: " + amongus1.getHeight());
+                Gdx.app.log("",""+isPixelHit(amongus1,(int)x,(int)y));
+
                 amongus1.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray1.get(1))));
 
                 return true; // true를 반환하면 touchUp 이벤트도 받습니다.
@@ -346,12 +356,15 @@ public class MissionDialog3 extends Dialog {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 amongus1.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray1.get(0))));
+
                 intputSequence.add(0);
             }
         });
         amongus2.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+
+
                 amongus2.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray2.get(1))));
 
                 return true; // true를 반환하면 touchUp 이벤트도 받습니다.
@@ -406,4 +419,64 @@ public class MissionDialog3 extends Dialog {
             }
         }, 0.2f); // 0.5초 후에 원래 이미지로 되돌림
     }
+
+    public boolean isPixelHit(Image image, int x, int y) {
+        TextureRegion region;
+
+        if (image.getDrawable() instanceof TextureRegionDrawable) {
+            TextureRegionDrawable drawable = (TextureRegionDrawable) image.getDrawable();
+            region = drawable.getRegion();
+        } else {
+            // TextureRegionDrawable이 아닌 경우 히트 인식하지 않음
+            Gdx.app.log("", "Drawable is not a TextureRegionDrawable");
+            return false;
+        }
+
+        // FrameBuffer를 사용하여 TextureRegion을 Pixmap으로 추출
+        FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, region.getRegionWidth(), region.getRegionHeight(), false);
+        frameBuffer.begin();
+
+        SpriteBatch batch = new SpriteBatch();
+        batch.begin();
+        batch.draw(region, 0, 0);
+        batch.end();
+
+        // FrameBuffer에서 Pixmap을 생성
+        Pixmap pixmap = Pixmap.createFromFrameBuffer(0, 0, region.getRegionWidth(), region.getRegionHeight());
+        frameBuffer.end();
+
+        batch.dispose();
+        frameBuffer.dispose();
+
+        // 이미지 좌표계를 Pixmap 좌표계로 변환
+        int textureX = x;
+        int textureY = region.getRegionHeight() - 1 - y;
+
+        // 범위 체크
+        if (textureX < 0 || textureX >= pixmap.getWidth() || textureY < 0 || textureY >= pixmap.getHeight()) {
+            pixmap.dispose();
+            Gdx.app.log("", "Coordinates out of bounds");
+            return false;
+        }
+
+        // Pixmap의 해당 좌표가 알파 값이 있는지 확인합니다.
+        int pixel = pixmap.getPixel(textureX, textureY);
+        int alpha = (pixel >> 24) & 0xff;
+
+
+        // 알파 값이 일정 값 이상일 때 마우스가 이미지 위에 있다고 인식합니다.
+        Gdx.app.log("", "alpha = " + alpha + " " + textureX + ", " + textureY);
+        Gdx.app.log("Debug", "Region X: " + region.getRegionX() +
+            ", Region Y: " + region.getRegionY() +
+            ", Width: " + region.getRegionWidth() +
+            ", Height: " + region.getRegionHeight());
+
+
+        // Pixmap 해제
+        pixmap.dispose();
+
+        return alpha > 0;
+    }
+
+
 }
