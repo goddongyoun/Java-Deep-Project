@@ -173,17 +173,23 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block1.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block2.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block3.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Dia.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Eme.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Gold.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Iron.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Lapis.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Red.png</key>
-            <key type="filename">C:/Users/a0104/OneDrive/바탕 화면/block/block/Block5.png</key>
+            <key type="filename">Block1.png</key>
+            <key type="filename">Block2.png</key>
+            <key type="filename">Block3.png</key>
+            <key type="filename">Block4.png</key>
+            <key type="filename">Block4_Dia.png</key>
+            <key type="filename">Block4_Eme.png</key>
+            <key type="filename">Block4_Gold.png</key>
+            <key type="filename">Block4_Iron.png</key>
+            <key type="filename">Block4_Lapis.png</key>
+            <key type="filename">Block4_Red.png</key>
+            <key type="filename">Block5.png</key>
+            <key type="filename">../mission/item-list/item-list/Item_Dia.png</key>
+            <key type="filename">../mission/item-list/item-list/Item_Eme.png</key>
+            <key type="filename">../mission/item-list/item-list/Item_Gold.png</key>
+            <key type="filename">../mission/item-list/item-list/Item_Iron.png</key>
+            <key type="filename">../mission/item-list/item-list/Item_Lapis.png</key>
+            <key type="filename">../mission/item-list/item-list/Item_Red.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -205,17 +211,23 @@
             <struct type="SpriteSheet">
                 <key>files</key>
                 <array>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block1.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block2.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block3.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Dia.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Eme.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Gold.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Iron.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Lapis.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block4_Red.png</filename>
-                    <filename>C:/Users/a0104/OneDrive/바탕 화면/block/block/Block5.png</filename>
+                    <filename>Block1.png</filename>
+                    <filename>Block2.png</filename>
+                    <filename>Block3.png</filename>
+                    <filename>Block4.png</filename>
+                    <filename>Block4_Dia.png</filename>
+                    <filename>Block4_Eme.png</filename>
+                    <filename>Block4_Gold.png</filename>
+                    <filename>Block4_Iron.png</filename>
+                    <filename>Block4_Lapis.png</filename>
+                    <filename>Block4_Red.png</filename>
+                    <filename>Block5.png</filename>
+                    <filename>../mission/item-list/item-list/Item_Dia.png</filename>
+                    <filename>../mission/item-list/item-list/Item_Eme.png</filename>
+                    <filename>../mission/item-list/item-list/Item_Gold.png</filename>
+                    <filename>../mission/item-list/item-list/Item_Iron.png</filename>
+                    <filename>../mission/item-list/item-list/Item_Lapis.png</filename>
+                    <filename>../mission/item-list/item-list/Item_Red.png</filename>
                 </array>
             </struct>
         </map>

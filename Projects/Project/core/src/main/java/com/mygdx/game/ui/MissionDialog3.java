@@ -76,6 +76,7 @@ public class MissionDialog3 extends Dialog {
     private TextureRegionDrawable demonstrationDrawable = new TextureRegionDrawable(cardsAtlas.findRegion("demonstration"));
     private TextureRegionDrawable nowTryItDrawable = new TextureRegionDrawable(cardsAtlas.findRegion("nowTryIt"));
     private Image card;
+    private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
     private int amongusWidth = 84;
     private int amongusHeight = 84;
@@ -178,6 +179,8 @@ public class MissionDialog3 extends Dialog {
         fail.setVisible(false);
         contentTable.add(success).width(250).height(100).expand().fill();
         success.setVisible(false);
+        contentTable.add(startCard).width(250).height(80).expand().fill();
+        startCard.setVisible(false);
 
         this.getCell(contentTable).width(640).height(360).expand().fill();
         // 미션 클래스 자체의 배경을 제거
@@ -229,6 +232,10 @@ public class MissionDialog3 extends Dialog {
         background.setPosition(
             (this.getWidth() - background.getWidth()) / 2,
             (this.getHeight() - background.getHeight()) / 2
+        );
+        startCard.setPosition(
+            (this.getWidth() - startCard.getWidth()) / 2,
+            (this.getHeight() - startCard.getHeight()) / 2
         );
 
         if(failArray!=null && fail.isVisible() && isShowGameStatus) {
@@ -340,8 +347,19 @@ public class MissionDialog3 extends Dialog {
                                     // 작업 완료 시마다 completedTasks 증가
                                     completedTasks[0]++;
                                     if (completedTasks[0] == thisRoundSequenceCount) {
-                                        // 모든 작업이 완료되었을 때 실행
-                                        UserTurn();
+                                        Timer.schedule(new Timer.Task(){
+                                            @Override
+                                            public void run() {
+                                                startCard.setVisible(true);
+                                                Timer.schedule(new Timer.Task(){
+                                                    @Override
+                                                    public void run() {
+                                                        startCard.setVisible(false);
+                                                        UserTurn();
+                                                    }
+                                                }, 1f);
+                                            }
+                                        }, 0.5f);
                                     }
                                 }
                             }, i * 0.5f); // 각 반복마다 0.5초 간격으로 실행
