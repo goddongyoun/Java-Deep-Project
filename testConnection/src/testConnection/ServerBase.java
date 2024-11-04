@@ -24,7 +24,7 @@ import java.sql.*;
 
 class User{
 	String name;
-	int[] loc = new int[2];
+	float[] loc = new float[2];
 	InetAddress ip;
 	
 	User(String _name, InetAddress _ip){
@@ -32,12 +32,12 @@ class User{
 		ip = _ip;
 	}
 	
-	void setLocation(int x, int y) {
+	void setLocation(float x, float y) {
 		loc[0] = x;
 		loc[1] = y;
 	}
 	
-	int[] getLocation() {
+	float[] getLocation() {
 		return loc;
 	}
 }
@@ -113,8 +113,8 @@ class Room{
 		return 0;
 	}
 	
-	int[][] getLocations() {
-		int[][] locations = new int[curUserNum][2];
+	float[][] getLocations() {
+		float[][] locations = new float[curUserNum][2];
 		int idx = 0;
 		for (int i = 0; i < users.length; i++) {
 			if (users[i] != null) {
@@ -143,7 +143,7 @@ class Room{
         return sb.toString();
 	}
 	
-	int setLocation(String name, int x, int y) {
+	int setLocation(String name, float x, float y) {
 		for (int i = 0; i < curUserNum; i++) {
 			if (users[i] != null && users[i].name.equals(name)) {
 				users[i].setLocation(x, y);
@@ -214,7 +214,9 @@ class Clients implements Runnable{
 			
 			if(isSender == 0) {
 				while((saver = tcpReader.readLine()) != null) {
-					System.out.println("TCP received "+ saver + sock.getRemoteSocketAddress());
+					if(!(saver.equals("NewLoc") && saver.equals("GetLoc"))) {
+						System.out.println("TCP received "+ saver + sock.getRemoteSocketAddress());
+					}
 					
 					if(saver.equals("MakeGame")) {
 						if(RecogPort == -1) {
@@ -307,8 +309,8 @@ class Clients implements Runnable{
 							tcpReader.readLine();tcpReader.readLine();
 						}
 						else {
-							int tempx = Integer.parseInt(tcpReader.readLine());
-							int tempy = Integer.parseInt(tcpReader.readLine());
+							float tempx = Float.parseFloat(tcpReader.readLine());
+							float tempy = Float.parseFloat(tcpReader.readLine());
 							String tempName = tcpReader.readLine();
 							int res = ServerBase.rooms.get(RecogPort).setLocation(tempName, tempx, tempy);
 							if(res == 0) {

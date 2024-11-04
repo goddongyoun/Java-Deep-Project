@@ -96,7 +96,7 @@ public class LobbyMap extends Actor {
     				if(room.m_players[temp] == null) {
     					room.m_players[temp] = new PlayerOfMulti(_Imported_ClientBase.players[i].name, _Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, room.getme().size);
     				}
-    				System.out.println("CAME!!!!!!!!!!!");
+    				//System.out.println("CAME!!!!!!!!!!!");
     				room.m_players[temp].update(_Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, delta);
     				temp++;
     			}

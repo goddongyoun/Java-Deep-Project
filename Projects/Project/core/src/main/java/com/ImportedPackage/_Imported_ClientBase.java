@@ -242,10 +242,10 @@ public class _Imported_ClientBase {
 	
 	public static class Player {
 		public String name = null;
-		public int x;
-		public int y;
+		public float x;
+		public float y;
 		
-		public Player(String name, int x, int y) {
+		public Player(String name, float x, float y) {
 	        this.name = name;
 	        this.x = x;
 	        this.y = y;
@@ -271,8 +271,8 @@ public class _Imported_ClientBase {
 	            for (int i = 0; i < playerCount; i++) {
 	                String[] coords = parts[i + 1].split("/");
 	                String name = coords[0]; // name
-	                int x = Integer.parseInt(coords[1]); // x
-	                int y = Integer.parseInt(coords[2]); // y
+	                float x = Float.parseFloat(coords[1]); // x
+	                float y = Float.parseFloat(coords[2]); // y
 	                
 	                if (players[i] == null) {
 	                    players[i] = new Player(name, x, y);
@@ -284,13 +284,13 @@ public class _Imported_ClientBase {
 	            }
 	            
 	            
-	            System.out.println("[LOG] 현재 플레이어 정보:");
+	            /*System.out.println("[LOG] 현재 플레이어 정보:");
 	            for (Player player : players) {
 	                if (player != null) {
 	                    System.out.println("이름: " + player.name + ", x: " + player.x + ", y: " + player.y);
 	                }
 	            }
-	            System.out.println("[LOG] 현재 플레이어 정보 끝.");
+	            System.out.println("[LOG] 현재 플레이어 정보 끝.");*/
 	            
 	            return 0;
 			}
