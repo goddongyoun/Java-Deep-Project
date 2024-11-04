@@ -21,7 +21,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 import com.mygdx.game.util.FontManager;
+
+import java.util.TimerTask;
 
 public class MissionDialog extends Dialog {
     private Image currentMonster;  // 현재 표시된 몬스터 이미지
@@ -80,6 +83,13 @@ public class MissionDialog extends Dialog {
     Array<TextureRegion> monsterAArray;
     private Animation<TextureRegion> monsterAAnimation;
     TextureRegionDrawable monsterADrawable;
+
+    private TextureAtlas roundsAtlas = new  TextureAtlas("publicImages/rounds.atlas");
+    private TextureRegionDrawable stage1Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round1"));
+    private TextureRegionDrawable stage2Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round2"));
+    private TextureRegionDrawable stage3Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round3"));
+    private TextureRegionDrawable stage4Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round4"));
+    private Image card;
 
     private Stage stage; // Stage 참조를 멤버 변수로 추가
 
@@ -169,6 +179,8 @@ public class MissionDialog extends Dialog {
         aimImage = new Image(aim);
         aimImage.setSize(150,150);
 
+        card = new Image(stage1Drawable);
+
         contentTable.add(fieldImage).width(640).height(365).expand().fill().pad(30); //필드 이미지를 배경으로 설정
         contentTable.add(monsterBallImage).width(30).height(30).expand().fill().pad(10);
         contentTable.add(shooterImage).width(80).height(80).expand().fill().pad(10);
@@ -177,7 +189,8 @@ public class MissionDialog extends Dialog {
         contentTable.add(aimImage).width(150).height(150).expand().fill().pad(10);
         //expand(): 셀이 가능한 공간을 확장해서 차지하도록 설정합니다. 셀 자체는 크기가 늘어나지만, 그 안의 위젯은 원래 크기를 유지합니다.
         //fill(): 셀의 크기가 확장된 후, 위젯이 그 확장된 셀을 채우도록 설정합니다. 즉, 셀의 크기에 맞춰 위젯의 크기도 늘어납니다.
-
+        contentTable.add(card).width(250).height(80).expand().fill();
+        card.setVisible(false);
         contentTable.add(fail).width(250).height(100).expand().fill();
         fail.setVisible(false);
         contentTable.add(success).width(250).height(100).expand().fill();
@@ -242,6 +255,18 @@ public class MissionDialog extends Dialog {
     private void nextRound() {
         // 테이블에서 이전 몬스터만 삭제하고 새로운 몬스터 추가
         Table contentTable = getContentTable();
+
+        changeStageCard();
+
+        if(currentRound!=5) {
+            card.setVisible(true);
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    card.setVisible(false);
+                }
+            }, 1f);
+        }
 
 //        this.invalidate();
 //        this.layout();
@@ -324,10 +349,33 @@ public class MissionDialog extends Dialog {
         isNewRound = true;
     }
 
+    public void changeStageCard(){
+        switch(currentRound){
+            case 1:
+                card.setDrawable(stage1Drawable);
+                break;
+            case 2:
+                card.setDrawable(stage2Drawable);
+                break;
+            case 3:
+                card.setDrawable(stage3Drawable);
+                break;
+            case 4:
+                card.setDrawable(stage4Drawable);
+                break;
+            default:
+                break;
+        }
+    }
+
     @Override
     public void act(float delta) {
         super.act(delta);
 
+        card.setPosition(
+            (this.getWidth() - card.getWidth()) / 2,
+            (this.getHeight() - card.getHeight()) / 2
+        );
         fail.setPosition(
             (this.getWidth() - fail.getWidth()) / 2,
             (this.getHeight() - fail.getHeight()) / 2
@@ -411,29 +459,31 @@ public class MissionDialog extends Dialog {
             }
         }
         currentMonster.setPosition(x, y);
+        aimImage.setRotation(aimingAngle - 90);
 
-        // 키 입력 및 조준 방향 설정
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            aimingAngle += aimingAngleSpeed;  // 왼쪽으로 조준 각도 증가
-            if (aimingAngle > 140) aimingAngle = 140;  // 최대 각도 제한
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            aimingAngle -= aimingAngleSpeed;  // 오른쪽으로 조준 각도 감소
-            if (aimingAngle < 40) aimingAngle = 40;  // 최소 각도 제한
-        }
-        aimImage.setRotation(aimingAngle-90);
+        if(!card.isVisible() && currentRound != 5) {
+            // 키 입력 및 조준 방향 설정
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+                aimingAngle += aimingAngleSpeed;  // 왼쪽으로 조준 각도 증가
+                if (aimingAngle > 140) aimingAngle = 140;  // 최대 각도 제한
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+                aimingAngle -= aimingAngleSpeed;  // 오른쪽으로 조준 각도 감소
+                if (aimingAngle < 40) aimingAngle = 40;  // 최소 각도 제한
+            }
 
-        // A 키가 눌리면 몬스터볼 발사
-        if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
-            shooterImage.setDrawable(new TextureRegionDrawable(new TextureRegion(shooter2)));
-            isMonsterBallMoving = true;
-            remainingBalls--;  // 몬스터볼 갯수 감소
-            Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
+            // A 키가 눌리면 몬스터볼 발사
+            if (Gdx.input.isKeyPressed(Input.Keys.A) && !isMonsterBallMoving && remainingBalls > 0) {
+                shooterImage.setDrawable(new TextureRegionDrawable(new TextureRegion(shooter2)));
+                isMonsterBallMoving = true;
+                remainingBalls--;  // 몬스터볼 갯수 감소
+                Gdx.app.log("MissionDialog", "Monster balls left: " + remainingBalls);
 
-        // 각도에 따라 몬스터볼의 x, y 속도를 설정 (90도 보정)
-            float radians = MathUtils.degreesToRadians * aimingAngle;
-            monsterBallSpeedX = monsterBallSpeed * MathUtils.cos(radians);
-            monsterBallSpeedY = monsterBallSpeed * MathUtils.sin(radians);
+                // 각도에 따라 몬스터볼의 x, y 속도를 설정 (90도 보정)
+                float radians = MathUtils.degreesToRadians * aimingAngle;
+                monsterBallSpeedX = monsterBallSpeed * MathUtils.cos(radians);
+                monsterBallSpeedY = monsterBallSpeed * MathUtils.sin(radians);
+            }
         }
 
         // 몬스터볼이 움직일 때 x, y 좌표 업데이트

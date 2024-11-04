@@ -2,10 +2,13 @@ package com.mygdx.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -206,16 +209,18 @@ public class MissionDialog2 extends Dialog {
     private TextureRegion currentBlockImage;
     private TextureRegion currentBreakImage;
     private Texture border = new Texture(Gdx.files.internal("minecraft/border.png"));
-    private Texture missionBorder = new Texture(Gdx.files.internal("images/mission_box.png"));
+    private Texture missionBorderTexture = new Texture(Gdx.files.internal("mission/mission_box-90x90.png"));
     private Texture block0 = new Texture(Gdx.files.internal("minecraft/block0.png"));
     private Texture itemListTexture = new Texture(Gdx.files.internal("minecraft/checkItemBox.png"));
     private TextureRegionDrawable itemListDrawable = new TextureRegionDrawable(itemListTexture);
     private TextureRegionDrawable checkDrawable = new TextureRegionDrawable(new Texture(Gdx.files.internal("minecraft/Item_check.png")));
+    private TextureRegionDrawable missionBorderDrawable = new TextureRegionDrawable(missionBorderTexture);
+    private TextureRegion missionBorderRegion = new TextureRegion(missionBorderTexture);
     private Image block0Image;
     private Image borderImage;
     private Image blockImage;
     private Image breakImage;
-    private Image missionImage;
+    private Image missionBorder = new Image(missionBorderDrawable);
     private Image itemList = new Image(itemListDrawable);
     private Image check;
     private Array<Image> checkArray = new Array<>();
@@ -345,6 +350,7 @@ public class MissionDialog2 extends Dialog {
 //        missionImage = new Image(border);
 //        contentTable.add(missionImage).width(boxLength+gap).height(boxLength+gap).expand().fill();
 
+
         //생성된 블럭 스택들을 table에 차례로 추가하기
         for(int i=0;i<numBlocks*numBlocks;i++){
             contentTable.add(blockStacks.get(i)).width(blockLength).height(blockLength).expand().fill().pad(10);
@@ -360,11 +366,16 @@ public class MissionDialog2 extends Dialog {
         contentTable.add(success).width(250).height(100).expand().fill();
         success.setVisible(false);
 
-        initialX = 10;
-        initialY = 10;
 
-        this.getCell(contentTable).width(440).height(320);
-        this.setBackground((Drawable) null);
+        initialX = 30;
+        initialY = 30;
+
+        //테두리 추가
+        contentTable.add(missionBorder).width(boxLength+40).height(boxLength+40).expand().fill();
+        missionBorderClickEvent();
+        blockClick();
+        this.getCell(contentTable).width(490).height(370);
+//        this.setBackground((Drawable) null);
 
         stage.addActor(this);
     }
@@ -403,63 +414,6 @@ public class MissionDialog2 extends Dialog {
 //            });
 //        }
 
-        //각 블럭 객체당 별도의 클릭 시 블럭 깨기 이벤트
-        for (int i=0;i<numBlocks*numBlocks;i++){
-            final int finalI = i;
-            blockStacks.get(i).addListener(new ClickListener(){
-                @Override
-                public void clicked(InputEvent event, float x, float y){
-                    //블럭 6단계를 넘어가면 클릭 이벤트 비활성화
-                    if(blockObjects.get(finalI).getStage() >= 6){
-                        return;
-                    }
-
-                    breakerObjects.get(finalI).onClick();
-
-                    currentBlockImage = blockObjects.get(finalI).getCurrentBlockImage();
-                    blockImage = new Image(currentBlockImage);
-                    blockImage.setSize(blockLength,blockLength);
-
-                    currentBreakImage = breakerObjects.get(finalI).getCurrentBreakImage();
-                    breakImage = new Image(currentBreakImage);
-                    breakImage.setSize(blockLength,blockLength);
-
-//                    borderImage = new Image(border);
-//                    borderImage.setSize(blockLength, blockLength);
-
-                    blockStacks.get(finalI).add(blockImage);
-                    blockStacks.get(finalI).add(breakImage);
-//                    blockStacks.get(finalI).add(borderImage);
-                    if(blockObjects.get(finalI).gotMineral()){
-                        mineralCount++;
-                        switch (blockObjects.get(finalI).getMineral()){
-                            case "diamond":
-                                checkArray.get(5).setVisible(true);
-                                break;
-                            case "emerald":
-                                checkArray.get(4).setVisible(true);
-                                break;
-                            case "gold":
-                                checkArray.get(3).setVisible(true);
-                                break;
-                            case "iron":
-                                checkArray.get(2).setVisible(true);
-                                break;
-                            case "bluegold":
-                                checkArray.get(1).setVisible(true);
-                                break;
-                            case "redstone":
-                                checkArray.get(0).setVisible(true);
-                                break;
-                            default:
-                                Gdx.app.log("Block", "Unknown mineral type in clicked method");
-                        }
-                        Gdx.app.log("","mineralCount : "+mineralCount);
-                    }
-                }
-            });
-        }
-
         this.show(stage);
     }
 
@@ -482,6 +436,8 @@ public class MissionDialog2 extends Dialog {
             (this.getWidth() - success.getWidth()) / 2,
             (this.getHeight() - success.getHeight()) / 2
         );
+
+        missionBorder.setPosition(10,10);
 
         if(successArray !=null && success.isVisible()) {
             //애니메이션 시간 업데이트
@@ -510,5 +466,212 @@ public class MissionDialog2 extends Dialog {
             gameClear = true;
             success.setVisible(true);
         }
+    }
+
+    public void blockClick(){
+        //각 블럭 객체당 별도의 클릭 시 블럭 깨기 이벤트
+        for (int i=0;i<numBlocks*numBlocks;i++){
+            final int finalI = i;
+
+//            // 각 블럭마다 InputListener 추가
+//            blockStacks.get(i).addListener(new InputListener() {
+//                @Override
+//                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+//                    // 블럭 6단계를 넘어가면 클릭 이벤트 비활성화
+//                    if (blockObjects.get(finalI).getStage() >= 6) {
+//                        return false;
+//                    }
+//
+//                    return true; // 투명하지 않은 경우, 클릭 이벤트 정상 처리
+//                }
+//
+//                @Override
+//                public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+//
+//                    // 블럭 클릭 시 처리
+//                    breakerObjects.get(finalI).onClick();
+//
+//                    currentBlockImage = blockObjects.get(finalI).getCurrentBlockImage();
+//                    blockImage = new Image(currentBlockImage);
+//                    blockImage.setSize(blockLength, blockLength);
+//
+//                    currentBreakImage = breakerObjects.get(finalI).getCurrentBreakImage();
+//                    breakImage = new Image(currentBreakImage);
+//                    breakImage.setSize(blockLength, blockLength);
+//
+//                    blockStacks.get(finalI).add(blockImage);
+//                    blockStacks.get(finalI).add(breakImage);
+//
+//                    if (blockObjects.get(finalI).gotMineral()) {
+//                        mineralCount++;
+//                        switch (blockObjects.get(finalI).getMineral()) {
+//                            case "diamond":
+//                                checkArray.get(5).setVisible(true);
+//                                break;
+//                            case "emerald":
+//                                checkArray.get(4).setVisible(true);
+//                                break;
+//                            case "gold":
+//                                checkArray.get(3).setVisible(true);
+//                                break;
+//                            case "iron":
+//                                checkArray.get(2).setVisible(true);
+//                                break;
+//                            case "bluegold":
+//                                checkArray.get(1).setVisible(true);
+//                                break;
+//                            case "redstone":
+//                                checkArray.get(0).setVisible(true);
+//                                break;
+//                            default:
+//                                Gdx.app.log("Block", "Unknown mineral type in clicked method");
+//                        }
+//                        Gdx.app.log("", "mineralCount : " + mineralCount);
+//                    }
+//                }
+//            });
+
+            // 클릭 이벤트 처리
+            blockStacks.get(i).addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    // 블럭 6단계를 넘어가면 클릭 이벤트 비활성화
+                    if (blockObjects.get(finalI).getStage() >= 6) {
+                        return;
+                    }
+
+                    // 블럭 클릭 시 처리
+                    breakerObjects.get(finalI).onClick();
+
+                    currentBlockImage = blockObjects.get(finalI).getCurrentBlockImage();
+                    blockImage = new Image(currentBlockImage);
+                    blockImage.setSize(blockLength, blockLength);
+
+                    currentBreakImage = breakerObjects.get(finalI).getCurrentBreakImage();
+                    breakImage = new Image(currentBreakImage);
+                    breakImage.setSize(blockLength, blockLength);
+
+                    blockStacks.get(finalI).add(blockImage);
+                    blockStacks.get(finalI).add(breakImage);
+
+                    if (blockObjects.get(finalI).gotMineral()) {
+                        mineralCount++;
+                        switch (blockObjects.get(finalI).getMineral()) {
+                            case "diamond":
+                                checkArray.get(5).setVisible(true);
+                                break;
+                            case "emerald":
+                                checkArray.get(4).setVisible(true);
+                                break;
+                            case "gold":
+                                checkArray.get(3).setVisible(true);
+                                break;
+                            case "iron":
+                                checkArray.get(2).setVisible(true);
+                                break;
+                            case "bluegold":
+                                checkArray.get(1).setVisible(true);
+                                break;
+                            case "redstone":
+                                checkArray.get(0).setVisible(true);
+                                break;
+                            default:
+                                Gdx.app.log("Block", "Unknown mineral type in clicked method");
+                        }
+                        Gdx.app.log("", "mineralCount : " + mineralCount);
+                    }
+                }
+            });
+        }
+    }
+
+    public void missionBorderClickEvent(){
+        missionBorder.addListener(new ClickListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (checkTransparent(missionBorderRegion, missionBorder, x, y)) {
+                    System.out.println("false");
+                    // 투명한 부분 클릭 시 이벤트 전파를 중지하여 다른 대상이 처리하게 함
+                    // 투명한 부분 클릭 시 blockStacks의 클릭 이벤트 호출
+                    for (Stack blockStack : blockStacks) {
+                        // Stack의 경계를 Rectangle로 생성
+                        Rectangle bounds = new Rectangle(blockStack.getX(), blockStack.getY(), blockStack.getWidth(), blockStack.getHeight());
+
+                        // 클릭한 위치가 블록 스택의 범위에 포함되는지 확인
+                        if (bounds.contains(x, y)) {
+                            // 블록 스택 내의 상대 좌표 계산
+                            float localX = x - blockStack.getX();
+                            float localY = y - blockStack.getY();
+
+                            // blockStack의 ClickListener 호출
+                            for (EventListener listener : blockStack.getListeners()) {
+                                if (listener instanceof ClickListener) {
+                                    ((ClickListener) listener).clicked(event, localX, localY);
+                                }
+                            }
+                            break; // 클릭된 블록만 처리하고 루프를 종료
+                        }
+                    }
+
+                    return false;
+                }
+                // 투명하지 않은 부분 클릭 시 정상 처리
+                System.out.println("true");
+                return true;
+            }
+        });
+
+//        missionBorder.addListener(new ClickListener() {
+//            @Override
+//            public void clicked(InputEvent event, float x, float y) {
+//                // 투명한 부분을 클릭했는지 확인
+//                if (checkTransparent(missionBorderRegion, missionBorder, x, y)) {
+//                    // 투명한 부분을 클릭한 경우 이벤트를 다른 대상에게 전달할 수 있도록 한다.
+//                    event.stop(); // 이벤트 처리를 멈추지 않고 다른 곳으로 전파하도록 유지
+//                } else {
+//                    // 투명하지 않은 부분을 클릭한 경우에만 이벤트 처리
+//                    System.out.println("Border clicked at non-transparent area");
+//                    event.handle(); // 명시적으로 이벤트를 처리했다고 표시 (다른 대상에게는 전파되지 않음)
+//                }
+//            }
+//        });
+    }
+
+    //이 게임에 사용되는 캐릭터의 크기와 모양은 전부 동일하니 임의로 하나만 넣어서 모든 캐릭터에 사용 가능
+    private boolean checkTransparent(TextureRegion textureRegion,Image image , float x, float y) {
+        // amongus1의 TextureRegion을 Pixmap으로 변환하여 픽셀 알파값 확인
+        TextureRegion region = textureRegion;
+        Texture texture = region.getTexture();
+
+        // 텍스처 데이터를 Pixmap으로 추출
+        texture.getTextureData().prepare();
+        Pixmap pixmap = texture.getTextureData().consumePixmap();
+
+        // 클릭한 위치의 실제 텍스처 좌표 계산 (84x84 크기를 320x320 크기에 맞게 변환)
+        float scaleX = (float) region.getRegionWidth() / image.getWidth();
+        float scaleY = (float) region.getRegionHeight() / image.getHeight();
+        int textureX = (int) (x * scaleX) + region.getRegionX();
+        int textureY = (int) (y * scaleY) + region.getRegionY();
+
+        // Pixmap의 좌표계는 위쪽이 0이므로 Y축을 변환
+        textureY = pixmap.getHeight() - textureY - 1;
+
+        Gdx.app.log("", "texturexy " + textureX + ", " + textureY + " regionxy " + region.getRegionX() + ", " + region.getRegionY() + " " + texture);
+
+        // 해당 픽셀의 알파값 확인
+        int pixel = pixmap.getPixel(textureX, textureY);
+        int alpha = (pixel >>> 24) & 0xff;
+        int red = (pixel >>> 16) & 0xff;
+        int green = (pixel >>> 8) & 0xff;
+        int blue = pixel & 0xff;
+
+        // 알파값과 RGB 값 로그로 출력
+        Gdx.app.log("Alpha Value", "Clicked Alpha: " + alpha + " pixel = " + pixel);
+        Gdx.app.log("Pixel Color", "Red: " + red + ", Green: " + green + ", Blue: " + blue);
+
+        // Pixmap 메모리 해제
+        pixmap.dispose();
+
+        return alpha == 0;
     }
 }

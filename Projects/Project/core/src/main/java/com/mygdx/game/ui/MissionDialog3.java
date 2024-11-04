@@ -69,12 +69,9 @@ public class MissionDialog3 extends Dialog {
     private Image fail;
     private float failStateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
 
-    private TextureAtlas cardsAtlas = new TextureAtlas("amongus/cards.atlas");
     private TextureRegionDrawable stage1Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round1"));
     private TextureRegionDrawable stage2Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round2"));
     private TextureRegionDrawable stage3Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round3"));
-    private TextureRegionDrawable demonstrationDrawable = new TextureRegionDrawable(cardsAtlas.findRegion("demonstration"));
-    private TextureRegionDrawable nowTryItDrawable = new TextureRegionDrawable(cardsAtlas.findRegion("nowTryIt"));
     private Image card;
     private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
@@ -389,12 +386,9 @@ public class MissionDialog3 extends Dialog {
         amongus1.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-//                if(isPixelHit(amongus1,(int)x,(int)y)) return false;
-//                Gdx.app.log("Debug", "amongus1 X: " + amongus1.getX() +
-//                    ", amongus1 Y: " + amongus1.getY() +
-//                    ", amongus1Width: " + amongus1.getWidth() +
-//                    ", amongus1Height: " + amongus1.getHeight());
-//                Gdx.app.log("",""+isPixelHit(amongus1,(int)x,(int)y));
+                if(checkTransparent(amongusArray1.get(0),amongus1,x,y)){
+                    return false;
+                }
 
                 amongus1.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray1.get(1))));
 
@@ -410,6 +404,9 @@ public class MissionDialog3 extends Dialog {
         amongus2.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if(checkTransparent(amongusArray1.get(0),amongus2,x,y)){
+                    return false;
+                }
 
                 amongus2.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray2.get(1))));
 
@@ -424,6 +421,10 @@ public class MissionDialog3 extends Dialog {
         amongus3.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if(checkTransparent(amongusArray1.get(0),amongus3,x,y)){
+                    return false;
+                }
+
                 amongus3.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray3.get(1))));
 
                 return true; // true를 반환하면 touchUp 이벤트도 받습니다.
@@ -437,6 +438,10 @@ public class MissionDialog3 extends Dialog {
         amongus4.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if(checkTransparent(amongusArray1.get(0),amongus4,x,y)){
+                    return false;
+                }
+
                 amongus4.setDrawable(new TextureRegionDrawable(new TextureRegion(amongusArray4.get(1))));
 
                 return true; // true를 반환하면 touchUp 이벤트도 받습니다.
@@ -466,62 +471,42 @@ public class MissionDialog3 extends Dialog {
         }, 0.2f); // 0.5초 후에 원래 이미지로 되돌림
     }
 
-    public boolean isPixelHit(Image image, int x, int y) {
-        TextureRegion region;
+    //이 게임에 사용되는 캐릭터의 크기와 모양은 전부 동일하니 임의로 하나만 넣어서 모든 캐릭터에 사용 가능
+    private boolean checkTransparent(TextureRegion textureRegion,Image image , float x, float y) {
+        // amongus1의 TextureRegion을 Pixmap으로 변환하여 픽셀 알파값 확인
+        TextureRegion region = textureRegion;
+        Texture texture = region.getTexture();
 
-        if (image.getDrawable() instanceof TextureRegionDrawable) {
-            TextureRegionDrawable drawable = (TextureRegionDrawable) image.getDrawable();
-            region = drawable.getRegion();
-        } else {
-            // TextureRegionDrawable이 아닌 경우 히트 인식하지 않음
-            Gdx.app.log("", "Drawable is not a TextureRegionDrawable");
-            return false;
-        }
+        // 텍스처 데이터를 Pixmap으로 추출
+        texture.getTextureData().prepare();
+        Pixmap pixmap = texture.getTextureData().consumePixmap();
 
-        // FrameBuffer를 사용하여 TextureRegion을 Pixmap으로 추출
-        FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, region.getRegionWidth(), region.getRegionHeight(), false);
-        frameBuffer.begin();
+        // 클릭한 위치의 실제 텍스처 좌표 계산 (84x84 크기를 320x320 크기에 맞게 변환)
+        float scaleX = (float) region.getRegionWidth() / image.getWidth();
+        float scaleY = (float) region.getRegionHeight() / image.getHeight();
+        int textureX = (int) (x * scaleX) + region.getRegionX();
+        int textureY = (int) (y * scaleY) + region.getRegionY();
 
-        SpriteBatch batch = new SpriteBatch();
-        batch.begin();
-        batch.draw(region, 0, 0);
-        batch.end();
+        // Pixmap의 좌표계는 위쪽이 0이므로 Y축을 변환
+        textureY = pixmap.getHeight() - textureY - 1;
 
-        // FrameBuffer에서 Pixmap을 생성
-        Pixmap pixmap = Pixmap.createFromFrameBuffer(0, 0, region.getRegionWidth(), region.getRegionHeight());
-        frameBuffer.end();
+        Gdx.app.log("", "texturexy " + textureX + ", " + textureY + " regionxy " + region.getRegionX() + ", " + region.getRegionY() + " " + texture);
 
-        batch.dispose();
-        frameBuffer.dispose();
-
-        // 이미지 좌표계를 Pixmap 좌표계로 변환
-        int textureX = x;
-        int textureY = region.getRegionHeight() - 1 - y;
-
-        // 범위 체크
-        if (textureX < 0 || textureX >= pixmap.getWidth() || textureY < 0 || textureY >= pixmap.getHeight()) {
-            pixmap.dispose();
-            Gdx.app.log("", "Coordinates out of bounds");
-            return false;
-        }
-
-        // Pixmap의 해당 좌표가 알파 값이 있는지 확인합니다.
+        // 해당 픽셀의 알파값 확인
         int pixel = pixmap.getPixel(textureX, textureY);
-        int alpha = (pixel >> 24) & 0xff;
+        int alpha = (pixel >>> 24) & 0xff;
+        int red = (pixel >>> 16) & 0xff;
+        int green = (pixel >>> 8) & 0xff;
+        int blue = pixel & 0xff;
 
+        // 알파값과 RGB 값 로그로 출력
+        Gdx.app.log("Alpha Value", "Clicked Alpha: " + alpha + " pixel = " + pixel);
+        Gdx.app.log("Pixel Color", "Red: " + red + ", Green: " + green + ", Blue: " + blue);
 
-        // 알파 값이 일정 값 이상일 때 마우스가 이미지 위에 있다고 인식합니다.
-        Gdx.app.log("", "alpha = " + alpha + " " + textureX + ", " + textureY);
-        Gdx.app.log("Debug", "Region X: " + region.getRegionX() +
-            ", Region Y: " + region.getRegionY() +
-            ", Width: " + region.getRegionWidth() +
-            ", Height: " + region.getRegionHeight());
-
-
-        // Pixmap 해제
+        // Pixmap 메모리 해제
         pixmap.dispose();
 
-        return alpha > 0;
+        return alpha == 0;
     }
 
 
