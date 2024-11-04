@@ -3,14 +3,15 @@ package com.mygdx.game.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 
@@ -23,8 +24,10 @@ public class MissionDialog2 extends Dialog {
     public class Block {
         private int stage; // 1 ~ 5 단계
         public String mineral; // 다이아몬드, 에메랄드, 금, 철, 청금석, 레드스톤, 심층암 중 하나
-        private TextureAtlas blocks = new TextureAtlas(Gdx.files.internal("minecraft/blocks.atlas"));; // 블록 이미지가 저장된 TextureAtlas
-        private Array<TextureRegion> blocksArray = new Array<TextureRegion>();; // 블록 이미지를 저장할 배열
+        private TextureAtlas blocks = new TextureAtlas(Gdx.files.internal("minecraft/blocks.atlas")); // 블록 이미지가 저장된 TextureAtlas
+        private Texture block0 = new Texture(Gdx.files.internal("minecraft/block0.png"));
+        private Array<TextureRegion> blocksArray = new Array<TextureRegion>(); // 블록 이미지를 저장할 배열
+        private TextureRegion blockEmpty = new TextureRegion(block0);
 
         // 생성자
         public Block(int stage, String mineral) {
@@ -72,13 +75,41 @@ public class MissionDialog2 extends Dialog {
                         Gdx.app.log("Block", "Unknown mineral type: " + mineral);
                 }
             } else if (stage == 5) {
+                // 4단계일 경우 광물 변수에 따라 다른 블록을 로드
+                switch (mineral.toLowerCase()) {
+                    case "diamond":
+                        blocksArray.add(blocks.findRegion("Item_Dia"));
+                        break;
+                    case "emerald":
+                        blocksArray.add(blocks.findRegion("Item_Eme"));
+                        break;
+                    case "gold":
+                        blocksArray.add(blocks.findRegion("Item_Gold"));
+                        break;
+                    case "iron":
+                        blocksArray.add(blocks.findRegion("Item_Iron"));
+                        break;
+                    case "bluegold":
+                        blocksArray.add(blocks.findRegion("Item_Lapis"));
+                        break;
+                    case "redstone":
+                        blocksArray.add(blocks.findRegion("Item_Red"));
+                        break;
+                    case "ggwang":
+                        blocksArray.add(blocks.findRegion("Block5"));
+                        break;
+                    default:
+                        Gdx.app.log("Block", "Unknown mineral type: " + mineral);
+                }
+            }
+            else if (stage == 6) {
                 blocksArray.add(blocks.findRegion("Block5"));
             }
         }
 
         // 단계 변경 메서드
         public void setStage(int newStage) {
-            if(stage <= 5) {
+            if(stage <= 6) {
                 this.stage = newStage;
                 blocksArray.clear(); // 기존 블록 이미지를 지우고
                 loadBlockImages();    // 새로운 블록 이미지를 로드
@@ -91,13 +122,13 @@ public class MissionDialog2 extends Dialog {
         }
 
         // 광물 변경 메서드 (4단계에서만 유효)
-        public void setMineral(String newMineral) {
-            if (stage == 4) {
-                this.mineral = newMineral;
-                blocksArray.clear(); // 기존 블록 이미지를 지우고
-                loadBlockImages();    // 새로운 블록 이미지를 로드
-            }
-        }
+//        public void setMineral(String newMineral) {
+//            if (stage == 5) {
+//                this.mineral = newMineral;
+//                blocksArray.clear(); // 기존 블록 이미지를 지우고
+//                loadBlockImages();    // 새로운 블록 이미지를 로드
+//            }
+//        }
 
         // 현재 블록 이미지를 반환하는 메서드
         public TextureRegion getCurrentBlockImage() {
@@ -105,10 +136,14 @@ public class MissionDialog2 extends Dialog {
         }
 
         public boolean gotMineral(){
-            if(this.mineral != "ggwang" && this.stage == 5) {
+            if(this.mineral != "ggwang" && this.stage == 6) {
                 return true;
             }
             return false;
+        }
+
+        public String getMineral() {
+            return mineral;
         }
     }
 
@@ -136,12 +171,16 @@ public class MissionDialog2 extends Dialog {
 
         // 마우스 클릭 시 호출되는 메서드
         public void onClick() {
-            if (breakStage < 10) {
-                breakStage++;
-            } else {
-                // 10단계에 도달하면 초기화 및 블럭의 단계 증가
-                breakStage = 0;
+            if(block.getStage()==5){
                 block.setStage(block.getStage() + 1);
+            }else {
+                if (breakStage < 10) {
+                    breakStage++;
+                } else {
+                    // 10단계에 도달하면 초기화 및 블럭의 단계 증가
+                    breakStage = 0;
+                    block.setStage(block.getStage() + 1);
+                }
             }
 //            Gdx.app.log("onclick","breakStage"+breakStage);
         }
@@ -158,8 +197,6 @@ public class MissionDialog2 extends Dialog {
     Array<Block> blockObjects = new Array<>();
     Array<BlockBreaker> breakerObjects = new Array<>();
     // 이미지 저장용 리스트 선언
-    Array<Image> blockImages = new Array<>();
-    Array<Image> breakImages = new Array<>();
     // 블럭 + 블럭깨기 합치기 위한 스택 배열 선언
     Array<Stack> blockStacks = new Array<>();
     // Block과 BlockBreaker 객체의 수
@@ -171,25 +208,41 @@ public class MissionDialog2 extends Dialog {
     private Texture border = new Texture(Gdx.files.internal("minecraft/border.png"));
     private Texture missionBorder = new Texture(Gdx.files.internal("images/mission_box.png"));
     private Texture block0 = new Texture(Gdx.files.internal("minecraft/block0.png"));
-    private TextureRegionDrawable block0Drawable = new TextureRegionDrawable(block0);
-    private TextureRegionDrawable borderDrawable = new TextureRegionDrawable(border);
+    private Texture itemListTexture = new Texture(Gdx.files.internal("minecraft/checkItemBox.png"));
+    private TextureRegionDrawable itemListDrawable = new TextureRegionDrawable(itemListTexture);
+    private TextureRegionDrawable checkDrawable = new TextureRegionDrawable(new Texture(Gdx.files.internal("minecraft/Item_check.png")));
     private Image block0Image;
     private Image borderImage;
     private Image blockImage;
     private Image breakImage;
     private Image missionImage;
+    private Image itemList = new Image(itemListDrawable);
+    private Image check;
+    private Array<Image> checkArray = new Array<>();
     private Stack blockStack;
     private float initialX=0;
     private float initialY=0;
     private float x = initialX;
     private float y = initialY;
+    private int checkSize = 38;
     private int index=0;
     private int mineralCount = 0;
     private boolean gameClear = false;
-    private int blockLength = 50;
+    private int blockLength = 75;
     private int boxLength = blockLength * numBlocks;
     private int gap = 20;
+    private float checkInitialX =boxLength+80;
+    private float checkInitailY =98;
+    private float checkX = checkInitialX;
+    private float checkY = checkInitailY;
     private boolean borderOn = false;
+
+    private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
+    private TextureRegionDrawable successDrawable;
+    private Array<TextureRegion> successArray = new Array<>();
+    private Animation<TextureRegion> successAnimation;
+    private Image success = new Image();
+    private float successStateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
 
     Random random = new Random();
 
@@ -211,6 +264,13 @@ public class MissionDialog2 extends Dialog {
                 return super.keyDown(event, keycode);
             }
         });
+
+        for(int i=1; i <= 6 ; i++){
+            successArray.add(successAtals.findRegion("mission_success" + i));
+        }
+        successAnimation = new Animation<TextureRegion>(0.15f, successArray,Animation.PlayMode.NORMAL);
+        successDrawable = new TextureRegionDrawable(successAnimation.getKeyFrame(0));
+        success = new Image(successDrawable);
 
         // 반복문 밖에서 리스트를 생성하고 섞음
         ArrayList<String> blockTypes = new ArrayList<>();
@@ -268,12 +328,18 @@ public class MissionDialog2 extends Dialog {
             borderImage.setSize(blockLength, blockLength);
             borderImage.setVisible(false);
 
+
             blockStack = new Stack();
             blockStack.add(blockImage);
             blockStack.add(breakImage);
             blockStack.add(borderImage);
 
             blockStacks.add(blockStack);
+        }
+
+        for(int i=0;i<6;i++){
+            check = new Image(checkDrawable);
+            checkArray.add(check);
         }
 
 //        missionImage = new Image(border);
@@ -284,11 +350,21 @@ public class MissionDialog2 extends Dialog {
             contentTable.add(blockStacks.get(i)).width(blockLength).height(blockLength).expand().fill().pad(10);
         }
 
+        contentTable.add(itemList).width(120).height(220);
+
+        for(int i=0;i<6;i++){
+            contentTable.add(checkArray.get(i)).width(checkSize).height(checkSize).expand().fill().pad(10);
+            checkArray.get(i).setVisible(false);
+        }
+
+        contentTable.add(success).width(250).height(100).expand().fill();
+        success.setVisible(false);
+
         initialX = 10;
         initialY = 10;
 
-        this.getCell(contentTable).width(boxLength+gap).height(boxLength+gap);
-//        this.setBackground((Drawable) null);
+        this.getCell(contentTable).width(440).height(320);
+        this.setBackground((Drawable) null);
 
         stage.addActor(this);
     }
@@ -333,8 +409,8 @@ public class MissionDialog2 extends Dialog {
             blockStacks.get(i).addListener(new ClickListener(){
                 @Override
                 public void clicked(InputEvent event, float x, float y){
-                    //블럭 4단계를 넘어가면 클릭 이벤트 비활성화
-                    if(blockObjects.get(finalI).getStage() >= 5){
+                    //블럭 6단계를 넘어가면 클릭 이벤트 비활성화
+                    if(blockObjects.get(finalI).getStage() >= 6){
                         return;
                     }
 
@@ -354,9 +430,30 @@ public class MissionDialog2 extends Dialog {
                     blockStacks.get(finalI).add(blockImage);
                     blockStacks.get(finalI).add(breakImage);
 //                    blockStacks.get(finalI).add(borderImage);
-
                     if(blockObjects.get(finalI).gotMineral()){
                         mineralCount++;
+                        switch (blockObjects.get(finalI).getMineral()){
+                            case "diamond":
+                                checkArray.get(5).setVisible(true);
+                                break;
+                            case "emerald":
+                                checkArray.get(4).setVisible(true);
+                                break;
+                            case "gold":
+                                checkArray.get(3).setVisible(true);
+                                break;
+                            case "iron":
+                                checkArray.get(2).setVisible(true);
+                                break;
+                            case "bluegold":
+                                checkArray.get(1).setVisible(true);
+                                break;
+                            case "redstone":
+                                checkArray.get(0).setVisible(true);
+                                break;
+                            default:
+                                Gdx.app.log("Block", "Unknown mineral type in clicked method");
+                        }
                         Gdx.app.log("","mineralCount : "+mineralCount);
                     }
                 }
@@ -371,6 +468,28 @@ public class MissionDialog2 extends Dialog {
         super.act(delta);
 
 //        missionImage.setPosition(0,0);
+
+        itemList.setPosition(
+            boxLength+10,
+            (this.getHeight() - itemList.getHeight()) / 2 + 38
+        );
+
+        for(int i=0;i<6;i++){
+            checkArray.get(i).setPosition(checkX, checkY+(checkSize-5)*(i));
+        }
+
+        success.setPosition(
+            (this.getWidth() - success.getWidth()) / 2,
+            (this.getHeight() - success.getHeight()) / 2
+        );
+
+        if(successArray !=null && success.isVisible()) {
+            //애니메이션 시간 업데이트
+            successStateTime += delta;
+            //현재 애니메이션 프레임 가져오기
+            TextureRegion currentFrame = successAnimation.getKeyFrame(successStateTime, false);
+            ((TextureRegionDrawable) success.getDrawable()).setRegion(currentFrame);
+        }
 
         x = initialX;
         y = initialY;
@@ -389,6 +508,7 @@ public class MissionDialog2 extends Dialog {
         if(mineralCount==6 && !gameClear){
             Gdx.app.log("","game clear!");
             gameClear = true;
+            success.setVisible(true);
         }
     }
 }

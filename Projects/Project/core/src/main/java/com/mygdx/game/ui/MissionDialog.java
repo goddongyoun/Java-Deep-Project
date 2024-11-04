@@ -52,6 +52,20 @@ public class MissionDialog extends Dialog {
     private int remainingBalls = 2;  // 총 5개의 몬스터볼 및 남은 몬스터볼 갯수
     private float stateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
 
+    private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
+    private TextureRegionDrawable successDrawable;
+    private Array<TextureRegion> successArray = new Array<>();
+    private Animation<TextureRegion> successAnimation;
+    private Image success = new Image();
+    private float successStateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
+
+    private TextureAtlas failAtals = new TextureAtlas("publicImages/failes.atlas");
+    private TextureRegionDrawable failDrawable;
+    private Array<TextureRegion> failArray = new Array<>();
+    private Animation<TextureRegion> failAnimation;
+    private Image fail;
+    private float failStateTime = 0f;
+
     private boolean roundClear = false;
     private boolean roundFail = false;  // 라운드 실패 여부
 
@@ -89,6 +103,20 @@ public class MissionDialog extends Dialog {
                 return super.keyDown(event, keycode);
             }
         });
+
+        for(int i=1; i <= 6 ; i++){
+            successArray.add(successAtals.findRegion("mission_success" + i));
+        }
+        successAnimation = new Animation<TextureRegion>(0.15f, successArray,Animation.PlayMode.NORMAL);
+        successDrawable = new TextureRegionDrawable(successAnimation.getKeyFrame(0));
+        success = new Image(successDrawable);
+
+        for(int i=1; i <= 6 ; i++){
+            failArray.add(failAtals.findRegion("mission_false" + i));
+        }
+        failAnimation = new Animation<TextureRegion>(0.15f,failArray,Animation.PlayMode.NORMAL);
+        failDrawable = new TextureRegionDrawable(failAnimation.getKeyFrame(0));
+        fail = new Image(failDrawable);
 
         // 레이아웃 설정
         Table contentTable = getContentTable();
@@ -149,6 +177,11 @@ public class MissionDialog extends Dialog {
         contentTable.add(aimImage).width(150).height(150).expand().fill().pad(10);
         //expand(): 셀이 가능한 공간을 확장해서 차지하도록 설정합니다. 셀 자체는 크기가 늘어나지만, 그 안의 위젯은 원래 크기를 유지합니다.
         //fill(): 셀의 크기가 확장된 후, 위젯이 그 확장된 셀을 채우도록 설정합니다. 즉, 셀의 크기에 맞춰 위젯의 크기도 늘어납니다.
+
+        contentTable.add(fail).width(250).height(100).expand().fill();
+        fail.setVisible(false);
+        contentTable.add(success).width(250).height(100).expand().fill();
+        success.setVisible(false);
 
         // 크기를 명시적으로 설정하여 다이얼로그가 팝업 크기를 따르도록 함
         this.getCell(contentTable).width(640).height(360);
@@ -267,6 +300,7 @@ public class MissionDialog extends Dialog {
                 currentMonsterSpeedX = 500f;
                 break;
             default:
+                success.setVisible(true);
                 Gdx.app.log("MissionDialog", "Game Clear! All rounds finished.");
                 return;
         }
@@ -294,9 +328,28 @@ public class MissionDialog extends Dialog {
     public void act(float delta) {
         super.act(delta);
 
-        // 이미 실패한 상태라면 추가적인 처리를 중지
-        if (roundFail) {
-            return;  // roundFail이 true일 경우 더 이상의 처리 중지
+        fail.setPosition(
+            (this.getWidth() - fail.getWidth()) / 2,
+            (this.getHeight() - fail.getHeight()) / 2
+        );
+        success.setPosition(
+            (this.getWidth() - success.getWidth()) / 2,
+            (this.getHeight() - success.getHeight()) / 2
+        );
+
+        if(failArray!=null && fail.isVisible()) {
+            //애니메이션 시간 업데이트
+            failStateTime += delta;
+            //현재 애니메이션 프레임 가져오기
+            TextureRegion currentFrame = failAnimation.getKeyFrame(failStateTime, false);
+            ((TextureRegionDrawable) fail.getDrawable()).setRegion(currentFrame);
+        }
+        if(successArray !=null && success.isVisible()) {
+            //애니메이션 시간 업데이트
+            successStateTime += delta;
+            //현재 애니메이션 프레임 가져오기
+            TextureRegion currentFrame = successAnimation.getKeyFrame(successStateTime, false);
+            ((TextureRegionDrawable) success.getDrawable()).setRegion(currentFrame);
         }
 
         // 플레이어 초기 위치 설정 (화면 아래 정중앙)
@@ -409,6 +462,7 @@ public class MissionDialog extends Dialog {
 
         // 남은 몬스터볼이 없고, 라운드 클리어가 안되어 있으며, 몬스터볼이 더이상 움직이지 않는 경우(마지막으로 던진 몬스터볼이 끝까지 날라갔는지 체크) 라운드 실패로 처리
         if (remainingBalls == 0 && !roundClear && !isMonsterBallMoving) {
+            fail.setVisible(true);
             roundFail = true;  // 몬스터볼이 모두 소진된 상태에서 충돌이 없으면 실패로 처리
             Gdx.app.log("MissionDialog", "Game Over!");  // 게임 실패 메시지 출력
         }
