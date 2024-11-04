@@ -267,7 +267,7 @@ public class _Imported_ClientBase {
 			else {
 				String[] parts = saver.split(" ");
 	            playerCount = Integer.parseInt(parts[0]);
-
+	            System.out.println(saver);
 	            for (int i = 0; i < playerCount; i++) {
 	                String[] coords = parts[i + 1].split("/");
 	                String name = coords[0]; // name
@@ -296,6 +296,7 @@ public class _Imported_ClientBase {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.out.println("ERR/CLI 299 | -2 Returned");
 			return -2;
 		} finally {
 		}
@@ -352,7 +353,6 @@ public class _Imported_ClientBase {
 			tcpWriter_toSend.write("MakeConnection"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write("plsReceive"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toSend.readLine());
 			
-			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.out.println("[LOG] 서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
@@ -372,6 +372,13 @@ public class _Imported_ClientBase {
 		executorService.execute(()->{
 			String saver = null;
 			isReceiverOut = false;
+			try {
+				tcpSock_toRecv.setSoTimeout(3000);
+			} catch (SocketException e) {
+				e.printStackTrace();
+				System.out.println("[LOG] ExecutorServices Couldn't Started");
+				return;
+			}
 			while (true) {
 	            try {
 	                Thread.sleep(1);

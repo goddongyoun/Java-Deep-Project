@@ -131,56 +131,56 @@ public class PlayerOfMulti {
         pixmap.dispose();
     }
 
-    public void update(float x, float y, float delta) {
-    	   stateTime += delta;
-    	   
-    	   // 서버 위치 저장
-    	   serverPosition.set(x, y);
-    	   
-    	   // 현재 위치와 서버 위치의 차이 계산
-    	   float dx = serverPosition.x - position.x;
-    	   float dy = serverPosition.y - position.y;
-    	   
-    	   // 텔레포트가 필요한 거리 체크 (예: 100 이상 차이나면)
-    	   float teleportThreshold = 100f;
-    	   if (Math.abs(dx) > teleportThreshold || Math.abs(dy) > teleportThreshold) {
-    	       // 직접 서버 위치로 텔레포트
-    	       position.x = serverPosition.x;
-    	       position.y = serverPosition.y;
-    	       velocity.setZero();
-    	       currentState = PlayerState.IDLE;
-    	   } else {
-    	       // 일반적인 이동 처리
-    	       velocity.setZero();
-    	       float moveThreshold = 1f;
-    	       
-    	       if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
-    	           velocity.x = dx;
-    	           velocity.y = dy;
-    	           velocity.nor();  // 방향 정규화
-    	           
-    	           // 이동 상태 설정
-    	           currentState = PlayerState.RUNNING;  // 어떤 방향이든 이동중이면 RUNNING
-    	           
-    	           // x 방향 이동시 방향 설정
-    	           if (Math.abs(dx) > moveThreshold) {
-    	               if (velocity.x < 0) {
-    	                   facingLeft = true;
-    	               } else if (velocity.x > 0) {
-    	                   facingLeft = false;
-    	               }
-    	           }
-    	       } else {
-    	           currentState = PlayerState.IDLE;
-    	       }
+	public void update(float x, float y, float delta) {
+		stateTime += delta;
 
-    	       // velocity를 사용한 부드러운 이동
-    	       position.x += velocity.x * speedX * delta;
-    	       position.y += velocity.y * speedY * delta;
-    	   }
-    	   
-    	   bounds.setPosition(position);
-    	}
+		// 서버 위치 저장
+		serverPosition.set(x, y);
+
+		// 현재 위치와 서버 위치의 차이 계산
+		float dx = serverPosition.x - position.x;
+		float dy = serverPosition.y - position.y;
+
+		// 텔레포트가 필요한 거리 체크 (예: 100 이상 차이나면)
+		float teleportThreshold = 100f;
+		if (Math.abs(dx) > teleportThreshold || Math.abs(dy) > teleportThreshold) {
+			// 직접 서버 위치로 텔레포트
+			position.x = serverPosition.x;
+			position.y = serverPosition.y;
+			velocity.setZero();
+			currentState = PlayerState.IDLE;
+		} else {
+			// 일반적인 이동 처리
+			velocity.setZero();
+			float moveThreshold = 1f;
+
+			if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
+				velocity.x = dx;
+				velocity.y = dy;
+				velocity.nor(); // 방향 정규화
+
+				// 이동 상태 설정
+				currentState = PlayerState.RUNNING; // 어떤 방향이든 이동중이면 RUNNING
+
+				// x 방향 이동시 방향 설정
+				if (Math.abs(dx) > moveThreshold) {
+					if (velocity.x < 0) {
+						facingLeft = true;
+					} else if (velocity.x > 0) {
+						facingLeft = false;
+					}
+				}
+			} else {
+				currentState = PlayerState.IDLE;
+			}
+
+			// velocity를 사용한 부드러운 이동
+			position.x += velocity.x * speedX * delta;
+			position.y += velocity.y * speedY * delta;
+		}
+
+		bounds.setPosition(position);
+	}
 
     public void render(Batch batch) {
         TextureRegion currentFrame = null;

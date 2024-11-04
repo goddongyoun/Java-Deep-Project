@@ -87,16 +87,16 @@ class Room{
 	
 	/**
 	 * Request to user out
-	 * @param ip
+	 * @param name
 	 * @return -1 Couldn't found, 0 success, -4 No one in this room, pls remove this room
 	 */
-	int outOfUser(InetAddress ip) {
+	int outOfUser(String name) {
 		boolean found = false;
 		for(int i = 0; i<curUserNum; i++) {
 			if(users[i] == null) {
 				continue;
 			}
-			if(users[i].ip.equals(ip)) {
+			if(users[i].name.equals(name)) {
 				found = true;
 				users[i] = null;
 				curUserNum--;
@@ -126,15 +126,21 @@ class Room{
 	
 	public String getLocToSortString() {
 		StringBuilder sb = null;
-        for(int z = 0; z<1; z++) {
+		boolean again = true;
+        while(again == true) {
+        	again = false;
     		sb = new StringBuilder();
             sb.append(curUserNum);
-        	for (int i = 0; i < curUserNum; i++) {
+        	for (int i = 0; i < MAX_USER; i++) {
     			try {
     				User user = users[i];
-    				sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/")
-    						.append(user.getLocation()[1]);
+    				if(user != null) {
+    					sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/")
+						.append(user.getLocation()[1]);
+    				}
     			} catch (Exception e) {
+    				//e.printStackTrace();
+    				//again = true;
     				break;
     			}
     		}
@@ -275,7 +281,7 @@ class Clients implements Runnable{
 						if(RecogPort == -1) {
 							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
 						} else {
-							int res = ServerBase.rooms.get(RecogPort).outOfUser(connectedIP);
+							int res = ServerBase.rooms.get(RecogPort).outOfUser(name);
 							if(res == -1) {
 								tcpWriter.write("Couldn't found"); tcpWriter.newLine(); tcpWriter.flush();
 							} else if(res == 0) {
@@ -366,7 +372,7 @@ class Clients implements Runnable{
 		finally {
 			System.out.println(SysoutColors.RED + "Disconnected with " + sock.getRemoteSocketAddress() + " Closed Socket" + SysoutColors.RESET);
 			if(RecogPort != -1) {
-				int res = ServerBase.rooms.get(RecogPort).outOfUser(connectedIP);
+				int res = ServerBase.rooms.get(RecogPort).outOfUser(name);
 				if(res == 0) {
 					System.out.println("Successfully out " + connectedIP);
 				}
