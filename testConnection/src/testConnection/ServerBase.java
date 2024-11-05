@@ -220,7 +220,7 @@ class Clients implements Runnable{
 			
 			if(isSender == 0) {
 				while((saver = tcpReader.readLine()) != null) {
-					if(!(saver.equals("NewLoc") && saver.equals("GetLoc"))) {
+					if(!(saver.equals("NewLoc") || saver.equals("GetLoc"))) {
 						System.out.println("TCP received "+ saver + sock.getRemoteSocketAddress());
 					}
 					
