@@ -82,7 +82,6 @@ public class _Imported_ClientBase {
 	        if (parts.length > 1) {
 	            recogPort = parts[1];
 	            System.out.println("RecogPort: " + recogPort);
-	            tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
 				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
 				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+recogPort); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
@@ -171,7 +170,7 @@ public class _Imported_ClientBase {
 				return saver;
 			}
 			else if(saver.equals("SuccessfullyJoind")) {
-				tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				//tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
 				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
 				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
@@ -267,7 +266,7 @@ public class _Imported_ClientBase {
 			else {
 				String[] parts = saver.split(" ");
 	            playerCount = Integer.parseInt(parts[0]);
-	            System.out.println(saver);
+	            //System.out.println(saver);
 	            for (int i = 0; i < playerCount; i++) {
 	                String[] coords = parts[i + 1].split("/");
 	                String name = coords[0]; // name
@@ -373,11 +372,15 @@ public class _Imported_ClientBase {
 			String saver = null;
 			isReceiverOut = false;
 			try {
+	            tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 				tcpSock_toRecv.setSoTimeout(3000);
 			} catch (SocketException e) {
 				e.printStackTrace();
-				System.out.println("[LOG] ExecutorServices Couldn't Started");
+				System.out.println("[LOG] CLI/379(SOCKET_EXCEPTION) || ExecutorServices Couldn't Started");
 				return;
+			} catch(IOException e) {
+				e.printStackTrace();
+				System.out.println("[LOG] CLI/383(IOEXCEPTION) || ExecutorServices Couldn't Started");
 			}
 			while (true) {
 	            try {
@@ -394,11 +397,12 @@ public class _Imported_ClientBase {
 	                    }
 	                }
 	            } catch (IOException e) {
+	            	e.printStackTrace();
 	                System.out.println("[LOG] 채팅 연결 종료");
 	                break;
 	            } catch (InterruptedException e) {
 	                Thread.currentThread().interrupt();
-	                System.out.println("[LOG] 스레드가 인터럽트되었습니다.");
+	                System.out.println("[LOG] The Thread was Interrupted.");
 	                break; 
 	            } finally {
 					tcpReader_toRecv = null;
@@ -406,6 +410,7 @@ public class _Imported_ClientBase {
 				}
 			}
 		});
+		Thread.sleep(10); //To wait that excutorService.execute make Socket to Receive
 		System.out.println("[LOG] ExecutorServices Started");
 		//!!! Important ends!!
 		
