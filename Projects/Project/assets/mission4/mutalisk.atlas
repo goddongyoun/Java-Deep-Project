@@ -1,0 +1,89 @@
+mutalisk.png
+size: 3840, 2400
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+MutaliskL1
+  rotate: false
+  xy: 0, 0
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskL2
+  rotate: false
+  xy: 960, 0
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskL3
+  rotate: false
+  xy: 1920, 0
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskL4
+  rotate: false
+  xy: 2880, 0
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskL5
+  rotate: false
+  xy: 0, 800
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskL6
+  rotate: false
+  xy: 960, 800
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskR1
+  rotate: false
+  xy: 1920, 800
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskR2
+  rotate: false
+  xy: 2880, 800
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskR3
+  rotate: false
+  xy: 0, 1600
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskR4
+  rotate: false
+  xy: 960, 1600
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskR5
+  rotate: false
+  xy: 1920, 1600
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1
+MutaliskR6
+  rotate: false
+  xy: 2880, 1600
+  size: 960, 800
+  orig: 960, 800
+  offset: 0, 0
+  index: -1

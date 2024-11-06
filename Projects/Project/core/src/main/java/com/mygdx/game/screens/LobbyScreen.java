@@ -19,12 +19,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
 import com.mygdx.game.Player;
 import com.mygdx.game.Room;
-import com.mygdx.game.ui.AnimatedImageButton;
-import com.mygdx.game.ui.LobbyMap;
+import com.mygdx.game.ui.*;
 import com.mygdx.game.util.FontManager;
-import com.mygdx.game.ui.MissionDialog;
-import com.mygdx.game.ui.MissionDialog2;
-import com.mygdx.game.ui.MissionDialog3;
 
 public class LobbyScreen implements Screen {
     private Main game;
@@ -42,6 +38,7 @@ public class LobbyScreen implements Screen {
     private MissionDialog missionDialog;
     private MissionDialog2 missionDialog2;
     private MissionDialog3 missionDialog3;
+    private MissionDialog4 missionDialog4;
     private Player player;
 
     public LobbyScreen(final Main game) {
@@ -96,6 +93,7 @@ public class LobbyScreen implements Screen {
             buttonAtlas.findRegion("settingBtn").getRegionHeight());
 
         TextButton mission3Btn = new TextButton("미션3 어몽구스",skin);
+        TextButton mission4Btn = new TextButton("미션4 스타",skin);
 
         AnimatedImageButton leaveButton = new AnimatedImageButton(buttonTexture,
             buttonAtlas.findRegion("closeGameBtn").getRegionX(),
@@ -128,6 +126,14 @@ public class LobbyScreen implements Screen {
             }
         });
 
+        mission4Btn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                missionDialog4 = new MissionDialog4("", skin, stage);
+                missionDialog4.showMission(stage);  // 미션 팝업을 화면에 띄움
+            }
+        });
+
         leaveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -139,6 +145,7 @@ public class LobbyScreen implements Screen {
         buttonTable.add(startButton).padBottom(10).row();
         buttonTable.add(editButton).padBottom(10).row();
         buttonTable.add(mission3Btn).padBottom(10).row();
+        buttonTable.add(mission4Btn).padBottom(10).row();
         buttonTable.add(leaveButton);
 
         stage.addActor(buttonTable);
@@ -180,7 +187,7 @@ public class LobbyScreen implements Screen {
         float x = (camera.viewportWidth - backgroundWidth * scale) / 2;
         float y = camera.viewportHeight - backgroundHeight * scale - 20;
 
-        batch.draw(roomInfoBackground, x, y, backgroundWidth * scale, backgroundHeight * scale);
+//        batch.draw(roomInfoBackground, x, y, backgroundWidth * scale, backgroundHeight * scale);
 
         String roomTitle = "방 제목: " + currentRoom.getTitle();
         String playerInfo = String.format("플레이어: %d / %d", currentRoom.getPlayers().size(), currentRoom.getMaxPlayers());
@@ -189,15 +196,15 @@ public class LobbyScreen implements Screen {
         float textY = y + backgroundHeight * scale - 40;
         float centerX = x + (backgroundWidth * scale) / 2;
 
-        roomInfoFont.setColor(Color.BLACK);
-        layout.setText(roomInfoFont, roomTitle);
-        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY);
-
-        layout.setText(roomInfoFont, playerInfo);
-        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY - 30);
-
-        layout.setText(roomInfoFont, roomCode);
-        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY - 60);
+//        roomInfoFont.setColor(Color.BLACK);
+//        layout.setText(roomInfoFont, roomTitle);
+//        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY);
+//
+//        layout.setText(roomInfoFont, playerInfo);
+//        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY - 30);
+//
+//        layout.setText(roomInfoFont, roomCode);
+//        roomInfoFont.draw(batch, layout, centerX - layout.width / 2, textY - 60);
     }
 
     @Override
