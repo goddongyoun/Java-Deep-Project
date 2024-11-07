@@ -20,8 +20,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 
 import java.util.Random;
+import java.util.TimerTask;
 
 public class MissionDialog4 extends Dialog {
     Stage stage;
@@ -53,10 +55,12 @@ public class MissionDialog4 extends Dialog {
     //오버로드
     private Array<Overlord> overlord = new Array<>();
     private int overlordCount = 3;
+    private int hitOverlordCount = 0;
 
     //뮤탈리스크
     private Array<Mutalisk> mutalisk = new Array<>();
     private int mutaliskCount = 5;
+    private int hitMutaliskCount = 0;
 
     //피격 효과
     private TextureAtlas hitAtlas = new TextureAtlas(Gdx.files.internal("mission4/fire.atlas"));
@@ -87,6 +91,12 @@ public class MissionDialog4 extends Dialog {
     private Animation<TextureRegion> failAnimation;
     private Image fail;
     private float failStateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
+
+    //테두리
+    private Image border = new Image(new Texture(Gdx.files.internal("mission/missionBox240240.png")));
+
+    //시작카드
+    private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
     private float clickedX;
     private float clickedY;
@@ -161,7 +171,7 @@ public class MissionDialog4 extends Dialog {
         hit = new Image(hitDrawable);
 
         //요소 테이블에 추가
-        contentTable.add(sky).width(dialogSize).height(dialogSize).expand().fill();
+        contentTable.add(sky).width(dialogSize-20).height(dialogSize-20).expand().fill();
         sky.setName("sky");
 
         //하늘에 떠다니는 요소는 이 사이로 추가 ~~
@@ -190,10 +200,18 @@ public class MissionDialog4 extends Dialog {
         gunShooter.setName("gunShooter");
 
         contentTable.add(fail).width(250).height(100).expand().fill();
+        fail.setName("fail");
         fail.setVisible(false);
 
         contentTable.add(success).width(250).height(100).expand().fill();
+        success.setName("success");
         success.setVisible(false);
+
+        contentTable.add(startCard).width(250).height(80).expand().fill();
+        startCard.setName("startCard");
+
+        contentTable.add(border).width(dialogSize).height(dialogSize).expand().fill();
+        border.setName("border");
 
         this.getCell(contentTable).width(dialogSize).height(dialogSize).expand().fill();
         // 미션 클래스 자체의 배경을 제거
@@ -214,8 +232,14 @@ public class MissionDialog4 extends Dialog {
             (stage.getHeight() - this.getHeight()) / 2
         );
 
-        //발사 이벤트 추가
-        contentTable.addListener(clickListener);
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                startCard.setVisible(false);
+                //발사 이벤트 추가
+                contentTable.addListener(clickListener);
+            }
+        },1f);
     }
 
     public void act(float delta) {
@@ -225,7 +249,14 @@ public class MissionDialog4 extends Dialog {
             contentTable.removeListener(clickListener);
         }
 
-
+        border.setPosition(
+            (this.getWidth() - border.getWidth()) / 2,
+            (this.getHeight() - border.getHeight()) / 2
+        );
+        startCard.setPosition(
+            (this.getWidth() - startCard.getWidth()) / 2,
+            (this.getHeight() - startCard.getHeight()) / 2
+        );
         fail.setPosition(
             (this.getWidth() - fail.getWidth()) / 2,
             (this.getHeight() - fail.getHeight()) / 2
@@ -288,7 +319,8 @@ public class MissionDialog4 extends Dialog {
             ((TextureRegionDrawable) success.getDrawable()).setRegion(currentFrame);
         }
 
-        if(mutalisk.size == 0 && overlord.size == 0){
+        //몬스터 둘 다 잡으면 게임 클리어
+        if(hitMutaliskCount == mutaliskCount && hitOverlordCount == overlordCount){
             gameClear = true;
             success.setVisible(true);
         }
@@ -328,24 +360,35 @@ public class MissionDialog4 extends Dialog {
                         TextureRegionDrawable drawable = (TextureRegionDrawable) image.getDrawable();
                         TextureRegion textureRegion = drawable.getRegion();
 
+//                        // 투명도 확인 - 미리 계산된 데이터 사용
+//                        if (image.getName().equals("mutalisk") || image.getName().equals("overlord") || image.getName().equals("rollingMarine")) {
+//                            TransparentData transparentData = (TransparentData) image.getUserObject();  // 이미지 객체에 미리 계산된 데이터를 저장해 두었음
+//                            int textureX = (int) (localX / image.getWidth() * textureRegion.getRegionWidth());
+//                            int textureY = (int) (localY / image.getHeight() * textureRegion.getRegionHeight());
+//
+//                            if (!transparentData.isTransparent(textureX, textureY)) {
+//                                // 클릭된 위치가 투명하지 않음
+//                                actors.removeIndex(i);
+//                                break;
+//                            }
+//                        }
+
+
+
                         // 투명 여부 확인
                         if (!checkTransparent(textureRegion, image, localX, localY)) {
                             if (image.getName().equals("mutalisk") || image.getName().equals("overlord") || image.getName().equals("rollingMarine")) {
-                                if (image.getUserObject() instanceof Mutalisk) {
-                                    mutalisk.removeValue((Mutalisk) image.getUserObject(), true);
-                                    ((Mutalisk) image.getUserObject()).getImage().remove();
-                                } else if (image.getUserObject() instanceof Overlord) {
-                                    overlord.removeValue((Overlord) image.getUserObject(), true);
-                                    ((Overlord) image.getUserObject()).getImage().remove();
-                                } else if (image.getUserObject() instanceof RollingMarine) {
-                                    rollingMarine.removeValue((RollingMarine) image.getUserObject(), true);
-                                    ((RollingMarine) image.getUserObject()).getImage().remove();
+                                if (image.getName().equals("rollingMarine")) {
                                     isFailed = true;
                                     fail.setVisible(true);
+                                }else if (image.getName().equals("mutalisk")) {
+                                    hitMutaliskCount++;
+                                } else if (image.getName().equals("overlord")) {
+                                    hitOverlordCount++;
                                 }
                                 // 투명하지 않다면 이미지 제거
-//                                actors.removeIndex(i);
-//                                break;
+                                actors.removeIndex(i);
+                                break;
                             }
                         }
                     }
@@ -457,8 +500,8 @@ public class MissionDialog4 extends Dialog {
             overlordAnimeR = new Animation<TextureRegion>(0.18f, overlordRegionR, Animation.PlayMode.LOOP);
             overlordDrawableR = new TextureRegionDrawable(overlordAnimeR.getKeyFrame(0));
             overlord = new Image(overlordDrawableL);
-            overlord.setUserObject(this);
             overlord.setName("overlord");
+            overlord.setUserObject(this);
 
             // 초기 위치 및 각도 설정
             this.x = x;
@@ -563,11 +606,13 @@ public class MissionDialog4 extends Dialog {
         private Array<TextureRegion> mutaliskRegionR = new Array<>();
         private Animation<TextureRegion> mutaliskAnimeR;
         private TextureRegionDrawable mutaliskDrawableR;
+        private TransparentData mutaliskTransparent;
         private Image mutalisk;
         private float mutaliskStateTime = 0f;
         private int mutaliskSize = 80;
         private boolean movingLeft = true;
         private float x, y;
+        private float localX, localY;
         private float speed = 200f; // 이동 속도 (픽셀/초)
         private float directionChangeCooldown; // 1~5초 사이 랜덤 쿨다운 시간
         private float timeSinceLastDirectionChange = 0f;
@@ -583,13 +628,21 @@ public class MissionDialog4 extends Dialog {
             mutaliskAnimeR = new Animation<TextureRegion>(0.13f, mutaliskRegionR, Animation.PlayMode.LOOP);
             mutaliskDrawableR = new TextureRegionDrawable(mutaliskAnimeR.getKeyFrame(0));
             mutalisk = new Image(mutaliskDrawableR);
-            mutalisk.setUserObject(this);
             mutalisk.setName("mutalisk");
+            mutalisk.setUserObject(this);
 
             // 초기 위치 및 각도 설정
             this.x = x;
             this.y = y;
             angle = (movingLeft ? 180 : 0) + MathUtils.random(-40, 40);
+
+            //투명 체크 클래스 호출
+            mutaliskTransparent = new TransparentData (mutalisk);
+        }
+
+        //투명 체크
+        private boolean isMutaliskTrasnparent(float x, float y){
+            return mutaliskTransparent.isTransparent(x,y);
         }
 
         //위치이동
@@ -680,6 +733,48 @@ public class MissionDialog4 extends Dialog {
         }
         //~~~반환
     }
+
+    public class TransparentData {
+        private boolean[][] transparencyMap;
+
+        // 이미지의 투명도 정보를 계산하여 저장하는 생성자
+        public TransparentData(Image image) {
+            TextureRegionDrawable drawable = (TextureRegionDrawable) image.getDrawable();
+            TextureRegion textureRegion = drawable.getRegion();
+            Texture texture = textureRegion.getTexture();
+
+            // Pixmap 준비
+            if (!texture.getTextureData().isPrepared()) {
+                texture.getTextureData().prepare();
+            }
+            Pixmap pixmap = texture.getTextureData().consumePixmap();
+
+            // 투명도 배열 초기화
+            transparencyMap = new boolean[textureRegion.getRegionWidth()][textureRegion.getRegionHeight()];
+
+            // 각 픽셀의 투명도를 미리 계산하여 배열에 저장
+            for (int x = 0; x < textureRegion.getRegionWidth(); x++) {
+                for (int y = 0; y < textureRegion.getRegionHeight(); y++) {
+                    int pixel = pixmap.getPixel(x + textureRegion.getRegionX(), y + textureRegion.getRegionY());
+                    int alpha = (pixel >>> 24) & 0xff;
+                    transparencyMap[x][y] = (alpha == 0);  // 투명하면 true
+                }
+            }
+
+            // Pixmap 메모리 해제
+            pixmap.dispose();
+        }
+
+        // 특정 좌표가 투명한지 여부 확인
+        public boolean isTransparent(float x, float y) {
+            if (x < 0 || x >= transparencyMap.length || y < 0 || y >= transparencyMap[0].length) {
+                return true; // 경계 밖은 투명한 것으로 간주
+            }
+            return transparencyMap[(int)x][(int)y];
+        }
+    }
+
+
 
     //이 게임에 사용되는 캐릭터의 크기와 모양은 전부 동일하니 임의로 하나만 넣어서 모든 캐릭터에 사용 가능
     private boolean checkTransparent(TextureRegion textureRegion,Image image , float x, float y) {
