@@ -422,34 +422,30 @@ public class MissionDialog4 extends Dialog {
             rollingMarine.setUserObject(this);
         }
 
-        private void moving(float delta){
-            // 새로운 위치 계산 (30도 대각선 방향 이동)
+        private void moving(float delta) {
+            // 새로운 위치 계산
             rollingMarineX += rollingMarineSpeed * rollingMarineDirectionX * delta;
             rollingMarineY += rollingMarineSpeed * rollingMarineDirectionY * delta;
 
             // 오른쪽 벽에 부딪히는 경우
             if (rollingMarineX + rollingMarineSize / 2 > contentTable.getWidth() - 50) {
-                rollingMarineDirectionX = -1.0f;  // 왼쪽으로 방향 전환
-                rollingMarineDirectionY = (float) Math.tan(Math.toRadians(impactAngle));   // 위쪽으로 이전 각도 유지
+                rollingMarineDirectionX = -1.0f;  // X 방향 반전
                 rollingMarineX = contentTable.getWidth() - 50 - rollingMarineSize / 2;  // 경계값으로 위치 조정
             }
             // 왼쪽 벽에 부딪히는 경우
             else if (rollingMarineX - rollingMarineSize / 2 < 0) {
-                rollingMarineDirectionX = 1.0f;  // 오른쪽으로 방향 전환
-                rollingMarineDirectionY = -(float) Math.tan(Math.toRadians(impactAngle)); // 아래쪽으로 이전 각도 유지
+                rollingMarineDirectionX = 1.0f;  // X 방향 반전
                 rollingMarineX = rollingMarineSize / 2;  // 경계값으로 위치 조정
             }
 
             // 위쪽 벽에 부딪히는 경우
             if (rollingMarineY + rollingMarineSize / 2 > contentTable.getHeight() - 50) {
-                rollingMarineDirectionY = -1.0f; // 아래쪽으로 방향 전환
-                rollingMarineDirectionX = -(float) Math.tan(Math.toRadians(impactAngle)); // 왼쪽으로 이전 각도 유지
+                rollingMarineDirectionY = -1.0f;  // Y 방향 반전
                 rollingMarineY = contentTable.getHeight() - 50 - rollingMarineSize / 2;  // 경계값으로 위치 조정
             }
             // 아래쪽 벽에 부딪히는 경우
             else if (rollingMarineY - rollingMarineSize / 2 < 0) {
-                rollingMarineDirectionY = 1.0f;  // 위쪽으로 방향 전환
-                rollingMarineDirectionX = (float) Math.tan(Math.toRadians(impactAngle));  // 오른쪽으로 이전 각도 유지
+                rollingMarineDirectionY = 1.0f;  // Y 방향 반전
                 rollingMarineY = rollingMarineSize / 2;  // 경계값으로 위치 조정
             }
 
@@ -458,9 +454,10 @@ public class MissionDialog4 extends Dialog {
 
             // 기존의 회전 각도에 delta에 따른 각도 추가
             float currentRotation = rollingMarine.getRotation(); // 현재 각도 가져오기
-            rollingMarine.setOrigin(rollingMarine.getWidth()/2,rollingMarine.getHeight()/2);
-            rollingMarine.setRotation(currentRotation - rotateSpeed*direction * delta);
+            rollingMarine.setOrigin(rollingMarine.getWidth() / 2, rollingMarine.getHeight() / 2);
+            rollingMarine.setRotation(currentRotation - rotateSpeed * direction * delta);
         }
+
 
         private Image getImage(){
             return rollingMarine;
