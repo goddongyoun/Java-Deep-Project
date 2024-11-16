@@ -86,23 +86,23 @@ public class LobbyMap extends Actor {
         Vector2 oldPosition = localPlayer.getPosition().cpy();
         localPlayer.update(delta);
         Room room = game.getCurrentRoom();
-    	_Imported_ClientBase.updateLoc(Math.round(room.getme().getPosition().x), Math.round(room.getme().getPosition().y));
-    	_Imported_ClientBase.getLocation();
-    	room.pCount = _Imported_ClientBase.playerCount-1;
-    	int temp = 0;
-    	for(int i = 0; i<5; i++) {
-    		if(_Imported_ClientBase.players[i] != null) {
-    			if(!(_Imported_ClientBase.players[i].name.equals(room.getme().getNickname()))) { // 그냥 언어포맷 무시하고 한글로 씀. 이름이 다르다면
-    				if(room.m_players[temp] == null) {
-    					room.m_players[temp] = new PlayerOfMulti(_Imported_ClientBase.players[i].name, _Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, room.getme().size);
-    				}
-    				System.out.println("CAME!!!!!!!!!!!");
-    				room.m_players[temp].update(_Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, delta);
-    				temp++;
-    			}
-    		}
-    	}
-    	
+        _Imported_ClientBase.updateLoc(Math.round(room.getme().getPosition().x), Math.round(room.getme().getPosition().y));
+        _Imported_ClientBase.getLocation();
+        room.pCount = _Imported_ClientBase.playerCount-1;
+        int temp = 0;
+        for(int i = 0; i<5; i++) {
+            if(_Imported_ClientBase.players[i] != null) {
+                if(!(_Imported_ClientBase.players[i].name.equals(room.getme().getNickname()))) { // 그냥 언어포맷 무시하고 한글로 씀. 이름이 다르다면
+                    if(room.m_players[temp] == null) {
+                        room.m_players[temp] = new PlayerOfMulti(_Imported_ClientBase.players[i].name, _Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, room.getme().size);
+                    }
+                    System.out.println("CAME!!!!!!!!!!!");
+                    room.m_players[temp].update(_Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, delta);
+                    temp++;
+                }
+            }
+        }
+
         handleCollisions(oldPosition);
 
         float cameraX = localPlayer.getPosition().x;
@@ -166,10 +166,10 @@ public class LobbyMap extends Actor {
         batch.setProjectionMatrix(camera.combined);
         localPlayer.render(batch);
         for(int i = 0; i<game.getCurrentRoom().pCount; i++) {
-        	if(game.getCurrentRoom().m_players[i] != null) {
-        		game.getCurrentRoom().m_players[i].render(batch);
-        	}
-        	
+            if(game.getCurrentRoom().m_players[i] != null) {
+                game.getCurrentRoom().m_players[i].render(batch);
+            }
+
         }
     }
 

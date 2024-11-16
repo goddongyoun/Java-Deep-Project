@@ -25,7 +25,7 @@ public class PlayerOfMulti {
     private float speedX = 160f;
     private float speedY = 120f;
     private Rectangle bounds;
-    private float size;
+    public float size;
     private int x, y;
 
     private TextureAtlas atlas;
@@ -131,9 +131,11 @@ public class PlayerOfMulti {
         pixmap.dispose();
     }
 
-    public void update(int x, int y, float delta) {
+    // PlayerOfMulti.java의 update 메서드 수정
+    public void update(float x, float y, float delta) {  // int를 float로 변경
         stateTime += delta;
-        
+
+        // 이전 프레임과의 위치 차이로 방향 결정
         if (x < position.x) {
             facingLeft = true;
             currentState = PlayerState.RUNNING;
@@ -148,6 +150,7 @@ public class PlayerOfMulti {
             currentState = PlayerState.RUNNING;
         }
 
+        // 실제 위치 업데이트 (이미지 중앙 기준)
         position.x = x;
         position.y = y;
         bounds.setPosition(position);
@@ -197,6 +200,14 @@ public class PlayerOfMulti {
         // 닉네임 그리기
         font.setColor(nicknameColor);
         font.draw(batch, nickname, nicknameX, nicknameY);
+    }
+
+    public void setSize(float size) {
+        this.size = size;
+    }
+
+    public float getSize() {
+        return this.size;
     }
 
     public Vector2 getPosition() {

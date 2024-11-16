@@ -52,9 +52,9 @@ public class Room {
             players.add(player);
         }
     }
-    
+
     public void addMulPlayer(PlayerOfMulti p) {
-    	
+
     }
 
     public Player getme() {

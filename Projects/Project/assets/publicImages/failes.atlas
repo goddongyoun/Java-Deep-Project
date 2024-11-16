@@ -1,0 +1,47 @@
+failes.png
+size: 7680, 640
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+mission_false1
+  rotate: false
+  xy: 0, 0
+  size: 1280, 640
+  orig: 1280, 640
+  offset: 0, 0
+  index: -1
+mission_false2
+  rotate: false
+  xy: 1280, 0
+  size: 1280, 640
+  orig: 1280, 640
+  offset: 0, 0
+  index: -1
+mission_false3
+  rotate: false
+  xy: 2560, 0
+  size: 1280, 640
+  orig: 1280, 640
+  offset: 0, 0
+  index: -1
+mission_false4
+  rotate: false
+  xy: 3840, 0
+  size: 1280, 640
+  orig: 1280, 640
+  offset: 0, 0
+  index: -1
+mission_false5
+  rotate: false
+  xy: 5120, 0
+  size: 1280, 640
+  orig: 1280, 640
+  offset: 0, 0
+  index: -1
+mission_false6
+  rotate: false
+  xy: 6400, 0
+  size: 1280, 640
+  orig: 1280, 640
+  offset: 0, 0
+  index: -1

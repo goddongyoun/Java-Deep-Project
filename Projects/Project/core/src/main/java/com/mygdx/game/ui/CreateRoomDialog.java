@@ -17,7 +17,7 @@ public class CreateRoomDialog extends Dialog {
     private TextField playerNameField;
     private SelectBox<Integer> playerCountSelect;
     private TextField passwordField;
-    
+
     public CreateRoomDialog(Skin skin, final Main game) {
         super("방 만들기", skin, "dialog");
         this.game = game;
@@ -103,7 +103,7 @@ public class CreateRoomDialog extends Dialog {
                 };
                 Label.LabelStyle labelStyle = new Label.LabelStyle(getSkin().get(Label.LabelStyle.class));
                 labelStyle.font = FontManager.getInstance().getFont(24);
-                
+
                 TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle(getSkin().get(TextButton.TextButtonStyle.class));
                 buttonStyle.font = FontManager.getInstance().getFont(20);
 
@@ -115,7 +115,7 @@ public class CreateRoomDialog extends Dialog {
                 errorDialog.show(getStage());
 
                 this.hide();
-                
+
                 //!!!!!!!!! should be killed when publish
                 game.setPlayerNickname(playerName);
                 Player host = new Player(playerName, 0, 0, 32);
@@ -124,24 +124,24 @@ public class CreateRoomDialog extends Dialog {
                 game.setCurrentRoom(newRoom);
                 game.setScreen(new LobbyScreen(game));
                 //!!!!!!!!! ends
-                
+
                 return;
             }
             String saver = _Imported_ClientBase.MakeGame_TCP(roomName); //The returning string looks like 'Success makeGame/ABC123', so the string has to be split by '/'.
             String[] parts = saver.split("/");
             if(parts[0].equals("Success makeGame")) {
-            	if(parts.length > 1) {
-            		roomCode = parts[1];
+                if(parts.length > 1) {
+                    roomCode = parts[1];
                     game.setPlayerNickname(playerName);
                     Player host = new Player(playerName, Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2, 32);
                     Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
 
                     game.setCurrentRoom(newRoom);
                     game.setScreen(new LobbyScreen(game));
-            	}
-            	else { // just in case
-            		System.out.println("ROOM CODE INVALID?");
-            	}
+                }
+                else { // just in case
+                    System.out.println("ROOM CODE INVALID?");
+                }
             }
         }
     }

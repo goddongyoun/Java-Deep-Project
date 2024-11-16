@@ -1,0 +1,61 @@
+m1monsters.png
+size: 1920, 960
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+mssn1MstrA1
+  rotate: false
+  xy: 0, 0
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrA2
+  rotate: false
+  xy: 480, 0
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrB1
+  rotate: false
+  xy: 960, 0
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrB2
+  rotate: false
+  xy: 1440, 0
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrC1
+  rotate: false
+  xy: 0, 480
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrC2
+  rotate: false
+  xy: 480, 480
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrD1
+  rotate: false
+  xy: 960, 480
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
+mssn1MstrD2
+  rotate: false
+  xy: 1440, 480
+  size: 480, 480
+  orig: 480, 480
+  offset: 0, 0
+  index: -1
