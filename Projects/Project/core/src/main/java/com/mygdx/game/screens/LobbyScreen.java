@@ -80,19 +80,22 @@ public class LobbyScreen implements Screen {
         buttonTable.setFillParent(true);
 
         Texture buttonTexture = buttonAtlas.findRegion("createLobbyBtn").getTexture();
+        if(isJoined == false) {
+            // 게임 시작 버튼
+            AnimatedImageButton startButton = createAnimatedButton(buttonTexture, "createLobbyBtn",
+                new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                    	if(isJoined == false) {
+                    		shouldStart = true;
+                           	_Imported_ClientBase.startPls();
+                            handleGameStart();
+                    	}
+                    }
+                });
 
-        // 게임 시작 버튼
-        AnimatedImageButton startButton = createAnimatedButton(buttonTexture, "createLobbyBtn",
-            new ClickListener() {
-                @Override
-                public void clicked(InputEvent event, float x, float y) {
-                	if(isJoined == false) {
-                		shouldStart = true;
-                       	_Imported_ClientBase.startPls();
-                        handleGameStart();
-                	}
-                }
-            });
+            buttonTable.add(startButton).padBottom(10).row();
+        }
         
         // 설정 버튼
         AnimatedImageButton editButton = createAnimatedButton(buttonTexture, "settingBtn",
@@ -113,7 +116,6 @@ public class LobbyScreen implements Screen {
                 }
             });
         
-        buttonTable.add(startButton).padBottom(10).row();
         buttonTable.add(editButton).padBottom(10).row();
         buttonTable.add(leaveButton);
 
