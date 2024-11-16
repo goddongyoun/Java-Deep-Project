@@ -113,7 +113,7 @@ public class JoinRoomDialog extends Dialog {
                     Room room = new Room("Joined Room", roomCode, password, 5, player);
 
                     game.setCurrentRoom(room);
-                    game.setScreen(new LobbyScreen(game));
+                    game.setScreen(new LobbyScreen(game, true));
                 }
 
             } else {

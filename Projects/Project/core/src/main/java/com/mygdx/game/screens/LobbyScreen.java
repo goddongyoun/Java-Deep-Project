@@ -37,10 +37,13 @@ public class LobbyScreen implements Screen {
     private final TextureAtlas buttonAtlas;
     private Table buttonTable;
     private final Room room;
+    private boolean isJoined;
+    
+    public static boolean shouldStart = false;
 
     private Dialog currentDialog; // 현재 표시 중인 다이얼로그
 
-    public LobbyScreen(final Main game) {
+    public LobbyScreen(final Main game, boolean isJoined) {
         this.game = game;
         this.camera = new OrthographicCamera();
         this.viewport = new FitViewport(Main.WINDOW_WIDTH, Main.WINDOW_HEIGHT, camera);
@@ -50,6 +53,7 @@ public class LobbyScreen implements Screen {
         this.layout = new GlyphLayout();
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
         this.room = game.getCurrentRoom();
+        this.isJoined = isJoined;
 
         // 방 정보 배경 이미지 로드
         this.roomInfoBackground = new Texture(Gdx.files.internal("ui/Room_info.png"));
@@ -82,10 +86,14 @@ public class LobbyScreen implements Screen {
             new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    handleGameStart();
+                	if(isJoined == false) {
+                		shouldStart = true;
+                       	_Imported_ClientBase.startPls();
+                        handleGameStart();
+                	}
                 }
             });
-
+        
         // 설정 버튼
         AnimatedImageButton editButton = createAnimatedButton(buttonTexture, "settingBtn",
             new ClickListener() {
@@ -104,7 +112,7 @@ public class LobbyScreen implements Screen {
                     handleRoomExit();
                 }
             });
-
+        
         buttonTable.add(startButton).padBottom(10).row();
         buttonTable.add(editButton).padBottom(10).row();
         buttonTable.add(leaveButton);
@@ -219,6 +227,11 @@ public class LobbyScreen implements Screen {
 
     @Override
     public void render(float delta) {
+    	if(shouldStart == true) {
+    		System.out.println("asdad");
+    		handleGameStart();
+    	}
+    	
         // 화면 클리어
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

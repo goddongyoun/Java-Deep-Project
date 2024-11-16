@@ -20,6 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import com.mygdx.game.Main;
+import com.mygdx.game.screens.LobbyScreen;
+
 public class _Imported_ClientBase {
 
     static byte[] sendBuf;
@@ -86,6 +89,7 @@ public class _Imported_ClientBase {
 				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
 				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+recogPort); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
 //				System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
+				//tcpSock_toRecv.setSoTimeout(3000);
 				return "Success makeGame/" + recogPort;
 	        } else {
 	            System.out.println("[LOG] ??? ERROR CLI_86 정보를 찾을 수 없습니다.");
@@ -173,9 +177,10 @@ public class _Imported_ClientBase {
 				//tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
 				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
-				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
+				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
 				System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 				System.out.println("[LOG] 방에 접속하였습니다.");
+				//tcpSock_toRecv.setSoTimeout(3000);
 				return saver;
 			}
 			else { // anjdi Tlqkf?
@@ -322,6 +327,22 @@ public class _Imported_ClientBase {
 		} 
 	}
 	
+	public static void startPls() {
+		try {
+			tcpWriter_toSend.write("PlsStart"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("NowStartIsTrue")) {
+				System.out.println("Start Game Sended successfully [LOG]");
+			}
+			else {
+				System.out.println("Start Game Sended with Error [LOG]");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+	
 	private static boolean alreadyRunning = false;
 	
 	public static void run(String playerName) throws Exception {
@@ -373,7 +394,6 @@ public class _Imported_ClientBase {
 			isReceiverOut = false;
 			try {
 	            tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-				tcpSock_toRecv.setSoTimeout(3000);
 			} catch (SocketException e) {
 				e.printStackTrace();
 				System.out.println("[LOG] CLI/379(SOCKET_EXCEPTION) || ExecutorServices Couldn't Started");
@@ -384,7 +404,7 @@ public class _Imported_ClientBase {
 			}
 			while (true) {
 	            try {
-	                Thread.sleep(1);
+	                Thread.sleep(10);
 	                if (isShuttingdown) {
 	                    tcpReader_toRecv.close();
 	                    break;
@@ -393,7 +413,26 @@ public class _Imported_ClientBase {
 	                if (tcpReader_toRecv != null) {
 	                    saver = tcpReader_toRecv.readLine();
 	                    if (saver != null) {
-	                        System.out.println("\n" + saver + " / [LOG] chat");
+	                        if (saver.equals("Chat")) {
+	                            // Chat 메시지를 받으면 End가 나올 때까지 계속 읽기
+	                            while (true) {
+	                                String chatMessage = tcpReader_toRecv.readLine();
+	                                if (chatMessage == null) break;  // 연결이 끊어진 경우
+	                                if (chatMessage.equals("End")) break;  // 채팅 메시지 끝
+	                                
+	                                //여기서 chatMessage를 알맞게 채팅 출력함수에 보내야됨 Ex) printChat(chatMessage)
+	                                System.out.println("\n" + chatMessage + " / [LOG] chat");
+	                            }
+	                        } 
+	                        // KA(Keep Alive)는 무시
+	                        else if (saver.equals("KA")) {
+	                            //Keep Alive 메시지는 별도 처리 없이 넘어감
+	                            //System.out.println("Keep Alive received [LOG] KA"); // 디버깅시 필요하면 활성화
+	                        }
+	                        else if(saver.equals("StartGame")) {
+	                        	LobbyScreen.shouldStart = true;
+	                        	System.out.println("game Started [LOG]");
+	                        }
 	                    }
 	                }
 	            } catch (IOException e) {
@@ -405,10 +444,12 @@ public class _Imported_ClientBase {
 	                System.out.println("[LOG] The Thread was Interrupted.");
 	                break; 
 	            } finally {
-					tcpReader_toRecv = null;
-					isReceiverOut = true;
+	            	
 				}
 			}
+			tcpReader_toRecv = null;
+			isReceiverOut = true;
+            System.out.println("[LOG] ExcutorService Ended.");
 		});
 		Thread.sleep(10); //To wait that excutorService.execute make Socket to Receive
 		System.out.println("[LOG] ExecutorServices Started");

@@ -122,7 +122,7 @@ public class CreateRoomDialog extends Dialog {
                 Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);
 
                 game.setCurrentRoom(newRoom);
-                game.setScreen(new LobbyScreen(game));
+                game.setScreen(new LobbyScreen(game, false));
                 //!!!!!!!!! ends
 
                 return;
@@ -137,7 +137,7 @@ public class CreateRoomDialog extends Dialog {
                     Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
 
                     game.setCurrentRoom(newRoom);
-                    game.setScreen(new LobbyScreen(game));
+                    game.setScreen(new LobbyScreen(game, false));
                 }
                 else { // just in case
                     System.out.println("ROOM CODE INVALID?");

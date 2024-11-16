@@ -51,6 +51,7 @@ class Room{
 	public List<String> chatLog = new ArrayList<>();
 	public int chatNum = -1;
 	String roomName = null;
+	boolean start = false;
 	
 	Room(int gameRecogPort, String roomName){
 		this.gameRecogPort = gameRecogPort;
@@ -108,6 +109,7 @@ class Room{
 		}
 		if(curUserNum <= 0) {
 			this.unconnectable = true;
+			start = false;
 			return -4;
 		}
 		return 0;
@@ -337,6 +339,15 @@ class Clients implements Runnable{
 							tcpWriter.write(saver); tcpWriter.newLine(); tcpWriter.flush();
 						}
 					}
+					else if(saver.equals("PlsStart")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+						else {
+							ServerBase.rooms.get(RecogPort).start = true;
+							tcpWriter.write("NowStartIsTrue"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
 					else {
 						System.out.println("? " + saver + sock.getInetAddress());
 						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
@@ -344,14 +355,24 @@ class Clients implements Runnable{
 				}
 			}
 			else if(isSender == 1) {
+				boolean isStarted = false;
 				while(true) {
-					Thread.sleep(1);
+					Thread.sleep(10);
 					if(RecogPort != -1) {
 						if(currentChatNum <= ServerBase.rooms.get(RecogPort).chatNum) {
+							tcpWriter.write("Chat"); tcpWriter.newLine(); tcpWriter.flush();
 							for(; currentChatNum <= ServerBase.rooms.get(RecogPort).chatNum; currentChatNum++) {
 								tcpWriter.write(ServerBase.rooms.get(RecogPort).chatLog.get(currentChatNum)); tcpWriter.newLine(); tcpWriter.flush();
 							}
+							tcpWriter.write("End"); tcpWriter.newLine(); tcpWriter.flush();
 							System.out.println("chat shooted");
+						}
+						else if(ServerBase.rooms.get(RecogPort).start == true && isStarted == false) {
+							isStarted = true;
+							tcpWriter.write("StartGame"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+						else {
+							tcpWriter.write("KA"); tcpWriter.newLine(); tcpWriter.flush(); // KA means Keep Alive
 						}
 					}
 				}
