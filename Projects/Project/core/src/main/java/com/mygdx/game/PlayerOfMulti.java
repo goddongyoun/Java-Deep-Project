@@ -228,6 +228,14 @@ public class PlayerOfMulti {
         font.draw(batch, nickname, nicknameX, nicknameY);
     }
 
+    public void setSize(float size) {
+        this.size = size;
+    }
+
+    public float getSize() {
+        return this.size;
+    }
+
     public Vector2 getPosition() {
         return position;
     }

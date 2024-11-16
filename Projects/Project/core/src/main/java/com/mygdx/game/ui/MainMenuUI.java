@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.AssetManager;
 import com.mygdx.game.Main;
+import com.mygdx.game.screens.SinglePlayerGameScreen;
 
 public class MainMenuUI extends Group implements Disposable {
     private Main game;
@@ -69,8 +70,7 @@ public class MainMenuUI extends Group implements Disposable {
         createButton("settingBtn", new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                SettingsDialog dialog = new SettingsDialog(skin, game);
-                dialog.show(getStage());
+                game.setScreen(new SinglePlayerGameScreen(game));
             }
         });
         createButton("closeGameBtn", new ClickListener() {

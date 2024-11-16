@@ -21,32 +21,32 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class _Imported_ClientBase {
-	
-	static byte[] sendBuf;
-	static String SERVER_ADDRESS = "219.254.146.234"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
-	final static int SERVER_PORT_TCP = 1235;
-	final static int SERVER_PORT_UDP  = 4000;
-	static ExecutorService executorService = Executors.newFixedThreadPool(3);
-	static Future<String> future_UDP;
-	static Socket tcpSock_toSend;
-	static Socket tcpSock_toRecv;
-	static BufferedWriter tcpWriter_toSend;
-	static BufferedReader tcpReader_toSend;
-	static BufferedWriter tcpWriter_toRecv;
-	static BufferedReader tcpReader_toRecv;
-	
-	static boolean isReceiverOut = true;
-	
-	static String name = null;
-	
-	static Scanner sc = new Scanner(System.in);
-	
-	/**
-	 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	 * Do not use this method, This method should only be used inside the client. the Method will exist as public considering various situations, but do not use it.
-	 */
-	public static void checkLoopBack() {
-		try {
+
+    static byte[] sendBuf;
+    static String SERVER_ADDRESS = "203.234.62.50"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
+    final static int SERVER_PORT_TCP = 1235;
+    final static int SERVER_PORT_UDP  = 4000;
+    static ExecutorService executorService = Executors.newFixedThreadPool(3);
+    static Future<String> future_UDP;
+    static Socket tcpSock_toSend;
+    static Socket tcpSock_toRecv;
+    static BufferedWriter tcpWriter_toSend;
+    static BufferedReader tcpReader_toSend;
+    static BufferedWriter tcpWriter_toRecv;
+    static BufferedReader tcpReader_toRecv;
+
+    static boolean isReceiverOut = true;
+
+    static String name = null;
+
+    static Scanner sc = new Scanner(System.in);
+
+    /**
+     * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     * Do not use this method, This method should only be used inside the client. the Method will exist as public considering various situations, but do not use it.
+     */
+    public static void checkLoopBack() {
+        try {
             String apiUrl = "https://ifconfig.me/ip";
             URL url = new URL(apiUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -55,7 +55,7 @@ public class _Imported_ClientBase {
             String externalIp = reader.readLine();
             reader.close();
             if(externalIp.equals(SERVER_ADDRESS)) {
-            	SERVER_ADDRESS = "127.0.0.1";
+                SERVER_ADDRESS = "127.0.0.1";
             }
         } catch (Exception e) {
             e.printStackTrace();

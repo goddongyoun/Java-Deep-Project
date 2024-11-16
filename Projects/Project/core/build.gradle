@@ -16,4 +16,5 @@ dependencies {
   api "com.github.tommyettinger:anim8-gdx:$anim8Version"
   api "com.github.tommyettinger:colorful:$colorfulVersion"
   api "org.apache.commons:commons-collections4:$commonsCollectionsVersion"
+  implementation 'mysql:mysql-connector-java:8.0.33'
 }

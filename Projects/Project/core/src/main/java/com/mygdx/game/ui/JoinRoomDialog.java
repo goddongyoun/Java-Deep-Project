@@ -74,11 +74,11 @@ public class JoinRoomDialog extends Dialog {
             String roomCode = roomCodeField.getText().toUpperCase();
             String password = passwordField.getText();
             String playerName = playerNameField.getText();
-            
+
             // TODO: 실제로는 서버에서 방 정보를 가져와야 함
             // 임시로 방을 생성하여 참여하는 것으로 구현
             if (!roomCode.isEmpty()) {
-            	try {
+                try {
                     // Trying To Connect
                     _Imported_ClientBase.run(playerName);
                 } catch (Exception e) {
@@ -93,7 +93,7 @@ public class JoinRoomDialog extends Dialog {
                     };
                     Label.LabelStyle labelStyle = new Label.LabelStyle(getSkin().get(Label.LabelStyle.class));
                     labelStyle.font = FontManager.getInstance().getFont(24);
-                    
+
                     TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle(getSkin().get(TextButton.TextButtonStyle.class));
                     buttonStyle.font = FontManager.getInstance().getFont(20);
 
@@ -107,15 +107,15 @@ public class JoinRoomDialog extends Dialog {
                     return;
                 }
                 if(_Imported_ClientBase.joinGame(roomCode, playerName).equals("SuccessfullyJoind")) {
-                	game.setPlayerNickname(playerName);
+                    game.setPlayerNickname(playerName);
                     // Player 생성자에 적절한 크기 값을 전달합니다. 여기서는 임시로 32를 사용합니다.
                     Player player = new Player(playerName, Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2, 32);
                     Room room = new Room("Joined Room", roomCode, password, 5, player);
-                    
+
                     game.setCurrentRoom(room);
                     game.setScreen(new LobbyScreen(game));
                 }
-                
+
             } else {
                 messageLabel.setText("올바른 방 코드를 입력해주세요.");
             }

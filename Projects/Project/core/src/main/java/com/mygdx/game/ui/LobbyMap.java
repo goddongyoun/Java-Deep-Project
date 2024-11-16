@@ -168,10 +168,10 @@ public class LobbyMap extends Actor {
         batch.setProjectionMatrix(camera.combined);
         localPlayer.render(batch);
         for(int i = 0; i<game.getCurrentRoom().pCount; i++) {
-        	if(game.getCurrentRoom().m_players[i] != null) {
-        		game.getCurrentRoom().m_players[i].render(batch);
-        	}
-        	
+            if(game.getCurrentRoom().m_players[i] != null) {
+                game.getCurrentRoom().m_players[i].render(batch);
+            }
+
         }
     }
 
