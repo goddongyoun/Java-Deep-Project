@@ -464,7 +464,7 @@ public class MissionDialog2 extends Dialog {
         }
 
         success.setPosition(
-            (this.getWidth() - success.getWidth()) / 2,
+            (this.getWidth() - success.getWidth()) / 2 - 22,
             (this.getHeight() - success.getHeight()) / 2
         );
 
