@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.util.FontManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -229,18 +230,23 @@ public class MissionDialog2 extends Dialog {
     private float initialY=0;
     private float x = initialX;
     private float y = initialY;
-    private int checkSize = 38;
+    private int checkSize = 28;
     private int index=0;
     private int mineralCount = 0;
     private boolean gameClear = false;
     private int blockLength = 75;
     private int boxLength = blockLength * numBlocks;
     private int gap = 20;
-    private float checkInitialX =boxLength+80;
-    private float checkInitailY =98;
-    private float checkX = checkInitialX;
-    private float checkY = checkInitailY;
+    private float checkInitialX;
+    private float checkInitialY;
+    private float checkX;
+    private float checkY;
     private boolean borderOn = false;
+
+    private TextButton closeButton;
+    private Image closeButtonImage;
+    Texture closeButtonTexture = new Texture(Gdx.files.internal("images/mission_button1.png"));
+    Texture closeButtonTextureHover = new Texture(Gdx.files.internal("images/mission_button2.png"));
 
     private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
     private TextureRegionDrawable successDrawable;
@@ -285,6 +291,30 @@ public class MissionDialog2 extends Dialog {
         blockTypes.add("iron");
         blockTypes.add("bluegold");
         blockTypes.add("redstone");
+
+        //닫기 버튼
+        closeButtonImage = new Image(closeButtonTexture);
+        closeButtonImage.setSize(50,50);
+        // 닫기 버튼
+        closeButton = new TextButton("", skin);
+        Drawable closeButtonDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTexture));
+        Drawable closeButtonHoverDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTextureHover));
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+        buttonStyle.up = closeButtonDrawable;
+        buttonStyle.down = closeButtonHoverDrawable;
+        buttonStyle.over = closeButtonHoverDrawable;
+        buttonStyle.font = FontManager.getInstance().getFont(16);
+        //스타일은 up,down,font 이 3개는 필수로 초기화되어있어야 함
+        // 설정한 스타일들을 적용
+        closeButton.setStyle(buttonStyle);
+
+        // 버튼 클릭 이벤트 처리
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                MissionDialog2.this.hide(); // 팝업 창 닫기
+            }
+        });
 
         // 리스트를 섞어서 랜덤 순서로 배치
         Collections.shuffle(blockTypes);
@@ -347,16 +377,12 @@ public class MissionDialog2 extends Dialog {
             checkArray.add(check);
         }
 
-//        missionImage = new Image(border);
-//        contentTable.add(missionImage).width(boxLength+gap).height(boxLength+gap).expand().fill();
-
-
         //생성된 블럭 스택들을 table에 차례로 추가하기
         for(int i=0;i<numBlocks*numBlocks;i++){
             contentTable.add(blockStacks.get(i)).width(blockLength).height(blockLength).expand().fill().pad(10);
         }
 
-        contentTable.add(itemList).width(120).height(220);
+        contentTable.add(itemList).width(80).height(180);
 
         for(int i=0;i<6;i++){
             contentTable.add(checkArray.get(i)).width(checkSize).height(checkSize).expand().fill().pad(10);
@@ -367,15 +393,22 @@ public class MissionDialog2 extends Dialog {
         success.setVisible(false);
 
 
-        initialX = 30;
-        initialY = 30;
+        initialX = 100;
+        initialY = 20;
+
+        checkInitialX = initialX ;
+        checkInitialY = initialY ;
+
+        checkX = (checkInitialX-20) + (boxLength+40) + 45;
+        checkY = (checkInitialY-20) + 164;
 
         //테두리 추가
         contentTable.add(missionBorder).width(boxLength+40).height(boxLength+40).expand().fill();
+        contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
         missionBorderClickEvent();
         blockClick();
-        this.getCell(contentTable).width(490).height(370);
-//        this.setBackground((Drawable) null);
+        this.getCell(contentTable).width(550).height(340);
+        this.setBackground((Drawable) null);
 
         stage.addActor(this);
     }
@@ -389,7 +422,7 @@ public class MissionDialog2 extends Dialog {
 
         // 팝업 창을 중앙에 배치
         this.setPosition(
-            (stage.getWidth() - this.getWidth()) / 2,
+            (stage.getWidth() - this.getWidth())/2,
             (stage.getHeight() - this.getHeight()) / 2
         );
 
@@ -421,15 +454,13 @@ public class MissionDialog2 extends Dialog {
     public void act(float delta) {
         super.act(delta);
 
-//        missionImage.setPosition(0,0);
-
         itemList.setPosition(
-            boxLength+10,
-            (this.getHeight() - itemList.getHeight()) / 2 + 38
+            boxLength+blockLength+44,
+            (this.getHeight() - itemList.getHeight()) - 8
         );
 
         for(int i=0;i<6;i++){
-            checkArray.get(i).setPosition(checkX, checkY+(checkSize-5)*(i));
+            checkArray.get(i).setPosition(checkX, checkY+(checkSize-1)*(i));
         }
 
         success.setPosition(
@@ -437,7 +468,12 @@ public class MissionDialog2 extends Dialog {
             (this.getHeight() - success.getHeight()) / 2
         );
 
-        missionBorder.setPosition(10,10);
+        missionBorder.setPosition(initialX-20,initialY-20);
+
+        closeButton.setPosition(
+            missionBorder.getX()+missionBorder.getWidth()-closeButton.getWidth(),
+            missionBorder.getY()+missionBorder.getHeight()-closeButton.getHeight()
+        );
 
         if(successArray !=null && success.isVisible()) {
             //애니메이션 시간 업데이트
@@ -472,64 +508,6 @@ public class MissionDialog2 extends Dialog {
         //각 블럭 객체당 별도의 클릭 시 블럭 깨기 이벤트
         for (int i=0;i<numBlocks*numBlocks;i++){
             final int finalI = i;
-
-//            // 각 블럭마다 InputListener 추가
-//            blockStacks.get(i).addListener(new InputListener() {
-//                @Override
-//                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-//                    // 블럭 6단계를 넘어가면 클릭 이벤트 비활성화
-//                    if (blockObjects.get(finalI).getStage() >= 6) {
-//                        return false;
-//                    }
-//
-//                    return true; // 투명하지 않은 경우, 클릭 이벤트 정상 처리
-//                }
-//
-//                @Override
-//                public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-//
-//                    // 블럭 클릭 시 처리
-//                    breakerObjects.get(finalI).onClick();
-//
-//                    currentBlockImage = blockObjects.get(finalI).getCurrentBlockImage();
-//                    blockImage = new Image(currentBlockImage);
-//                    blockImage.setSize(blockLength, blockLength);
-//
-//                    currentBreakImage = breakerObjects.get(finalI).getCurrentBreakImage();
-//                    breakImage = new Image(currentBreakImage);
-//                    breakImage.setSize(blockLength, blockLength);
-//
-//                    blockStacks.get(finalI).add(blockImage);
-//                    blockStacks.get(finalI).add(breakImage);
-//
-//                    if (blockObjects.get(finalI).gotMineral()) {
-//                        mineralCount++;
-//                        switch (blockObjects.get(finalI).getMineral()) {
-//                            case "diamond":
-//                                checkArray.get(5).setVisible(true);
-//                                break;
-//                            case "emerald":
-//                                checkArray.get(4).setVisible(true);
-//                                break;
-//                            case "gold":
-//                                checkArray.get(3).setVisible(true);
-//                                break;
-//                            case "iron":
-//                                checkArray.get(2).setVisible(true);
-//                                break;
-//                            case "bluegold":
-//                                checkArray.get(1).setVisible(true);
-//                                break;
-//                            case "redstone":
-//                                checkArray.get(0).setVisible(true);
-//                                break;
-//                            default:
-//                                Gdx.app.log("Block", "Unknown mineral type in clicked method");
-//                        }
-//                        Gdx.app.log("", "mineralCount : " + mineralCount);
-//                    }
-//                }
-//            });
 
             // 클릭 이벤트 처리
             blockStacks.get(i).addListener(new ClickListener() {
@@ -590,7 +568,11 @@ public class MissionDialog2 extends Dialog {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (checkTransparent(missionBorderRegion, missionBorder, x, y)) {
-                    System.out.println("false");
+                    //미션 보더 초깃값 이동한 만큼 x,y 좌표에 설정해줘야함
+                    x += missionBorder.getX();
+                    y += missionBorder.getY();
+
+//                    System.out.println("false");
                     // 투명한 부분 클릭 시 이벤트 전파를 중지하여 다른 대상이 처리하게 함
                     // 투명한 부분 클릭 시 blockStacks의 클릭 이벤트 호출
                     for (Stack blockStack : blockStacks) {
@@ -616,7 +598,7 @@ public class MissionDialog2 extends Dialog {
                     return false;
                 }
                 // 투명하지 않은 부분 클릭 시 정상 처리
-                System.out.println("true");
+//                System.out.println("true");
                 return true;
             }
         });
@@ -656,7 +638,7 @@ public class MissionDialog2 extends Dialog {
         // Pixmap의 좌표계는 위쪽이 0이므로 Y축을 변환
         textureY = pixmap.getHeight() - textureY - 1;
 
-        Gdx.app.log("", "texturexy " + textureX + ", " + textureY + " regionxy " + region.getRegionX() + ", " + region.getRegionY() + " " + texture);
+//        Gdx.app.log("", "texturexy " + textureX + ", " + textureY + " regionxy " + region.getRegionX() + ", " + region.getRegionY() + " " + texture);
 
         // 해당 픽셀의 알파값 확인
         int pixel = pixmap.getPixel(textureX, textureY);
@@ -666,8 +648,8 @@ public class MissionDialog2 extends Dialog {
         int blue = pixel & 0xff;
 
         // 알파값과 RGB 값 로그로 출력
-        Gdx.app.log("Alpha Value", "Clicked Alpha: " + alpha + " pixel = " + pixel);
-        Gdx.app.log("Pixel Color", "Red: " + red + ", Green: " + green + ", Blue: " + blue);
+//        Gdx.app.log("Alpha Value", "Clicked Alpha: " + alpha + " pixel = " + pixel);
+//        Gdx.app.log("Pixel Color", "Red: " + red + ", Green: " + green + ", Blue: " + blue);
 
         // Pixmap 메모리 해제
         pixmap.dispose();

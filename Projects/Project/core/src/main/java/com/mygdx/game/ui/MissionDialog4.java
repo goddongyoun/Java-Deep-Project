@@ -12,15 +12,13 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
+import com.mygdx.game.util.FontManager;
 
 import java.util.Random;
 import java.util.TimerTask;
@@ -98,6 +96,12 @@ public class MissionDialog4 extends Dialog {
     //시작카드
     private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
+    //닫기버튼
+    private TextButton closeButton;
+    private Image closeButtonImage;
+    Texture closeButtonTexture = new Texture(Gdx.files.internal("images/mission_button1.png"));
+    Texture closeButtonTextureHover = new Texture(Gdx.files.internal("images/mission_button2.png"));
+
     private float clickedX;
     private float clickedY;
     private boolean isShooting = false;
@@ -123,6 +127,7 @@ public class MissionDialog4 extends Dialog {
             }
         });
 
+        //성공카드
         for(int i=1; i <= 6 ; i++){
             successArray.add(successAtals.findRegion("mission_success" + i));
         }
@@ -130,12 +135,36 @@ public class MissionDialog4 extends Dialog {
         successDrawable = new TextureRegionDrawable(successAnimation.getKeyFrame(0));
         success = new Image(successDrawable);
 
+        //실패카드
         for(int i=1; i <= 6 ; i++){
             failArray.add(failAtals.findRegion("mission_false" + i));
         }
         failAnimation = new Animation<TextureRegion>(0.15f,failArray,Animation.PlayMode.NORMAL);
         failDrawable = new TextureRegionDrawable(failAnimation.getKeyFrame(0));
         fail = new Image(failDrawable);
+
+        //닫기 버튼
+        closeButtonImage = new Image(closeButtonTexture);
+        closeButtonImage.setSize(50,50);
+        closeButton = new TextButton("", skin);
+        Drawable closeButtonDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTexture));
+        Drawable closeButtonHoverDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTextureHover));
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+        buttonStyle.up = closeButtonDrawable;
+        buttonStyle.down = closeButtonHoverDrawable;
+        buttonStyle.over = closeButtonHoverDrawable;
+        buttonStyle.font = FontManager.getInstance().getFont(16);
+        //스타일은 up,down,font 이 3개는 필수로 초기화되어있어야 함
+        // 설정한 스타일들을 적용
+        closeButton.setStyle(buttonStyle);
+
+        // 버튼 클릭 이벤트 처리
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                MissionDialog4.this.hide(); // 팝업 창 닫기
+            }
+        });
 
         //건슈터
         for (int i = 0; i<6;i++){
@@ -213,6 +242,8 @@ public class MissionDialog4 extends Dialog {
         contentTable.add(border).width(dialogSize).height(dialogSize).expand().fill();
         border.setName("border");
 
+        contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
+
         this.getCell(contentTable).width(dialogSize).height(dialogSize).expand().fill();
         // 미션 클래스 자체의 배경을 제거
         this.setBackground((Drawable) null);
@@ -248,6 +279,9 @@ public class MissionDialog4 extends Dialog {
         if(gameClear || isFailed){
             contentTable.removeListener(clickListener);
         }
+
+        //닫기 버튼 위치 설정
+        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+3));
 
         border.setPosition(
             (this.getWidth() - border.getWidth()) / 2,

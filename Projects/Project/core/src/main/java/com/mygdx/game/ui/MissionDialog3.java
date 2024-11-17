@@ -12,15 +12,14 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Timer;
+import com.mygdx.game.util.FontManager;
 
 import java.util.Random;
 
@@ -75,6 +74,11 @@ public class MissionDialog3 extends Dialog {
     private Image card;
     private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
+    private TextButton closeButton;
+    private Image closeButtonImage;
+    Texture closeButtonTexture = new Texture(Gdx.files.internal("images/mission_button1.png"));
+    Texture closeButtonTextureHover = new Texture(Gdx.files.internal("images/mission_button2.png"));
+
     private int amongusWidth = 84;
     private int amongusHeight = 84;
     private int currentRound = 1;
@@ -114,6 +118,30 @@ public class MissionDialog3 extends Dialog {
                     return true; // 키 입력 처리됨을 알림
                 }
                 return super.keyDown(event, keycode);
+            }
+        });
+
+        //닫기 버튼
+        closeButtonImage = new Image(closeButtonTexture);
+        closeButtonImage.setSize(50,50);
+        // 닫기 버튼
+        closeButton = new TextButton("", skin);
+        Drawable closeButtonDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTexture));
+        Drawable closeButtonHoverDrawable = new TextureRegionDrawable(new TextureRegion(closeButtonTextureHover));
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+        buttonStyle.up = closeButtonDrawable;
+        buttonStyle.down = closeButtonHoverDrawable;
+        buttonStyle.over = closeButtonHoverDrawable;
+        buttonStyle.font = FontManager.getInstance().getFont(16);
+        //스타일은 up,down,font 이 3개는 필수로 초기화되어있어야 함
+        // 설정한 스타일들을 적용
+        closeButton.setStyle(buttonStyle);
+
+        // 버튼 클릭 이벤트 처리
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                MissionDialog3.this.hide(); // 팝업 창 닫기
             }
         });
 
@@ -179,6 +207,8 @@ public class MissionDialog3 extends Dialog {
         contentTable.add(startCard).width(250).height(80).expand().fill();
         startCard.setVisible(false);
 
+        contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
+
         this.getCell(contentTable).width(640).height(360).expand().fill();
         // 미션 클래스 자체의 배경을 제거
         this.setBackground((Drawable) null);
@@ -209,6 +239,9 @@ public class MissionDialog3 extends Dialog {
 
     public void act(float delta){
         super.act(delta);
+
+        //닫기 버튼 위치 설정
+        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+3));
 
         card.setPosition(
             (this.getWidth() - card.getWidth()) / 2,

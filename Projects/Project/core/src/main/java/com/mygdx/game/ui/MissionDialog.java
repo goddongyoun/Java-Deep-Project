@@ -185,7 +185,7 @@ public class MissionDialog extends Dialog {
         contentTable.add(monsterBallImage).width(30).height(30).expand().fill().pad(10);
         contentTable.add(shooterImage).width(80).height(80).expand().fill().pad(10);
         contentTable.add(borderImage).width(640).height(365).expand().fill().pad(10); //테두리 적용
-        contentTable.add(closeButton).width(45).height(45).expand().fill().pad(10);
+        contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
         contentTable.add(aimImage).width(150).height(150).expand().fill().pad(10);
         //expand(): 셀이 가능한 공간을 확장해서 차지하도록 설정합니다. 셀 자체는 크기가 늘어나지만, 그 안의 위젯은 원래 크기를 유지합니다.
         //fill(): 셀의 크기가 확장된 후, 위젯이 그 확장된 셀을 채우도록 설정합니다. 즉, 셀의 크기에 맞춰 위젯의 크기도 늘어납니다.
@@ -229,15 +229,13 @@ public class MissionDialog extends Dialog {
         aimInitialY = 15;
         aimImage.setPosition(aimInitialX,aimInitialY);
 
-        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-closeButton.getHeight());
-
         // 플레이어 초기 위치 설정 (화면 아래 정중앙)
         shooterInitialX = ((this.getWidth() - shooterImage.getWidth()) / 2)-(shooterImage.getWidth() / 2.5f);
         shooterInitialY = 15;
         shooterImage.setPosition(shooterInitialX, shooterInitialY);
 
         //닫기 버튼 위치 설정
-        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()/1.2f),this.getHeight()-(closeButton.getHeight()/1.2f));
+        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+5));
 
         //테두리 위치 설정
         borderImage.setPosition(0,-5);
@@ -540,7 +538,7 @@ public class MissionDialog extends Dialog {
         shooterImage.setPosition(shooterInitialX, shooterInitialY);
 
         //닫기 버튼 위치 설정
-        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()/1.2f),this.getHeight()-(closeButton.getHeight()/1.2f));
+        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+5));
 
         //테두리 위치 설정
         borderImage.setPosition(0,-5);
