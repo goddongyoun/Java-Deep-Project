@@ -230,7 +230,6 @@ public class LobbyScreen implements Screen {
     @Override
     public void render(float delta) {
     	if(shouldStart == true) {
-    		System.out.println("asdad");
     		handleGameStart();
     	}
     	

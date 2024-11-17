@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.MapLayer;
@@ -18,7 +19,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -27,6 +30,7 @@ import com.mygdx.game.Player;
 import com.mygdx.game.PlayerOfMulti;
 import com.mygdx.game.Room;
 import com.mygdx.game.ui.MissionDialog;
+import com.mygdx.game.util.FontManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,6 +73,8 @@ public class GameScreen implements Screen {
     private Map<String, Boolean> objActiveStates;
     private String currentInteractiveObj;
     private Map<String, Boolean> missionCompletionStatus;  // 미션 완료 상태를 추적
+    
+    private Dialog currentDialog; // 현재 표시 중인 다이얼로그
 
     public GameScreen(Main game) {
         this.game = game;
@@ -107,11 +113,12 @@ public class GameScreen implements Screen {
         multiplexer.addProcessor(uiStage);
         Gdx.input.setInputProcessor(multiplexer);
     }
+    
     private void initializePlayerSize() {
         playerWidth = 32 * MAP_SCALE * PLAYER_SCALE;
         playerHeight = playerWidth;
     }
-
+    
     private void loadMap() {
         try {
             map = new TmxMapLoader().load("maps/game_map.tmx");
@@ -317,7 +324,7 @@ public class GameScreen implements Screen {
             player.render(renderer.getBatch());
             renderer.getBatch().end();
         }
-
+        
         // UI 렌더링
         uiStage.act(delta);
         uiStage.draw();

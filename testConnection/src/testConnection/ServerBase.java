@@ -26,6 +26,7 @@ class User{
 	String name;
 	float[] loc = new float[2];
 	InetAddress ip;
+	boolean isDead = false;
 	
 	User(String _name, InetAddress _ip){
 		name = _name;
@@ -52,6 +53,7 @@ class Room{
 	public int chatNum = -1;
 	String roomName = null;
 	boolean start = false;
+	int bossInd = -1;
 	
 	Room(int gameRecogPort, String roomName){
 		this.gameRecogPort = gameRecogPort;
@@ -93,7 +95,7 @@ class Room{
 	 */
 	int outOfUser(String name) {
 		boolean found = false;
-		for(int i = 0; i<curUserNum; i++) {
+		for(int i = 0; i<MAX_USER; i++) {
 			if(users[i] == null) {
 				continue;
 			}
@@ -108,8 +110,12 @@ class Room{
 			return -1;
 		}
 		if(curUserNum <= 0) {
+			System.out.println(gameRecogPort + " now been resetted");
+			curUserNum = 0;
 			this.unconnectable = true;
+			chatNum = -1;
 			start = false;
+			bossInd = -1;
 			return -4;
 		}
 		return 0;
@@ -344,6 +350,10 @@ class Clients implements Runnable{
 							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
 						}
 						else {
+							int i = -1;
+							while (ServerBase.rooms.get(RecogPort).users[(i = (int)(Math.random() * 5))] == null);
+							ServerBase.rooms.get(RecogPort).bossInd = i;
+							Thread.sleep(5);
 							ServerBase.rooms.get(RecogPort).start = true;
 							tcpWriter.write("NowStartIsTrue"); tcpWriter.newLine(); tcpWriter.flush();
 						}
@@ -369,7 +379,16 @@ class Clients implements Runnable{
 						}
 						else if(ServerBase.rooms.get(RecogPort).start == true && isStarted == false) {
 							isStarted = true;
-							tcpWriter.write("StartGame"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpWriter.write("StartGame"); tcpWriter.newLine();
+							
+							Room tempR = ServerBase.rooms.get(RecogPort);
+							if(tempR.users[tempR.bossInd] == null) {
+								tcpWriter.write("BossIndError"); tcpWriter.newLine();
+							}
+							else {
+								tcpWriter.write(tempR.users[tempR.bossInd].name); tcpWriter.newLine();
+							}
+							tcpWriter.flush();
 						}
 						else {
 							tcpWriter.write("KA"); tcpWriter.newLine(); tcpWriter.flush(); // KA means Keep Alive
@@ -393,12 +412,14 @@ class Clients implements Runnable{
 		finally {
 			System.out.println(SysoutColors.RED + "Disconnected with " + sock.getRemoteSocketAddress() + " Closed Socket" + SysoutColors.RESET);
 			if(RecogPort != -1) {
-				int res = ServerBase.rooms.get(RecogPort).outOfUser(name);
-				if(res == 0) {
-					System.out.println("Successfully out " + connectedIP);
-				}
-				else if(res == -1) {
-					System.out.println("Couldn't found" + connectedIP);
+				if(isSender != 1) {
+					int res = ServerBase.rooms.get(RecogPort).outOfUser(name);
+					if(res == 0) {
+						System.out.println("Successfully out " + connectedIP);
+					}
+					else if(res == -1) {
+						System.out.println("Couldn't found" + connectedIP);
+					}
 				}
 			}
 		}

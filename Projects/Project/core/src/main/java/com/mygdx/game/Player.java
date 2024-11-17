@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
@@ -15,6 +16,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.screens.LobbyScreen;
 import com.mygdx.game.util.FontManager;
 
 public class Player {
@@ -187,9 +189,21 @@ public class Player {
         } else {
             Gdx.app.error("Player", "No valid texture to render");
         }
-
+        
+        String tempBName = null;
         // 닉네임 그리기 (윤곽선 포함)
-        glyphLayout.setText(font, nickname);
+        if(LobbyScreen.shouldStart == true) {
+        	if(nickname.equals(_Imported_ClientBase.getBossName())) {
+            	if(nicknameColor != Color.RED) {
+            		nicknameColor = Color.RED;
+            	}
+            	tempBName = "*BOSS* "+nickname;
+                glyphLayout.setText(font, tempBName);
+        	}
+        }
+        else {
+        	glyphLayout.setText(font, nickname);
+        }
         float nicknameX = position.x + size / 2 - glyphLayout.width / 2;
         float nicknameY = position.y + size + glyphLayout.height + 5;
 
@@ -198,14 +212,24 @@ public class Player {
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 if (i != 0 || j != 0) {
-                    font.draw(batch, nickname, nicknameX + i, nicknameY + j);
+                	if(tempBName == null) {
+                		font.draw(batch, nickname, nicknameX + i, nicknameY + j);
+                	}
+                	else {
+                		font.draw(batch, tempBName, nicknameX + i, nicknameY + j);
+                	}
                 }
             }
         }
-
+        
         // 닉네임 그리기
         font.setColor(nicknameColor);
-        font.draw(batch, nickname, nicknameX, nicknameY);
+        if(tempBName == null) {
+    		font.draw(batch, nickname, nicknameX, nicknameY);
+    	}
+    	else {
+    		font.draw(batch, tempBName, nicknameX, nicknameY);
+    	}
     }
 
     public Vector2 getPosition() {

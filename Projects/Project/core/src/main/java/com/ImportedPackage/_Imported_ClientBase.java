@@ -37,6 +37,8 @@ public class _Imported_ClientBase {
     static BufferedReader tcpReader_toSend;
     static BufferedWriter tcpWriter_toRecv;
     static BufferedReader tcpReader_toRecv;
+    
+    private static String bossName = null;
 
     static boolean isReceiverOut = true;
 
@@ -103,7 +105,6 @@ public class _Imported_ClientBase {
 			return "Failed makeGame/ERROR";
 		}
 		catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "Failed makeGame/ERROR";
 		}
@@ -195,7 +196,6 @@ public class _Imported_ClientBase {
 			return "Failed joinGame";
 		}
 		catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "Failed joinGame";
 		}
@@ -211,6 +211,7 @@ public class _Imported_ClientBase {
 			String saver = tcpReader_toSend.readLine();
 			System.out.println(saver + " from Server [LOG] ");
 			tcpReader_toRecv = null;
+			bossName = null;
 			return saver;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -321,7 +322,6 @@ public class _Imported_ClientBase {
 				return -1;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return -2;
 		} 
@@ -338,9 +338,18 @@ public class _Imported_ClientBase {
 				System.out.println("Start Game Sended with Error [LOG]");
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
+	}
+	
+	public static String getBossName() {
+		if(bossName == null) {
+			System.out.println("BOSS NAME NULL ERROR [LOG]");
+			return null;
+		}
+		else {
+			return bossName;
+		}
 	}
 	
 	private static boolean alreadyRunning = false;
@@ -420,7 +429,7 @@ public class _Imported_ClientBase {
 	                                if (chatMessage == null) break;  // 연결이 끊어진 경우
 	                                if (chatMessage.equals("End")) break;  // 채팅 메시지 끝
 	                                
-	                                //여기서 chatMessage를 알맞게 채팅 출력함수에 보내야됨 Ex) printChat(chatMessage)
+	                                // TODO: 여기서 chatMessage를 알맞게 채팅 출력함수에 보내야됨 Ex) printChat(chatMessage)
 	                                System.out.println("\n" + chatMessage + " / [LOG] chat");
 	                            }
 	                        } 
@@ -430,7 +439,15 @@ public class _Imported_ClientBase {
 	                            //System.out.println("Keep Alive received [LOG] KA"); // 디버깅시 필요하면 활성화
 	                        }
 	                        else if(saver.equals("StartGame")) {
-	                        	LobbyScreen.shouldStart = true;
+	                        	saver = tcpReader_toRecv.readLine();
+	                        	if(saver.equals("BossIndError")) {
+	                        		System.out.println("BossIndError [LOG]");
+	                        	}
+	                        	else {
+	                        		bossName = saver;
+	                        		Thread.sleep(1);
+	                        		LobbyScreen.shouldStart = true;
+	                        	}
 	                        	System.out.println("game Started [LOG]");
 	                        }
 	                    }
