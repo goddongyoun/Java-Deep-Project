@@ -39,6 +39,7 @@ public class LobbyScreen implements Screen {
     private MissionDialog2 missionDialog2;
     private MissionDialog3 missionDialog3;
     private MissionDialog4 missionDialog4;
+    private MissionDialog5 missionDialog5;
     private Player player;
 
     public LobbyScreen(final Main game) {
@@ -94,6 +95,8 @@ public class LobbyScreen implements Screen {
 
         TextButton mission3Btn = new TextButton("미션3 어몽구스",skin);
         TextButton mission4Btn = new TextButton("미션4 스타",skin);
+        TextButton mission5Btn = new TextButton("미션5 팩맨",skin);
+
 
         AnimatedImageButton leaveButton = new AnimatedImageButton(buttonTexture,
             buttonAtlas.findRegion("closeGameBtn").getRegionX(),
@@ -134,6 +137,14 @@ public class LobbyScreen implements Screen {
             }
         });
 
+        mission5Btn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                missionDialog5 = new MissionDialog5("", skin, stage);
+                missionDialog5.showMission(stage);  // 미션 팝업을 화면에 띄움
+            }
+        });
+
         leaveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -146,6 +157,7 @@ public class LobbyScreen implements Screen {
         buttonTable.add(editButton).padBottom(10).row();
         buttonTable.add(mission3Btn).padBottom(10).row();
         buttonTable.add(mission4Btn).padBottom(10).row();
+        buttonTable.add(mission5Btn).padBottom(10).row();
         buttonTable.add(leaveButton);
 
         stage.addActor(buttonTable);

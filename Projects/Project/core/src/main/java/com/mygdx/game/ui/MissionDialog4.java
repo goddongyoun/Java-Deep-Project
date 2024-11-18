@@ -331,8 +331,7 @@ public class MissionDialog4 extends Dialog {
             ((TextureRegionDrawable) hit.getDrawable()).setRegion(currentFrame2);
 
             // 애니메이션이 끝났는지 확인
-            if (gunShooterAnime.isAnimationFinished(gunShooterStateTime) &&
-                hitAnime.isAnimationFinished(hitStateTime)) {
+            if (gunShooterAnime.isAnimationFinished(gunShooterStateTime) && hitAnime.isAnimationFinished(hitStateTime)) {
                 hit.setVisible(false);
                 isShooting = false; // 애니메이션이 끝나면 isShooting을 false로 설정
             }
