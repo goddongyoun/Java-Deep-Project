@@ -211,7 +211,9 @@ public class _Imported_ClientBase {
 			String saver = tcpReader_toSend.readLine();
 			System.out.println(saver + " from Server [LOG] ");
 			tcpReader_toRecv = null;
+			LobbyScreen.shouldStart = false;
 			bossName = null;
+			name = null;
 			return saver;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -242,6 +244,9 @@ public class _Imported_ClientBase {
 	public static int SHUTDOWN() {
 		isShuttingdown = true;
 		executorService.shutdownNow();
+		LobbyScreen.shouldStart = false;
+		bossName = null;
+		name = null;
 		return 1;
 	}
 	
@@ -249,11 +254,13 @@ public class _Imported_ClientBase {
 		public String name = null;
 		public float x;
 		public float y;
+		public boolean isDead = false;
 		
-		public Player(String name, float x, float y) {
+		public Player(String name, float x, float y, boolean isDead) {
 	        this.name = name;
 	        this.x = x;
 	        this.y = y;
+	        this.isDead = isDead;
 	    }
 		
 	}
@@ -278,24 +285,28 @@ public class _Imported_ClientBase {
 	                String name = coords[0]; // name
 	                float x = Float.parseFloat(coords[1]); // x
 	                float y = Float.parseFloat(coords[2]); // y
+	                boolean isDead = Boolean.parseBoolean(coords[3]); // isDead
 	                
 	                if (players[i] == null) {
-	                    players[i] = new Player(name, x, y);
+	                    players[i] = new Player(name, x, y, isDead);
 	                } else {
 	                    players[i].name = name;
 	                    players[i].x = x;
 	                    players[i].y = y;
+	                    players[i].isDead = isDead;
 	                }
 	            }
 	            
-	            
-	            /*System.out.println("[LOG] 현재 플레이어 정보:");
+	            //TODO: release it when you need debug
+	            /*
+	            System.out.println("[LOG] 현재 플레이어 정보:");
 	            for (Player player : players) {
 	                if (player != null) {
-	                    System.out.println("이름: " + player.name + ", x: " + player.x + ", y: " + player.y);
+	                    System.out.println("이름: " + player.name + ", x: " + player.x + ", y: " + player.y + ", isDead: " + player.isDead);
 	                }
 	            }
-	            System.out.println("[LOG] 현재 플레이어 정보 끝.");*/
+	            System.out.println("[LOG] 현재 플레이어 정보 끝.");
+	            //*/
 	            
 	            return 0;
 			}
@@ -303,7 +314,12 @@ public class _Imported_ClientBase {
 			e.printStackTrace();
 			System.out.println("ERR/CLI 299 | -2 Returned");
 			return -2;
-		} finally {
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			System.out.println("ERR/CLI 299 | -2 Returned");
+			return -2;
+		}
+		finally {
 		}
 	}
 	
@@ -324,7 +340,11 @@ public class _Imported_ClientBase {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return -2;
-		} 
+		} catch (NullPointerException e) {
+			System.out.println("서버와 연결 끊김");
+			e.printStackTrace();
+			return -3;
+		}
 	}
 	
 	public static void startPls() {
@@ -349,6 +369,27 @@ public class _Imported_ClientBase {
 		}
 		else {
 			return bossName;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param who Someone Who Should Die
+	 * @return Success: Successfully Died | Fail: Failed to kill
+	 */
+	public static String setIsDead(String who) {
+		try {
+			tcpWriter_toSend.write("SetDead"); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write(who); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("Success")) {
+				System.out.println(who+" died Successfully [LOG]");
+			}
+			return saver;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Error CLI 373 [LOG]";
 		}
 	}
 	

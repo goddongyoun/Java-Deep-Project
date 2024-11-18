@@ -144,7 +144,7 @@ class Room{
     				User user = users[i];
     				if(user != null) {
     					sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/")
-						.append(user.getLocation()[1]);
+						.append(user.getLocation()[1]).append("/").append(user.isDead);
     				}
     			} catch (Exception e) {
     				//e.printStackTrace();
@@ -254,6 +254,7 @@ class Clients implements Runnable{
 						if(RecogPort == -1) {
 							String tryingPort = tcpReader.readLine();
 							String temp = tcpReader.readLine();
+							System.out.println("trying port is "+ tryingPort);
 							try {
 								int res = ServerBase.rooms.get(ServerBase.strToI_map.get(tryingPort)).newUserCome(temp, connectedIP);
 								if(res == -1) {
@@ -277,6 +278,8 @@ class Clients implements Runnable{
 									tcpWriter.write("ERROR SB_137"); tcpWriter.newLine(); tcpWriter.flush();
 								}
 							} catch(IndexOutOfBoundsException e) {
+								tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
+							} catch(NullPointerException e) {
 								tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
 							}
 						}
@@ -356,6 +359,24 @@ class Clients implements Runnable{
 							Thread.sleep(5);
 							ServerBase.rooms.get(RecogPort).start = true;
 							tcpWriter.write("NowStartIsTrue"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
+					else if(saver.equals("SetDead")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();
+						}
+						else {
+							Room tempRoom = ServerBase.rooms.get(RecogPort);
+							saver = tcpReader.readLine();
+							for(int i = 0; i< tempRoom.MAX_USER; i++) {
+								if(tempRoom.users[i] != null) {
+									if(tempRoom.users[i].name.equals(saver)) {
+										tempRoom.users[i].isDead = true;
+										tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+									}
+								}
+							}
 						}
 					}
 					else {
@@ -481,13 +502,13 @@ public class ServerBase {
 			System.out.println("setOutError - 184");
 			e.printStackTrace();
 		}
-		try {
+		try {/*
 			System.out.println("Trying to connect with DB...");
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/javadeep", "root", "521869");
 			@SuppressWarnings("unused")
 			Statement stmt = conn.createStatement();
-			System.out.println("connect success with DB");
+			System.out.println("connect success with DB");*/
 			
 			for (int i = 0; i <= 99; i++) {
 				String tempSaver = setRanStr();

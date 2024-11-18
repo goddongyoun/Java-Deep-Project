@@ -144,7 +144,10 @@ public class Player {
             velocity.x += 1;
             facingLeft = false;
             currentState = PlayerState.RUNNING;
-        } else {
+        } else if(Gdx.input.isKeyPressed(Input.Keys.A)) { // TODO: just for the Test, should be deleted when published
+        	_Imported_ClientBase.setIsDead("Player");
+        }
+        else {
             currentState = PlayerState.IDLE;
         }
 
