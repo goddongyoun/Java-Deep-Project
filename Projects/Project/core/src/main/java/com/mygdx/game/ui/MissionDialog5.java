@@ -19,6 +19,8 @@ import com.badlogic.gdx.utils.Timer;
 import com.mygdx.game.util.FontManager;
 
 import java.util.ArrayList;
+import java.util.Formattable;
+import java.util.Objects;
 import java.util.TimerTask;
 
 public class MissionDialog5 extends Dialog {
@@ -27,6 +29,12 @@ public class MissionDialog5 extends Dialog {
 
     //게임상태
     private boolean gameOver = false;
+
+    // 실행 제어
+    private boolean continueExecution = true; // 초기값
+
+    //act 메소드에서 딱 1번만 실행되어야 하는 것들을 위한 변수
+    private boolean isActivated = false;
 
     //다이어로그, contentTable 크기를 이 변수로 설정
     private int dialogSizeWidth = 600;
@@ -48,15 +56,18 @@ public class MissionDialog5 extends Dialog {
 
     //점수
     private Image point;
-    private int pointSize = 40;
-    private float pointInitialX;
-    private float pointInitialY;
-    private float pointX;
-    private float pointY;
+    private int objSize = 60;
 
     //점수 및 유렁 배치를 위한 배열
     private ArrayList<Image> objs = new ArrayList<>();
-    private float objsSpeed = 4f;
+    private float objsSpeed = 800f;
+    private float objsInitialX;
+    private float objsInitialY;
+    private float objsX;
+    private float objsY;
+    private float objs0X;
+    private float objs0Y;
+    private boolean isDeleted=false;
 
     //팩맨
     private TextureAtlas pacmanEatAtlas = new TextureAtlas("mission5/pacmanEat.atlas");
@@ -65,11 +76,13 @@ public class MissionDialog5 extends Dialog {
     private Animation<TextureRegion> pacmanEatAnimation;
     private Image pacmanEat;
     private float pacmanEatStatetime = 0f;
-    private final float pacmanSpeed = 6f;  // 이동 속도 설정 (예: 1씩 이동)
+    private final float pacmanSpeed = 4f;  // 이동 속도 설정 (예: 1씩 이동)
     private final float maxDistance = 130f;  // 최대 이동 거리 설정
     private int pacmanSize = 60;
+    private boolean startAnimation = false;
     private boolean spaceClicked = false;
     private boolean isAvoid = false;
+    private boolean isOnOrigin = true;
     private float pacmanInitialX;
     private float pacmanInitialY;
     private float pacmanX;
@@ -147,8 +160,9 @@ public class MissionDialog5 extends Dialog {
         //옵젝들 위치배열에 넣어줌
         for (int i=0;i<4;i++){
             point = new Image(new Texture(Gdx.files.internal("mission5/Point.png")));
+            point.setName("point");
             objs.add(point);
-            contentTable.add(objs.get(i)).width(pointSize).height(pointSize).expand().fill();
+            contentTable.add(objs.get(i)).width(objSize).height(objSize).expand().fill();
         }
 
         //팩맨 추가
@@ -188,14 +202,13 @@ public class MissionDialog5 extends Dialog {
         pacmanX = pacmanInitialX;
         pacmanY = pacmanInitialY;
 
-        pointInitialX = (this.getWidth() - point.getWidth())*2/5;
-        pointInitialY = (this.getHeight() - point.getHeight())/2;
-        pointX = pointInitialX + 34;
-        pointY = pointInitialY;
+        objsInitialX = (this.getWidth() - objSize)*2/5 + 34;
+        objsInitialY = (this.getHeight() - objSize)/2;
+        objsX = objs0X = objsInitialX;
+        objsY = objs0Y = objsInitialY;
 
         this.addListener(eatListener);
         this.addListener(avoidlistener);
-//        this.addListener(gobacklistener);
     }
 
     public void act(float delta) {
@@ -219,35 +232,32 @@ public class MissionDialog5 extends Dialog {
         pacmanEat.setPosition(pacmanX,pacmanY);
         pacmanDead.setPosition(pacmanX,pacmanY);
 
-        for (int i=0;i<4;i++){
-            objs.get(i).setPosition(pointX+(i*120), pointY);
+        //1번째 objs 인덱스 위치 설정
+        objs.get(0).setPosition(objs0X,objs0Y);
+        //2번째 objs 인덱스 부터 위치 설정
+        for (int i=1;i<objs.size();i++){
+            objs.get(i).setPosition(objsX+(i*120), objsY);
         }
 
         //먹는 애니메이션
-        if(spaceClicked){
-            this.removeListener(avoidlistener);
+        if(startAnimation){
             pacmanEatStatetime += delta;
-            //objs 이동
-            objsMoving(delta);
 
             TextureRegion currentFrame = pacmanEatAnimation.getKeyFrame(pacmanEatStatetime, false);
             ((TextureRegionDrawable) pacmanEat.getDrawable()).setRegion(currentFrame);
 
+
             if(pacmanEatAnimation.isAnimationFinished(pacmanEatStatetime)){
-                this.addListener(avoidlistener);
                 pacmanEatStatetime = 0f;
                 //첫 프레임으로 다시 돌아옴
                 currentFrame = pacmanEatAnimation.getKeyFrame(pacmanEatStatetime, false);
                 ((TextureRegionDrawable) pacmanEat.getDrawable()).setRegion(currentFrame);
-                spaceClicked = false;
+                startAnimation = false;
             }
         }
 
         // 피하는 로직
         if (isAvoid) {
-            //피하는 즉시 먹는 로직 비활성
-            this.removeListener(eatListener);
-
             // pacmanY가 초기 위치에서 100만큼 아래로 이동했는지 확인
             if (pacmanY > (pacmanInitialY - maxDistance)) {
                 // pacmanY를 이동 속도만큼 감소시킴 (아래로 이동)
@@ -258,29 +268,47 @@ public class MissionDialog5 extends Dialog {
             }
         }else{ //원위치 로직
             if (pacmanY < pacmanInitialY) {
-                // pacmanY를 이동 속도만큼 감소시킴 (아래로 이동)
+                // pacmanY를 이동 속도만큼 증가시킴 (위로이동)
                 pacmanY += pacmanSpeed;
 
                 // pacmanEat의 위치 업데이트
                 pacmanEat.setPosition(pacmanEat.getX(), pacmanY);
             }else{
-                //원위치로 돌아가면 먹는 로직 재활성
-                this.addListener(eatListener);
+                //원위치로 돌아가면 ....
+                isOnOrigin=true;
             }
         }
 
+        // 업데이트 메서드 등에서 실행
+        if ((spaceClicked || !isOnOrigin) && continueExecution) {
+            this.removeListener(eatListener);
+            this.removeListener(avoidlistener);
+            //피하기
+            if (!isOnOrigin){
+                continueExecution = handleFirstObj(false, delta); // 메서드 값에 따라 continueExecution 변경
+            //먹기
+            }else if (spaceClicked){
+                continueExecution = handleFirstObj(true, delta); // 메서드 값에 따라 continueExecution 변경
+            }
+        } else {
+            this.addListener(eatListener);
+            this.addListener(avoidlistener);
+            continueExecution = false; // 조건이 충족되지 않으면 실행 멈춤
+        }
+
+        //게임 오버시 팩맨 죽음 애니메이션 실행
         if(gameOver) {
             pacmanDeadAnimation(delta);
         }
     }
 
-    public void objsMoving(float delta){
-        for (int i=1;i<4;i++){
-            System.out.println(1);
-            objs.get(i).setPosition(pointX+(i*120)-(objsSpeed*delta), pointY);
-        }
-    }
+//    //옵젝 움직임 함수
+//    public boolean objsMoving(float delta){
+//        if(objsInitialX <= objs.get(1).getX())
+//            objsX -= objsSpeed*delta;
+//    }
 
+    //팩맨 죽는 애니메이션
     public void pacmanDeadAnimation(float delta){
         pacmanDeadStatetime+= (deadSpeed*delta);
 
@@ -292,12 +320,86 @@ public class MissionDialog5 extends Dialog {
         }
     }
 
+    //0번째 인덱스 처리 로직
+    public boolean handleFirstObj(boolean isSucceeded, float delta){
+        if (Objects.equals(objs.get(0).getName(), "point")){
+            if(objsInitialX <= objs.get(1).getX())
+                objsX -= objsSpeed*delta;
+
+            //점수 먹을시
+            if (isSucceeded && objs0X > pacmanEat.getX()){
+                objs0X -= objsSpeed*delta;
+                return true;
+            //점수 피할시
+            }else if (!isSucceeded && objs0X > -20){
+                objs0X -= objsSpeed*delta;
+                return true;
+            }else{
+                //0번째 인덱스 제거
+                del0Index();
+                objsX = objs0X = objsInitialX;
+                objsY = objs0Y = objsInitialY;
+                return false;
+            }
+        }else{
+            System.out.println("handleFirstObj에서 첫 if문 다 만족하지 않음");
+            return false;
+        }
+    }
+
+    //0번째 옵젝 인덱스 제거
+    public void del0Index(){
+        if (!isDeleted){
+            isDeleted = true;
+
+            TextureRegionDrawable point = new TextureRegionDrawable(new Texture(Gdx.files.internal("mission5/GhostMint1.png")));
+            point.setName("point");
+
+            for (int i=0;i<objs.size();i++){
+                if (i<objs.size()-1){
+                    objs.get(i).setDrawable(objs.get(i+1).getDrawable());
+                }else{
+                    objs.get(i).setDrawable(point);
+                }
+            }
+
+//            // Table 내에서 0번째 요소 삭제
+//            contentTable.removeActor(objs.get(0));
+//            // 배열리스트 내에서 0번째 요소 삭제
+//            objs.remove(0);
+            //새로운 요소 추가
+//            addObjIntoArrlist();
+        }
+    }
+
+    //새로운 옵젝을 배열리스트에 추가
+    public void addObjIntoArrlist(){
+//        point = new Image(new Texture(Gdx.files.internal("mission5/Point.png")));
+//        point.setName("point");
+//        objs.add(point);
+//
+//        System.out.println(objs);
+//        System.out.println(objs.size());
+
+//        contentTable.add(objs.get(3)).width(objSize).height(objSize).expand().fill();
+    }
+
     //먹는 이벤트 리스너
     InputListener eatListener = new InputListener(){
         @Override
         public boolean keyDown(InputEvent event, int keycode) {
             if (keycode == Input.Keys.SPACE) {
+                continueExecution = true;
+                isActivated = false;
+                startAnimation = true;
                 spaceClicked = true;
+                isDeleted = false;
+                Timer.schedule(new Timer.Task(){
+                    @Override
+                    public void run() {
+                        spaceClicked = false;
+                    }
+                },0.2f);
                 return true;
             }
             return super.keyDown(event, keycode);
@@ -309,13 +411,16 @@ public class MissionDialog5 extends Dialog {
         @Override
         public boolean keyDown(InputEvent event, int keycode) {
             if (keycode == Input.Keys.DOWN) {
+                continueExecution = true;
                 isAvoid = true;
+                isDeleted = false;
+                isOnOrigin = false;
                 Timer.schedule(new Timer.Task(){
                     @Override
                     public void run() {
                         isAvoid = false;
                     }
-                },1f);
+                },0.2f);
                 return true;
             }
             return super.keyDown(event, keycode);
