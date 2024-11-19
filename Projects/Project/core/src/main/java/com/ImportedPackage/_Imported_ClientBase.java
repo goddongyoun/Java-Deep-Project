@@ -175,9 +175,12 @@ public class _Imported_ClientBase {
 				return saver;
 			}
 			else if(saver.equals("SuccessfullyJoind")) {
-				//tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				if(tcpSock_toRecv.isClosed() == true) {
+					tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				}
 				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
 				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
+				//tcpReader_toRecv.lines();
 				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
 				System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 				System.out.println("[LOG] 방에 접속하였습니다.");
@@ -209,7 +212,8 @@ public class _Imported_ClientBase {
 		try {
 			tcpWriter_toSend.write("OutGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
-			System.out.println(saver + " from Server [LOG] ");
+			System.out.println(saver + " from Server(OUT) [LOG] ");
+			tcpSock_toRecv.close();
 			tcpReader_toRecv = null;
 			LobbyScreen.shouldStart = false;
 			bossName = null;
@@ -280,6 +284,7 @@ public class _Imported_ClientBase {
 				String[] parts = saver.split(" ");
 	            playerCount = Integer.parseInt(parts[0]);
 	            //System.out.println(saver);
+	            try {
 	            for (int i = 0; i < playerCount; i++) {
 	                String[] coords = parts[i + 1].split("/");
 	                String name = coords[0]; // name
@@ -296,7 +301,9 @@ public class _Imported_ClientBase {
 	                    players[i].isDead = isDead;
 	                }
 	            }
-	            
+	            } catch (Exception e) {
+	            	return 0;
+	            }
 	            //TODO: release it when you need debug
 	            /*
 	            System.out.println("[LOG] 현재 플레이어 정보:");
@@ -315,6 +322,10 @@ public class _Imported_ClientBase {
 			System.out.println("ERR/CLI 299 | -2 Returned");
 			return -2;
 		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			System.out.println("ERR/CLI 299 | -2 Returned");
+			return -2;
+		} catch (NullPointerException e) {
 			e.printStackTrace();
 			System.out.println("ERR/CLI 299 | -2 Returned");
 			return -2;
@@ -395,11 +406,16 @@ public class _Imported_ClientBase {
 	
 	private static boolean alreadyRunning = false;
 	
+	public static void changeName(String newName) {
+		name = newName;
+	}
+	
 	public static void run(String playerName) throws Exception {
 		if(alreadyRunning == false) {
 			alreadyRunning = true;
 		}
 		else {
+			changeName(playerName);
 			return;
 		}
 		System.out.println("[LOG] <-- means 'from ClientBase'");
@@ -454,13 +470,13 @@ public class _Imported_ClientBase {
 			}
 			while (true) {
 	            try {
-	                Thread.sleep(10);
+					Thread.sleep(1);
 	                if (isShuttingdown) {
 	                    tcpReader_toRecv.close();
 	                    break;
 	                }
 	                
-	                if (tcpReader_toRecv != null) {
+	                if (tcpReader_toRecv != null && !tcpSock_toRecv.isClosed()) {
 	                    saver = tcpReader_toRecv.readLine();
 	                    if (saver != null) {
 	                        if (saver.equals("Chat")) {
@@ -478,6 +494,7 @@ public class _Imported_ClientBase {
 	                        else if (saver.equals("KA")) {
 	                            //Keep Alive 메시지는 별도 처리 없이 넘어감
 	                            //System.out.println("Keep Alive received [LOG] KA"); // 디버깅시 필요하면 활성화
+	                        	continue;
 	                        }
 	                        else if(saver.equals("StartGame")) {
 	                        	saver = tcpReader_toRecv.readLine();
@@ -493,6 +510,8 @@ public class _Imported_ClientBase {
 	                        }
 	                    }
 	                }
+	            } catch (SocketException e) {
+	            	System.out.println("[LOG] 소켓이 닫혔지만 계속 시도중..");
 	            } catch (IOException e) {
 	            	e.printStackTrace();
 	                System.out.println("[LOG] 채팅 연결 종료");

@@ -281,6 +281,8 @@ class Clients implements Runnable{
 								tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
 							} catch(NullPointerException e) {
 								tcpWriter.write("InvalidRecogPort"); tcpWriter.newLine(); tcpWriter.flush();
+							} catch(Exception e) {
+								tcpWriter.write("ERROR SB_285"); tcpWriter.newLine(); tcpWriter.flush();
 							}
 						}
 						else {
