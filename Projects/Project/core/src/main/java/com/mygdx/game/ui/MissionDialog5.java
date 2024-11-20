@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -19,6 +20,7 @@ import com.badlogic.gdx.utils.Timer;
 import com.mygdx.game.util.FontManager;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.TimerTask;
 
 public class MissionDialog5 extends Dialog {
@@ -28,8 +30,29 @@ public class MissionDialog5 extends Dialog {
     //게임상태
     private boolean gameOver = false;
     private boolean gameClear = false;
+    private boolean isStart = false;
     private int maxPointCount = 20;
     private int pointCount = 0;
+
+    //스코어 이미지
+    private TextureAtlas numberAtlas = new TextureAtlas(Gdx.files.internal("mission5/numbers.atlas"));
+    private Array<TextureRegion> numberArray = new Array<>();
+    private Image numberImage;
+    private Image score = new Image(new Texture("mission5/score.png"));
+    private Image slash = new Image(new Texture("mission5/slash.png"));
+    private Array<Image> number = new Array<>();
+    private int numWidth = 14;
+    private int numHeight = 24;
+    private int slashWidth = 20;
+    private int slashHeight = 36;
+    private int scoreWidth = 100;
+    private int scoreHeight = 20;
+    private int maxScore = 20;
+    private float scoreX;
+    private float scoreY;
+
+    //시작카드
+    private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
     // 실행 제어
     private boolean continueExecution = true; // 초기값
@@ -59,12 +82,13 @@ public class MissionDialog5 extends Dialog {
     private int firstIndex;
     private int lastIndex;
     private int objSize = 60;
-    private float objsSpeed = 800f;
+    private float objsSpeed = 900f;
     private float objsInitialX;
     private float objsInitialY;
     private float[] objsX = new float[objArrSize]; // 각 인덱스의 x좌표
     private float objsY;
     private boolean isActivated =false;
+    private boolean isGetPoint = false;
 
     //팩맨
     private TextureAtlas pacmanEatAtlas = new TextureAtlas("mission5/pacmanEat.atlas");
@@ -204,6 +228,23 @@ public class MissionDialog5 extends Dialog {
         success.setName("success");
         success.setVisible(false);
 
+        contentTable.add(startCard).width(250).height(80).expand().fill();
+        startCard.setName("startCard");
+
+        //스코어, 슬래쉬 이미지 추가
+        contentTable.add(score).width(scoreWidth).height(scoreHeight).expand().fill();
+        contentTable.add(slash).width(slashWidth).height(slashHeight).expand().fill();
+
+        //넘버 추가
+        for (int i=0;i<10;i++){
+            numberArray.add(numberAtlas.findRegion("num"+i));
+        }
+        for (int i=0;i<4;i++){
+            numberImage = new Image(numberArray.get(0));
+            number.add(numberImage);
+            contentTable.add(number.get(i)).width(numWidth).height(numHeight).expand().fill();
+        }
+
         //테두리 추가
         contentTable.add(border).width(dialogSizeWidth).height(dialogSizeHeight).expandX().fillX();
 
@@ -242,8 +283,24 @@ public class MissionDialog5 extends Dialog {
         }
         objsY = objsInitialY;
 
-        this.addListener(eatListener);
-        this.addListener(avoidlistener);
+        scoreX = this.getWidth() - score.getWidth()*3;
+        scoreY = this.getHeight() - score.getHeight()*5;
+
+        number.get(2).setDrawable(new TextureRegionDrawable(new TextureRegion(numberArray.get(maxScore/10))));
+        number.get(3).setDrawable(new TextureRegionDrawable(new TextureRegion(numberArray.get(maxScore%10))));
+
+        // 시작카드 1초 보여주고 시작
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                startCard.setVisible(false);
+                isStart = true;
+            }
+        },1f);
+        if (isStart){
+            this.addListener(eatListener);
+            this.addListener(avoidlistener);
+        }
     }
 
     public void act(float delta) {
@@ -274,8 +331,35 @@ public class MissionDialog5 extends Dialog {
             (this.getHeight() - success.getHeight()) / 2
         );
 
+        startCard.setPosition(
+            (this.getWidth() - startCard.getWidth()) / 2,
+            (this.getHeight() - startCard.getHeight()) / 2
+        );
+
+        //ㅅㅂ 기준점을 이미지 한 가운데로 잡을걸
+        score.setPosition(scoreX,scoreY);
+        for (int i=0;i<2;i++){
+            if (i==0){
+                number.get(i).setPosition(scoreX+score.getWidth() + 14,scoreY-2);
+            }else{
+                number.get(i).setPosition(number.get(i-1).getX()+number.get(i-1).getWidth()+10,scoreY-2);
+            }
+        }
+        slash.setPosition(number.get(1).getX()+number.get(1).getWidth()+6,scoreY-score.getHeight()/2);
+        for (int i=2;i<4;i++){
+            if (i==2){
+                number.get(i).setPosition(slash.getX()+slash.getWidth()+10,scoreY-2);
+            }else{
+                number.get(i).setPosition(number.get(i-1).getX()+number.get(i-1).getWidth()+10,scoreY-2);
+            }
+        }
+
         pacmanEat.setPosition(pacmanX,pacmanY);
         pacmanDead.setPosition(pacmanX,pacmanY);
+
+        //score 카운트
+        number.get(0).setDrawable(new TextureRegionDrawable(new TextureRegion(numberArray.get(pointCount/10))));
+        number.get(1).setDrawable(new TextureRegionDrawable(new TextureRegion(numberArray.get(pointCount%10))));
 
         //objs 위치 설정
         for (int i=0;i<objArrSize;i++){
@@ -418,6 +502,9 @@ public class MissionDialog5 extends Dialog {
                     gameOver = true;
                     return false;
                 }
+                if (objs.get(firstIndex).getName() == ("point")){
+                    isGetPoint = true;
+                }
                 objsX[firstIndex] -= objsSpeed*delta;
                 return true;
             //피하는 행동 실행, objs가 맵밖으로 나갈 때까지 움직이고 true 리턴
@@ -426,13 +513,14 @@ public class MissionDialog5 extends Dialog {
                 return true;
             //행동이 끝났으면 위치 초기화, 이미지 한 칸씩 땡기기, false 리턴
             }else{
-                if (objs.get(firstIndex).getName() == ("point")){
+                if (objs.get(firstIndex).getName() == ("point") && isGetPoint){
                     pointCount++;
                     if (pointCount == maxPointCount){
                         gameClear = true;
                         System.out.println(gameClear);
                     }
                     System.out.println(pointCount);
+                    isGetPoint = false;
                 }
                 putAndChangeImages();
                 return false;
@@ -444,12 +532,23 @@ public class MissionDialog5 extends Dialog {
         if (!isActivated) {
             isActivated = true;
 
-            // 두 개의 TextureRegionDrawable 생성
+            String selectColor = "";
+            int RandomNumForColor = MathUtils.random(1,4);
+            if (RandomNumForColor == 1){
+                selectColor = "Mint";
+            }else if (RandomNumForColor == 2){
+                selectColor = "Orange";
+            }else if (RandomNumForColor == 3){
+                selectColor = "Pink";
+            }else{
+                selectColor = "Red";
+            }
+
+            TextureRegionDrawable ghostImage = new TextureRegionDrawable(new Texture(Gdx.files.internal("mission5/Ghost"+selectColor+"1.png")));
+            ghostImage.setName("ghost");
+
             TextureRegionDrawable pointImage = new TextureRegionDrawable(new Texture(Gdx.files.internal("mission5/point.png")));
             pointImage.setName("point");
-
-            TextureRegionDrawable ghostImage = new TextureRegionDrawable(new Texture(Gdx.files.internal("mission5/GhostMint1.png")));
-            ghostImage.setName("ghost");
 
             // 랜덤으로 이미지 선택
             TextureRegionDrawable image;
@@ -486,12 +585,24 @@ public class MissionDialog5 extends Dialog {
     // objs 초기화
     public void initialObjs(){
         for (int i=0;i<objArrSize;i++){
-            // 두 개의 TextureRegionDrawable 생성
+
+            String selectColor = "";
+            int RandomNumForColor = MathUtils.random(1,4);
+            if (RandomNumForColor == 1){
+                selectColor = "Mint";
+            }else if (RandomNumForColor == 2){
+                selectColor = "Orange";
+            }else if (RandomNumForColor == 3){
+                selectColor = "Pink";
+            }else{
+                selectColor = "Red";
+            }
+
+            Image ghostImage = new Image(new Texture(Gdx.files.internal("mission5/Ghost"+selectColor+"1.png")));
+            ghostImage.setName("ghost");
+
             Image pointImage = new Image(new Texture(Gdx.files.internal("mission5/point.png")));
             pointImage.setName("point");
-
-            Image ghostImage = new Image(new Texture(Gdx.files.internal("mission5/GhostMint1.png")));
-            ghostImage.setName("ghost");
 
             // 랜덤으로 이미지 선택
             Image image;
