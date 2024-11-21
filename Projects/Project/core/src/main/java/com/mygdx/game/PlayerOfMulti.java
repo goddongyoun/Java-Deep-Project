@@ -19,15 +19,16 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.screens.LobbyScreen;
 import com.mygdx.game.util.FontManager;
 
-public class Player {
+public class PlayerOfMulti {
+
     private String nickname;
     private Vector2 position;
     private Vector2 velocity;
     private float speedX = 160f;
     private float speedY = 120f;
     private Rectangle bounds;
-    public float size;
-    private int x, y;
+    private float size;
+    private Vector2 serverPosition = new Vector2();
 
     private TextureAtlas atlas;
     private Animation<TextureRegion> idleLeftAnimation;
@@ -50,7 +51,7 @@ public class Player {
         IDLE, RUNNING
     }
 
-    public Player(String nickname, float x, float y, float size) {
+    public PlayerOfMulti(String nickname, float x, float y, float size) {
         this.nickname = nickname;
         this.position = new Vector2(x, y);
         this.velocity = new Vector2();
@@ -132,40 +133,56 @@ public class Player {
         pixmap.dispose();
     }
 
-    public void update(float delta) {
-        stateTime += delta;
+	public void update(float x, float y, float delta) {
+		stateTime += delta;
 
-        velocity.setZero();
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            velocity.x -= 1;
-            facingLeft = true;
-            currentState = PlayerState.RUNNING;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            velocity.x += 1;
-            facingLeft = false;
-            currentState = PlayerState.RUNNING;
-        } else if(Gdx.input.isKeyPressed(Input.Keys.A)) { // TODO: just for the Test, should be deleted when published
-        	_Imported_ClientBase.setIsDead("Player");
-        }
-        else {
-            currentState = PlayerState.IDLE;
-        }
+		// 서버 위치 저장
+		serverPosition.set(x, y);
 
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) velocity.y += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) velocity.y -= 1;
+		// 현재 위치와 서버 위치의 차이 계산
+		float dx = serverPosition.x - position.x;
+		float dy = serverPosition.y - position.y;
 
-        if (!velocity.isZero()) {
-            velocity.nor();
-            currentState = PlayerState.RUNNING;
-        } else {
-            currentState = PlayerState.IDLE;
-        }
+		// 텔레포트가 필요한 거리 체크 (예: 100 이상 차이나면)
+		float teleportThreshold = 100f;
+		if (Math.abs(dx) > teleportThreshold || Math.abs(dy) > teleportThreshold) {
+			// 직접 서버 위치로 텔레포트
+			position.x = serverPosition.x;
+			position.y = serverPosition.y;
+			velocity.setZero();
+			currentState = PlayerState.IDLE;
+		} else {
+			// 일반적인 이동 처리
+			velocity.setZero();
+			float moveThreshold = 1f;
 
-        position.x += velocity.x * speedX * delta;
-        position.y += velocity.y * speedY * delta;
+			if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
+				velocity.x = dx;
+				velocity.y = dy;
+				velocity.nor(); // 방향 정규화
 
-        bounds.setPosition(position);
-    }
+				// 이동 상태 설정
+				currentState = PlayerState.RUNNING; // 어떤 방향이든 이동중이면 RUNNING
+
+				// x 방향 이동시 방향 설정
+				if (Math.abs(dx) > moveThreshold) {
+					if (velocity.x < 0) {
+						facingLeft = true;
+					} else if (velocity.x > 0) {
+						facingLeft = false;
+					}
+				}
+			} else {
+				currentState = PlayerState.IDLE;
+			}
+
+			// velocity를 사용한 부드러운 이동
+			position.x += velocity.x * speedX * delta;
+			position.y += velocity.y * speedY * delta;
+		}
+
+		bounds.setPosition(position);
+	}
 
     public void render(Batch batch) {
         TextureRegion currentFrame = null;
@@ -233,6 +250,14 @@ public class Player {
     	else {
     		font.draw(batch, tempBName, nicknameX, nicknameY);
     	}
+    }
+
+    public void setSize(float size) {
+        this.size = size;
+    }
+
+    public float getSize() {
+        return this.size;
     }
 
     public Vector2 getPosition() {

@@ -1,12 +1,15 @@
 package com.mygdx.game.ui;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.Align;
 import com.mygdx.game.Main;
 import com.mygdx.game.Player;
 import com.mygdx.game.Room;
 import com.mygdx.game.screens.LobbyScreen;
+import com.mygdx.game.screens.MainMenuScreen;
 import com.mygdx.game.util.FontManager;
+import com.ImportedPackage.*;
 
 public class CreateRoomDialog extends Dialog {
     private Main game;
@@ -83,15 +86,63 @@ public class CreateRoomDialog extends Dialog {
             String playerName = playerNameField.getText();
             int playerCount = playerCountSelect.getSelected();
             String password = passwordField.getText();
-            int roomCode = 0; // 임시로 0으로 설정
+            String roomCode = null; // 임시로 0으로 설정
 
-            game.setPlayerNickname(playerName);
-            // Player 생성자에 적절한 크기 값을 전달합니다. 여기서는 임시로 32를 사용합니다.
-            Player host = new Player(playerName, 0, 0, 32);
-            Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);
+            try {
+                // Trying To Connect
+                _Imported_ClientBase.run(playerName);
+            } catch (Exception e) {
+                e.printStackTrace();
 
-            game.setCurrentRoom(newRoom);
-            game.setScreen(new LobbyScreen(game));
+                Dialog errorDialog = new Dialog("", getSkin()) {
+                    @Override
+                    protected void result(Object obj) {
+                        hide();
+                        game.setScreen(new MainMenuScreen(game));
+                    }
+                };
+                Label.LabelStyle labelStyle = new Label.LabelStyle(getSkin().get(Label.LabelStyle.class));
+                labelStyle.font = FontManager.getInstance().getFont(24);
+
+                TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle(getSkin().get(TextButton.TextButtonStyle.class));
+                buttonStyle.font = FontManager.getInstance().getFont(20);
+
+                //errorDialog.text(new Label("서버와 연결할 수 없습니다.\n메인 메뉴로 돌아갑니다.", labelStyle));
+                errorDialog.text(new Label("서버와 연결할 수 없습니다.\n테스트 모드로 들어갑니다.", labelStyle));
+                errorDialog.button(new TextButton("확인", buttonStyle), true);
+                errorDialog.getContentTable().pad(20);
+
+                errorDialog.show(getStage());
+
+                this.hide();
+
+                //!!!!!!!!! should be killed when publish
+                game.setPlayerNickname(playerName);
+                Player host = new Player(playerName, 0, 0, 32);
+                Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);
+
+                game.setCurrentRoom(newRoom);
+                game.setScreen(new LobbyScreen(game, false));
+                //!!!!!!!!! ends
+
+                return;
+            }
+            String saver = _Imported_ClientBase.MakeGame_TCP(roomName); //The returning string looks like 'Success makeGame/ABC123', so the string has to be split by '/'.
+            String[] parts = saver.split("/");
+            if(parts[0].equals("Success makeGame")) {
+                if(parts.length > 1) {
+                    roomCode = parts[1];
+                    game.setPlayerNickname(playerName);
+                    Player host = new Player(playerName, Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2, 32);
+                    Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
+
+                    game.setCurrentRoom(newRoom);
+                    game.setScreen(new LobbyScreen(game, false));
+                }
+                else { // just in case
+                    System.out.println("ROOM CODE INVALID?");
+                }
+            }
         }
     }
 }

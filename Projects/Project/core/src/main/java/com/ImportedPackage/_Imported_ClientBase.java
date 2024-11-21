@@ -20,33 +20,38 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import com.mygdx.game.Main;
+import com.mygdx.game.screens.LobbyScreen;
+
 public class _Imported_ClientBase {
 
-	static byte[] sendBuf;
-	static String SERVER_ADDRESS = "219.254.146.234"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
-	final static int SERVER_PORT_TCP = 1235;
-	final static int SERVER_PORT_UDP  = 4000;
-	static ExecutorService executorService = Executors.newFixedThreadPool(3);
-	static Future<String> future_UDP;
-	static Socket tcpSock_toSend;
-	static Socket tcpSock_toRecv;
-	static BufferedWriter tcpWriter_toSend;
-	static BufferedReader tcpReader_toSend;
-	static BufferedWriter tcpWriter_toRecv;
-	static BufferedReader tcpReader_toRecv;
-	
-	static boolean isReceiverOut = true;
-	
-	static String name = null;
-	
-	static Scanner sc = new Scanner(System.in);
-	
-	/**
-	 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	 * Do not use this method, This method should only be used inside the client. the Method will exist as public considering various situations, but do not use it.
-	 */
-	public static void checkLoopBack() {
-		try {
+    static byte[] sendBuf;
+    static String SERVER_ADDRESS = "127.0.0.1"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
+    final static int SERVER_PORT_TCP = 1235;
+    final static int SERVER_PORT_UDP  = 4000;
+    static ExecutorService executorService = Executors.newFixedThreadPool(3);
+    static Future<String> future_UDP;
+    static Socket tcpSock_toSend;
+    static Socket tcpSock_toRecv;
+    static BufferedWriter tcpWriter_toSend;
+    static BufferedReader tcpReader_toSend;
+    static BufferedWriter tcpWriter_toRecv;
+    static BufferedReader tcpReader_toRecv;
+    
+    private static String bossName = null;
+
+    static boolean isReceiverOut = true;
+
+    static String name = null;
+
+    static Scanner sc = new Scanner(System.in);
+
+    /**
+     * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     * Do not use this method, This method should only be used inside the client. the Method will exist as public considering various situations, but do not use it.
+     */
+    public static void checkLoopBack() {
+        try {
             String apiUrl = "https://ifconfig.me/ip";
             URL url = new URL(apiUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -54,8 +59,8 @@ public class _Imported_ClientBase {
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String externalIp = reader.readLine();
             reader.close();
-            if(externalIp.equals("219.254.146.234")) {
-            	SERVER_ADDRESS = "127.0.0.1";
+            if(externalIp.equals(SERVER_ADDRESS)) {
+                SERVER_ADDRESS = "127.0.0.1";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,25 +81,32 @@ public class _Imported_ClientBase {
 			String readSaver = tcpReader_toSend.readLine();
 			System.out.println("[LOG] TCP received From Server -> " + readSaver);
 			System.out.println(readSaver + "[LOG] ");
-			int Port = readSaver.charAt(readSaver.length()-1) - '0';
 			
-			tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
-			tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
-			tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
-			tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
-			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
-			return "Success makeGame";
+			String[] parts = readSaver.split("/");
+			String recogPort = null;
+	        if (parts.length > 1) {
+	            recogPort = parts[1];
+	            System.out.println("RecogPort: " + recogPort);
+				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
+				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
+				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+recogPort); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
+//				System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
+				//tcpSock_toRecv.setSoTimeout(3000);
+				return "Success makeGame/" + recogPort;
+	        } else {
+	            System.out.println("[LOG] ??? ERROR CLI_86 정보를 찾을 수 없습니다.");
+				return "Failed makeGame/ERROR";
+	        }
 		} 
 		catch (SocketException e) {
 			if(e.getMessage().equals("Connection reset")) {
 				System.out.println("[LOG] 서버가 연결을 끊었습니다.");
 			}
-			return "Failed makeGame";
+			return "Failed makeGame/ERROR";
 		}
 		catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return "Failed makeGame";
+			return "Failed makeGame/ERROR";
 		}
 	}
 	
@@ -130,10 +142,10 @@ public class _Imported_ClientBase {
 	 * @param name what is your name to be displayed
 	 * @return
 	 */
-	public static String joinGame(int Port, String name) {
+	public static String joinGame(String Port, String name) {
 		try {
-			tcpWriter_toSend.write("JoinGame"); tcpWriter_toSend.newLine(); 
-			tcpWriter_toSend.write(Integer.toString(Port)); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write("JoinGame"); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(Port); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.write(name); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.flush();
 			
@@ -158,13 +170,21 @@ public class _Imported_ClientBase {
 				System.out.println("[LOG] 이미 연결되어있습니다.");
 				return saver;
 			}
+			else if(saver.equals("SameNameFound")) {
+				System.out.println("[LOG] 같은 닉네임이 발견되었습니다.");
+				return saver;
+			}
 			else if(saver.equals("SuccessfullyJoind")) {
-				tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				if(tcpSock_toRecv.isClosed() == true) {
+					tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+				}
 				tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
 				tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
-				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is "+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
+				//tcpReader_toRecv.lines();
+				tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+Port); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();
 				System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toRecv.readLine());
 				System.out.println("[LOG] 방에 접속하였습니다.");
+				//tcpSock_toRecv.setSoTimeout(3000);
 				return saver;
 			}
 			else { // anjdi Tlqkf?
@@ -179,7 +199,6 @@ public class _Imported_ClientBase {
 			return "Failed joinGame";
 		}
 		catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "Failed joinGame";
 		}
@@ -193,8 +212,12 @@ public class _Imported_ClientBase {
 		try {
 			tcpWriter_toSend.write("OutGame"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
-			System.out.println(saver + " from Server [LOG] ");
+			System.out.println(saver + " from Server(OUT) [LOG] ");
+			tcpSock_toRecv.close();
 			tcpReader_toRecv = null;
+			LobbyScreen.shouldStart = false;
+			bossName = null;
+			name = null;
 			return saver;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -220,12 +243,181 @@ public class _Imported_ClientBase {
 		}
 	}
 	
+	private static boolean isShuttingdown = false;
+	
 	public static int SHUTDOWN() {
-		executorService.shutdown();
+		isShuttingdown = true;
+		executorService.shutdownNow();
+		LobbyScreen.shouldStart = false;
+		bossName = null;
+		name = null;
 		return 1;
 	}
 	
+	public static class Player {
+		public String name = null;
+		public float x;
+		public float y;
+		public boolean isDead = false;
+		
+		public Player(String name, float x, float y, boolean isDead) {
+	        this.name = name;
+	        this.x = x;
+	        this.y = y;
+	        this.isDead = isDead;
+	    }
+		
+	}
+	
+    public static Player[] players = new Player[5];
+    public static int playerCount;
+    
+	public static int getLocation() {
+		try {
+			tcpWriter_toSend.write("GetLoc"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("NotJoinedYet")) {
+				System.out.println("[LOG] 방에 연결되지 않았습니다.");
+				return -1;
+			}
+			else {
+				String[] parts = saver.split(" ");
+	            playerCount = Integer.parseInt(parts[0]);
+	            //System.out.println(saver);
+	            try {
+	            for (int i = 0; i < playerCount; i++) {
+	                String[] coords = parts[i + 1].split("/");
+	                String name = coords[0]; // name
+	                float x = Float.parseFloat(coords[1]); // x
+	                float y = Float.parseFloat(coords[2]); // y
+	                boolean isDead = Boolean.parseBoolean(coords[3]); // isDead
+	                
+	                if (players[i] == null) {
+	                    players[i] = new Player(name, x, y, isDead);
+	                } else {
+	                    players[i].name = name;
+	                    players[i].x = x;
+	                    players[i].y = y;
+	                    players[i].isDead = isDead;
+	                }
+	            }
+	            } catch (Exception e) {
+	            	return 0;
+	            }
+	            //TODO: release it when you need debug
+	            /*
+	            System.out.println("[LOG] 현재 플레이어 정보:");
+	            for (Player player : players) {
+	                if (player != null) {
+	                    System.out.println("이름: " + player.name + ", x: " + player.x + ", y: " + player.y + ", isDead: " + player.isDead);
+	                }
+	            }
+	            System.out.println("[LOG] 현재 플레이어 정보 끝.");
+	            //*/
+	            
+	            return 0;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("ERR/CLI 299 | -2 Returned");
+			return -2;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			System.out.println("ERR/CLI 299 | -2 Returned");
+			return -2;
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			System.out.println("ERR/CLI 299 | -2 Returned");
+			return -2;
+		}
+		finally {
+		}
+	}
+	
+	public static int updateLoc(int x, int y) {
+		try {
+			tcpWriter_toSend.write("NewLoc"); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(Integer.toString(x)); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(Integer.toString(y)); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(name); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("Success")) {
+				return 0;
+			}
+			else {
+				return -1;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return -2;
+		} catch (NullPointerException e) {
+			System.out.println("서버와 연결 끊김");
+			e.printStackTrace();
+			return -3;
+		}
+	}
+	
+	public static void startPls() {
+		try {
+			tcpWriter_toSend.write("PlsStart"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("NowStartIsTrue")) {
+				System.out.println("Start Game Sended successfully [LOG]");
+			}
+			else {
+				System.out.println("Start Game Sended with Error [LOG]");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+	}
+	
+	public static String getBossName() {
+		if(bossName == null) {
+			System.out.println("BOSS NAME NULL ERROR [LOG]");
+			return null;
+		}
+		else {
+			return bossName;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param who Someone Who Should Die
+	 * @return Success: Successfully Died | Fail: Failed to kill
+	 */
+	public static String setIsDead(String who) {
+		try {
+			tcpWriter_toSend.write("SetDead"); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write(who); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.flush();
+			String saver = tcpReader_toSend.readLine();
+			if(saver.equals("Success")) {
+				System.out.println(who+" died Successfully [LOG]");
+			}
+			return saver;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Error CLI 373 [LOG]";
+		}
+	}
+	
+	private static boolean alreadyRunning = false;
+	
+	public static void changeName(String newName) {
+		name = newName;
+	}
+	
 	public static void run(String playerName) throws Exception {
+		if(alreadyRunning == false) {
+			alreadyRunning = true;
+		}
+		else {
+			changeName(playerName);
+			return;
+		}
 		System.out.println("[LOG] <-- means 'from ClientBase'");
 		name = playerName;
 		if(name == null) {
@@ -247,7 +439,6 @@ public class _Imported_ClientBase {
 			tcpWriter_toSend.write("MakeConnection"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write("plsReceive"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toSend.readLine());
 			
-			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.out.println("[LOG] 서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
@@ -267,22 +458,77 @@ public class _Imported_ClientBase {
 		executorService.execute(()->{
 			String saver = null;
 			isReceiverOut = false;
-			while(true) {
-				try {
+			try {
+	            tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+			} catch (SocketException e) {
+				e.printStackTrace();
+				System.out.println("[LOG] CLI/379(SOCKET_EXCEPTION) || ExecutorServices Couldn't Started");
+				return;
+			} catch(IOException e) {
+				e.printStackTrace();
+				System.out.println("[LOG] CLI/383(IOEXCEPTION) || ExecutorServices Couldn't Started");
+			}
+			while (true) {
+	            try {
 					Thread.sleep(1);
-					if(tcpReader_toRecv != null) {
-						while((saver = tcpReader_toRecv.readLine()) != null) {
-							System.out.println("\n" + saver + " / [LOG] chat");
-						}
-					}
-				} catch (IOException | InterruptedException e) {
-					System.out.println("[LOG] 채팅 연결 종료");
-				} finally {
-					tcpReader_toRecv = null;
-					isReceiverOut = true;
+	                if (isShuttingdown) {
+	                    tcpReader_toRecv.close();
+	                    break;
+	                }
+	                
+	                if (tcpReader_toRecv != null && !tcpSock_toRecv.isClosed()) {
+	                    saver = tcpReader_toRecv.readLine();
+	                    if (saver != null) {
+	                        if (saver.equals("Chat")) {
+	                            // Chat 메시지를 받으면 End가 나올 때까지 계속 읽기
+	                            while (true) {
+	                                String chatMessage = tcpReader_toRecv.readLine();
+	                                if (chatMessage == null) break;  // 연결이 끊어진 경우
+	                                if (chatMessage.equals("End")) break;  // 채팅 메시지 끝
+	                                
+	                                // TODO: 여기서 chatMessage를 알맞게 채팅 출력함수에 보내야됨 Ex) printChat(chatMessage)
+	                                System.out.println("\n" + chatMessage + " / [LOG] chat");
+	                            }
+	                        } 
+	                        // KA(Keep Alive)는 무시
+	                        else if (saver.equals("KA")) {
+	                            //Keep Alive 메시지는 별도 처리 없이 넘어감
+	                            //System.out.println("Keep Alive received [LOG] KA"); // 디버깅시 필요하면 활성화
+	                        	continue;
+	                        }
+	                        else if(saver.equals("StartGame")) {
+	                        	saver = tcpReader_toRecv.readLine();
+	                        	if(saver.equals("BossIndError")) {
+	                        		System.out.println("BossIndError [LOG]");
+	                        	}
+	                        	else {
+	                        		bossName = saver;
+	                        		Thread.sleep(1);
+	                        		LobbyScreen.shouldStart = true;
+	                        	}
+	                        	System.out.println("game Started [LOG]");
+	                        }
+	                    }
+	                }
+	            } catch (SocketException e) {
+	            	System.out.println("[LOG] 소켓이 닫혔지만 계속 시도중..");
+	            } catch (IOException e) {
+	            	e.printStackTrace();
+	                System.out.println("[LOG] 채팅 연결 종료");
+	                break;
+	            } catch (InterruptedException e) {
+	                Thread.currentThread().interrupt();
+	                System.out.println("[LOG] The Thread was Interrupted.");
+	                break; 
+	            } finally {
+	            	
 				}
 			}
+			tcpReader_toRecv = null;
+			isReceiverOut = true;
+            System.out.println("[LOG] ExcutorService Ended.");
 		});
+		Thread.sleep(10); //To wait that excutorService.execute make Socket to Receive
 		System.out.println("[LOG] ExecutorServices Started");
 		//!!! Important ends!!
 		

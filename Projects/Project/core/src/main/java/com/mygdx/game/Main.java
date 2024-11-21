@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -36,6 +37,7 @@ public class Main extends Game {
 
     @Override
     public void dispose() {
+        _Imported_ClientBase.SHUTDOWN();
         super.dispose();
         getScreen().dispose();
         FontManager.getInstance().dispose();

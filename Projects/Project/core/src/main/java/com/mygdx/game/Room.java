@@ -9,16 +9,18 @@ public class Room {
     private String password;
     private int maxPlayers;
     private List<Player> players;
-    private Player host;
+    private Player me;
+    public PlayerOfMulti[] m_players = new PlayerOfMulti[4];
+    public int pCount = 0;
 
-    public Room(String title, String code, String password, int maxPlayers, Player host) {
+    public Room(String title, String code, String password, int maxPlayers, Player me) {
         this.title = title;
         this.code = code;
         this.password = password;
         this.maxPlayers = maxPlayers;
         this.players = new ArrayList<>();
-        this.host = host;
-        this.players.add(host);
+        this.me = me;
+        this.players.add(me);
     }
 
     public String getTitle() {
@@ -51,11 +53,15 @@ public class Room {
         }
     }
 
-    public Player getHost() {
-        return host;
+    public void addMulPlayer(PlayerOfMulti p) {
+
     }
 
-    public void setHost(Player host) {
-        this.host = host;
+    public Player getme() {
+        return me;
+    }
+
+    public void setme(Player me) {
+        this.me = me;
     }
 }

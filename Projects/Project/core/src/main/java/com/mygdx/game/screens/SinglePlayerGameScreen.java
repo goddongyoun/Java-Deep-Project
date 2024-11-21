@@ -1,11 +1,8 @@
 package com.mygdx.game.screens;
 
-import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.MapLayer;
@@ -27,25 +24,20 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
 import com.mygdx.game.Player;
-import com.mygdx.game.PlayerOfMulti;
-import com.mygdx.game.Room;
-import com.mygdx.game.ui.MissionDialog;
+import com.mygdx.game.screens.MainMenuScreen;
 import com.mygdx.game.util.FontManager;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class GameScreen implements Screen {
+public class SinglePlayerGameScreen implements Screen {
     private Main game;
     private OrthographicCamera camera;
     private Viewport viewport;
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
-    private Room currentRoom;
-    private Stage uiStage;
-    private Skin skin;
 
     // 맵 스케일 설정
     private static final float MAP_SCALE = 2.0f;
@@ -72,20 +64,17 @@ public class GameScreen implements Screen {
     private Map<String, TiledMapTileLayer> objOnLayers;
     private Map<String, Boolean> objActiveStates;
     private String currentInteractiveObj;
-    private Map<String, Boolean> missionCompletionStatus;  // 미션 완료 상태를 추적
-    
-    private Dialog currentDialog; // 현재 표시 중인 다이얼로그
+    private Stage stage;
+    private Skin skin;
 
-    public GameScreen(Main game) {
+    public SinglePlayerGameScreen(Main game) {
         this.game = game;
-        this.currentRoom = game.getCurrentRoom();
 
         // 카메라 초기화
         camera = new OrthographicCamera();
         viewport = new ExtendViewport(Main.WINDOW_WIDTH, Main.WINDOW_HEIGHT, camera);
 
-        // UI Stage 및 Skin 초기화
-        this.uiStage = new Stage(viewport);
+        this.stage = new Stage(viewport);
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
 
         // 맵 로드
@@ -94,31 +83,25 @@ public class GameScreen implements Screen {
         // 플레이어 크기 초기화
         initializePlayerSize();
 
-        // 플레이어 초기화
-        player = currentRoom.getme();
+        // 플레이어 초기화 (싱글플레이어용)
+        createSinglePlayer();
         resetPlayerPosition();
 
-        // 다른 플레이어들 크기 조정
-        for (int i = 0; i < currentRoom.pCount; i++) {
-            if (currentRoom.m_players[i] != null) {
-                currentRoom.m_players[i].setSize(playerWidth);
-            }
-        }
-
         findLayers();
-        missionCompletionStatus = new HashMap<>();
 
-        // 입력 처리를 위한 InputMultiplexer 설정
-        InputMultiplexer multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(uiStage);
-        Gdx.input.setInputProcessor(multiplexer);
+        // ESC 키로 메인 메뉴로 돌아가기 위한 입력 프로세서 설정
+        Gdx.input.setInputProcessor(stage);
     }
-    
+
     private void initializePlayerSize() {
         playerWidth = 32 * MAP_SCALE * PLAYER_SCALE;
         playerHeight = playerWidth;
     }
-    
+
+    private void createSinglePlayer() {
+        player = new Player("훈련중", 0, 0, playerWidth);
+    }
+
     private void loadMap() {
         try {
             map = new TmxMapLoader().load("maps/game_map.tmx");
@@ -132,13 +115,12 @@ public class GameScreen implements Screen {
             float actualWidth = mapWidth * tileWidth * MAP_SCALE;
             float actualHeight = mapHeight * tileHeight * MAP_SCALE;
 
-            Gdx.app.log("GameScreen", String.format(
+            Gdx.app.log("SinglePlayerGameScreen", String.format(
                 "Map loaded - Size: %dx%d tiles, Actual size: %.0fx%.0f pixels, Scale: %.1f",
                 mapWidth, mapHeight, actualWidth, actualHeight, MAP_SCALE
             ));
-
         } catch (Exception e) {
-            Gdx.app.error("GameScreen", "Error loading map", e);
+            Gdx.app.error("SinglePlayerGameScreen", "Error loading map", e);
         }
     }
 
@@ -159,7 +141,7 @@ public class GameScreen implements Screen {
             if (blockPattern.matcher(layerName).matches()) {
                 if (layer instanceof TiledMapTileLayer) {
                     collisionLayers.add((TiledMapTileLayer) layer);
-                    Gdx.app.log("GameScreen", "Found collision layer: " + layerName);
+                    Gdx.app.log("SinglePlayerGameScreen", "Found collision layer: " + layerName);
                 }
             }
 
@@ -167,7 +149,7 @@ public class GameScreen implements Screen {
                 if (layer instanceof TiledMapTileLayer) {
                     String id = layerName.split("-")[0];
                     objOffLayers.put(id, (TiledMapTileLayer) layer);
-                    Gdx.app.log("GameScreen", "Found obj-off layer: " + layerName);
+                    Gdx.app.log("SinglePlayerGameScreen", "Found obj-off layer: " + layerName);
                 }
             }
 
@@ -177,12 +159,11 @@ public class GameScreen implements Screen {
                     objOnLayers.put(id, (TiledMapTileLayer) layer);
                     objActiveStates.put(id, false);
                     ((TiledMapTileLayer) layer).setVisible(false);
-                    Gdx.app.log("GameScreen", "Found obj-on layer: " + layerName);
+                    Gdx.app.log("SinglePlayerGameScreen", "Found obj-on layer: " + layerName);
                 }
             }
         }
     }
-
     private void resetPlayerPosition() {
         if (map != null) {
             int mapWidth = map.getProperties().get("width", Integer.class);
@@ -247,11 +228,15 @@ public class GameScreen implements Screen {
             currentInteractiveObj = null;
         }
 
-        // 스페이스바로 상호작용 및 미니게임 실행
         if (currentInteractiveObj != null &&
             objActiveStates.get(currentInteractiveObj) &&
             Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             showInteractionDialog(currentInteractiveObj);
+        }
+
+        // ESC 키로 메인 메뉴로 돌아가기
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            game.setScreen(new MainMenuScreen(game));
         }
     }
 
@@ -269,35 +254,22 @@ public class GameScreen implements Screen {
     }
 
     private void showInteractionDialog(String objId) {
-        if (objId.matches("obj\\d+")) {
-            // 미션이 이미 완료되었는지 확인
-            if (!missionCompletionStatus.getOrDefault(objId, false)) {
-                MissionDialog missionDialog = new MissionDialog("미션", skin, uiStage);
-                missionDialog.showMission(uiStage);
-
-                // 미션 완료 시 서버에 알림
-                missionDialog.setMissionCompleteCallback(() -> {
-                    missionCompletionStatus.put(objId, true);
-                    // TODO: 서버에 미션 완료 상태 전송
-                    // _Imported_ClientBase.sendMissionComplete(objId);
-                    checkAllMissionsComplete();
-                });
+        Dialog dialog = new Dialog("상호작용", skin) {
+            @Override
+            protected void result(Object object) {
+                hide();
             }
-        }
-    }
+        };
 
-    private void checkAllMissionsComplete() {
-        boolean allComplete = true;
-        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
-            if (!entry.getValue()) {
-                allComplete = false;
-                break;
-            }
-        }
+        Label.LabelStyle labelStyle = new Label.LabelStyle(skin.get(Label.LabelStyle.class));
+        labelStyle.font = FontManager.getInstance().getFont(20);
 
-        if (allComplete) {
-            // TODO: 게임 클리어 처리
-        }
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle(skin.get(TextButton.TextButtonStyle.class));
+        buttonStyle.font = FontManager.getInstance().getFont(18);
+
+        dialog.text(new Label("오브젝트 " + objId + "와 상호작용했습니다.", labelStyle));
+        dialog.button(new TextButton("확인", buttonStyle));
+        dialog.show(stage);
     }
 
     @Override
@@ -306,7 +278,6 @@ public class GameScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         handlePlayerMovement(delta);
-        updateMultiplayerPositions(delta);
         checkObjectInteractions();
         updateCamera(delta);
 
@@ -315,19 +286,12 @@ public class GameScreen implements Screen {
             renderer.render();
 
             renderer.getBatch().begin();
-            // 다른 플레이어들 렌더링
-            for (int i = 0; i < currentRoom.pCount; i++) {
-                if (currentRoom.m_players[i] != null) {
-                    currentRoom.m_players[i].render(renderer.getBatch());
-                }
-            }
             player.render(renderer.getBatch());
             renderer.getBatch().end();
         }
-        
-        // UI 렌더링
-        uiStage.act(delta);
-        uiStage.draw();
+
+        stage.act(delta);
+        stage.draw();
     }
 
     private void updateCamera(float delta) {
@@ -351,42 +315,6 @@ public class GameScreen implements Screen {
 
         camera.position.set(cameraPosition);
         camera.update();
-    }
-
-    private void updateMultiplayerPositions(float delta) {
-        Vector2 playerPos = player.getPosition();
-        float playerCenterX = playerPos.x + playerWidth / 2;
-        float playerCenterY = playerPos.y + playerHeight / 2;
-
-        _Imported_ClientBase.updateLoc(
-            Math.round(playerCenterX),
-            Math.round(playerCenterY)
-        );
-
-        _Imported_ClientBase.getLocation();
-        currentRoom.pCount = _Imported_ClientBase.playerCount - 1;
-
-        int temp = 0;
-        for (int i = 0; i < 5; i++) {
-            if (_Imported_ClientBase.players[i] != null) {
-                if (!(_Imported_ClientBase.players[i].name.equals(currentRoom.getme().getNickname()))) {
-                    if (currentRoom.m_players[temp] == null) {
-                        currentRoom.m_players[temp] = new PlayerOfMulti(
-                            _Imported_ClientBase.players[i].name,
-                            _Imported_ClientBase.players[i].x - playerWidth / 2,
-                            _Imported_ClientBase.players[i].y - playerHeight / 2,
-                            playerWidth
-                        );
-                    }
-                    currentRoom.m_players[temp].update(
-                        _Imported_ClientBase.players[i].x - playerWidth / 2,
-                        _Imported_ClientBase.players[i].y - playerHeight / 2,
-                        delta
-                    );
-                    temp++;
-                }
-            }
-        }
     }
 
     private void limitCameraToMapBounds() {
@@ -418,7 +346,7 @@ public class GameScreen implements Screen {
     public void dispose() {
         if (renderer != null) renderer.dispose();
         if (map != null) map.dispose();
-        if (uiStage != null) uiStage.dispose();
+        if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
     }
 

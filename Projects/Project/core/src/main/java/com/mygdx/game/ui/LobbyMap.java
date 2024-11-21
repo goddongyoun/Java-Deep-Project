@@ -1,5 +1,6 @@
 package com.mygdx.game.ui;
 
+import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -16,6 +17,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
 import com.mygdx.game.Player;
+import com.mygdx.game.PlayerOfMulti;
+import com.mygdx.game.Room;
 
 public class LobbyMap extends Actor {
     private Main game;
@@ -24,14 +27,15 @@ public class LobbyMap extends Actor {
     private OrthographicCamera camera;
     private Viewport viewport;
     private Player localPlayer;
-    private Player npc; //npc 테스트로 추가
     private Array<TiledMapTileLayer> collisionLayers;
 
-    private static final float WORLD_WIDTH = 1280;
-    private static final float WORLD_HEIGHT = 720;
+    private static float WORLD_WIDTH = 1280;
+    private static float WORLD_HEIGHT = 720;
 
     public LobbyMap(final Main game) {
         this.game = game;
+        WORLD_WIDTH = Main.WINDOW_WIDTH;
+        WORLD_HEIGHT = Main.WINDOW_HEIGHT;
         map = new TmxMapLoader().load("maps/lobby_map_32x18.tmx");
 
         Gdx.app.log("LobbyMap", "Map loaded: " + (map != null));
@@ -54,14 +58,10 @@ public class LobbyMap extends Actor {
         camera.update();
 
         float playerSize = tileWidth * unitScale * 1.6f;
-        float playerX = WORLD_WIDTH / 2;
-        float playerY = WORLD_HEIGHT / 2;
-        localPlayer = new Player(game.getPlayerNickname(), playerX, playerY, playerSize);
-
-        // NPC 생성 (화면 가운데에 배치)
-        float npcX = WORLD_WIDTH / 2 + 100; //플레이어와 다른 위치에 배치
-        float npcY = WORLD_HEIGHT / 2;
-        npc = new Player("NPC",npcX, npcY, playerSize);
+        /*float playerX = WORLD_WIDTH / 2;
+        float playerY = WORLD_HEIGHT / 2;*/
+        localPlayer = this.game.getCurrentRoom().getme();
+        localPlayer.size = playerSize;
 
         findCollisionLayers();
     }
@@ -83,9 +83,28 @@ public class LobbyMap extends Actor {
     }
 
     public void update(float delta) {
-
         Vector2 oldPosition = localPlayer.getPosition().cpy();
         localPlayer.update(delta);
+        Room room = game.getCurrentRoom();
+    	_Imported_ClientBase.updateLoc(Math.round(room.getme().getPosition().x), Math.round(room.getme().getPosition().y));
+    	int isErr = _Imported_ClientBase.getLocation();
+    	if(isErr == 0) {
+    		room.pCount = _Imported_ClientBase.playerCount-1;
+        	int temp = 0;
+        	for(int i = 0; i<5; i++) {
+        		if(_Imported_ClientBase.players[i] != null) {
+        			if(!(_Imported_ClientBase.players[i].name.equals(room.getme().getNickname()))) { // 그냥 언어포맷 무시하고 한글로 씀. 이름이 다르다면
+        				if(room.m_players[temp] == null) {
+        					room.m_players[temp] = new PlayerOfMulti(_Imported_ClientBase.players[i].name, _Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, room.getme().size);
+        				}
+        				//System.out.println("CAME!!!!!!!!!!!");
+        				room.m_players[temp].update(_Imported_ClientBase.players[i].x,_Imported_ClientBase.players[i].y, delta);
+        				temp++;
+        			}
+        		}
+        	}
+    	}
+    	
         handleCollisions(oldPosition);
 
         float cameraX = localPlayer.getPosition().x;
@@ -148,9 +167,12 @@ public class LobbyMap extends Actor {
 
         batch.setProjectionMatrix(camera.combined);
         localPlayer.render(batch);
+        for(int i = 0; i<game.getCurrentRoom().pCount; i++) {
+            if(game.getCurrentRoom().m_players[i] != null) {
+                game.getCurrentRoom().m_players[i].render(batch);
+            }
 
-        //npc 그리기
-        npc.render(batch);
+        }
     }
 
     public void resize(int width, int height) {
