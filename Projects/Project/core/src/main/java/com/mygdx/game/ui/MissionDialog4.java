@@ -670,11 +670,6 @@ public class MissionDialog4 extends Dialog {
             mutaliskTransparent = new TransparentData (mutalisk);
         }
 
-        //투명 체크
-        private boolean isMutaliskTrasnparent(float x, float y){
-            return mutaliskTransparent.isTransparent(x,y);
-        }
-
         //위치이동
         private void moving(float delta){
             // 상태 시간 업데이트

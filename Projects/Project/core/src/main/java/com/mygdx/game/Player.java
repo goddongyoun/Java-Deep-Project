@@ -15,6 +15,8 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.screens.LobbyScreen;
 import com.mygdx.game.util.FontManager;
@@ -45,6 +47,13 @@ public class Player {
     private Color outlineColor;
     private GlyphLayout glyphLayout;
     private int fontSize = 19; // 폰트 크기를 조절할 수 있는 변수
+
+    //움직임 제한 boolean 변수
+    private boolean canMove = true;
+
+    //테스트
+    private TextureRegion currentRegion;
+    private Image currentImage;
 
     private enum PlayerState {
         IDLE, RUNNING
@@ -95,6 +104,7 @@ public class Player {
             runRightAnimation = createAnimation("FrogRunR", frameDuration);
 
             defaultTexture = atlas.findRegion("FrogIdleR1");
+            currentImage = new Image(new TextureRegion(defaultTexture));
             if (defaultTexture == null) {
                 Gdx.app.error("Player", "Failed to load default texture from atlas");
                 createDefaultTexture();
@@ -133,9 +143,11 @@ public class Player {
     }
 
     public void update(float delta) {
+        if (!canMove) return;
         stateTime += delta;
 
         velocity.setZero();
+
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             velocity.x -= 1;
             facingLeft = true;
@@ -167,6 +179,18 @@ public class Player {
         bounds.setPosition(position);
     }
 
+    public void setCanMove(boolean canMove) {
+        this.canMove = canMove;
+    }
+
+    public TextureRegion getPlayerRegion(){
+        return currentRegion;
+    }
+
+    public Image getPlayerImage(){
+        return currentImage;
+    }
+
     public void render(Batch batch) {
         TextureRegion currentFrame = null;
 
@@ -180,6 +204,9 @@ public class Player {
                     currentFrame = facingLeft ? idleLeftAnimation.getKeyFrame(stateTime, true) : idleRightAnimation.getKeyFrame(stateTime, true);
                     break;
             }
+            //테스트
+            currentRegion = currentFrame;
+            currentImage.setDrawable(new TextureRegionDrawable(currentRegion));
         } catch (Exception e) {
             Gdx.app.error("Player", "Error getting animation frame", e);
         }
@@ -192,7 +219,7 @@ public class Player {
         } else {
             Gdx.app.error("Player", "No valid texture to render");
         }
-        
+
         String tempBName = null;
         // 닉네임 그리기 (윤곽선 포함)
         if(LobbyScreen.shouldStart == true) {
@@ -224,7 +251,7 @@ public class Player {
                 }
             }
         }
-        
+
         // 닉네임 그리기
         font.setColor(nicknameColor);
         if(tempBName == null) {
@@ -237,6 +264,14 @@ public class Player {
 
     public Vector2 getPosition() {
         return position;
+    }
+
+    public float getX(){
+        return position.x;
+    }
+
+    public float getY(){
+        return position.y;
     }
 
     public void setPosition(Vector2 position) {

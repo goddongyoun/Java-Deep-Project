@@ -7,18 +7,27 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -27,6 +36,10 @@ import com.mygdx.game.Player;
 import com.mygdx.game.PlayerOfMulti;
 import com.mygdx.game.Room;
 import com.mygdx.game.ui.MissionDialog;
+import com.mygdx.game.ui.MissionDialog2;
+import com.mygdx.game.ui.MissionDialog3;
+import com.mygdx.game.ui.MissionDialog4;
+import com.mygdx.game.ui.MissionDialog5;
 import com.mygdx.game.ui.MissionDialogm;
 
 import java.util.HashMap;
@@ -73,6 +86,17 @@ public class GameScreen implements Screen {
 
     private Dialog currentDialog; // 현재 표시 중인 다이얼로그
 
+    //미니게임 관련
+    MissionDialogm missionDialog;
+    MissionDialogm missionDialog2;
+    MissionDialogm missionDialog3;
+    MissionDialogm missionDialog4;
+    MissionDialogm missionDialog5;
+    private boolean isMissionActivated=false;
+
+    //투명 부분 충돌 실험을 위한 것들
+    private Mutalisk mutalisk;
+
     public GameScreen(Main game) {
         this.game = game;
         this.currentRoom = game.getCurrentRoom();
@@ -94,6 +118,21 @@ public class GameScreen implements Screen {
         // 플레이어 초기화
         player = currentRoom.getme();
         resetPlayerPosition();
+
+        //뮤탈리스크 (투명확인 테스트)
+        int mapWidth = map.getProperties().get("width", Integer.class);
+        int mapHeight = map.getProperties().get("height", Integer.class);
+        int tileWidth = map.getProperties().get("tilewidth", Integer.class);
+        int tileHeight = map.getProperties().get("tileheight", Integer.class);
+
+        float centerX = (mapWidth * tileWidth * MAP_SCALE) / 2f;
+        float centerY = (mapHeight * tileHeight * MAP_SCALE) / 2f;
+        mutalisk = new Mutalisk(
+            centerX - playerWidth / 2,
+            centerY - playerHeight / 2
+        );
+
+        uiStage.addActor(mutalisk.getImage());
 
         // 다른 플레이어들 크기 조정
         for (int i = 0; i < currentRoom.pCount; i++) {
@@ -194,9 +233,11 @@ public class GameScreen implements Screen {
                 centerX - playerWidth / 2,
                 centerY - playerHeight / 2
             ));
+
             player.size = playerWidth;
         }
     }
+
 
     private boolean isColliding(float x, float y) {
         int tileX = (int) (x / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
@@ -210,6 +251,111 @@ public class GameScreen implements Screen {
         }
         return false;
     }
+
+    //맵 셀을 불러와 알파값을 찾음
+//    public boolean isCollidable(float x, float y) {
+//        int tileX = (int) (x / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
+//        int tileY = (int) (y / (map.getProperties().get("tileheight", Integer.class) * MAP_SCALE));
+//
+//        for (TiledMapTileLayer layer : collisionLayers) {
+//            Cell cell = layer.getCell(tileX, tileY);
+//            if (cell != null) {
+//                TiledMapTile tile = cell.getTile();
+//                if (tile != null) {
+//                    // 타일의 TextureRegion 가져오기
+//                    TextureRegion region = tile.getTextureRegion();
+//                    Texture texture = region.getTexture();
+//
+//                    // Pixmap을 통해 픽셀 데이터 확인
+//                    texture.getTextureData().prepare();
+//                    Pixmap pixmap = texture.getTextureData().consumePixmap();
+//
+//                    // 타일의 로컬 좌표 계산
+//                    float localX = x % region.getRegionWidth();
+//                    float localY = y % region.getRegionHeight();
+//
+//                    // 픽셀의 알파값 확인
+//                    int pixel = pixmap.getPixel((int)localX, (int)localY);
+//                    int alpha = (pixel >>> 24) & 0xFF; // 알파값 추출 (0-255)
+//                    pixmap.dispose(); // Pixmap 해제
+//
+//                    if (alpha == 0) {
+//                        return false; // 완전 투명하면 충돌 없음
+//                    }
+//                    return true; // 투명하지 않으면 충돌
+//                }
+//            }
+//        }
+//        return false; // 셀이나 타일이 없으면 충돌 없음
+//    }
+
+    private Pixmap getPixmapFromTextureRegion(TextureRegion region) {
+        Texture texture = region.getTexture();
+        texture.getTextureData().prepare();
+        return texture.getTextureData().consumePixmap();
+    }
+
+    private boolean checkCollisionWithTransparency(
+        TextureRegion region1, float x1, float y1, float width1, float height1,
+        TextureRegion region2, float x2, float y2, float width2, float height2
+    ) {
+        // 겹치는 영역 계산 (화면 좌표 기준)
+        int overlapXStart = Math.max((int) x1, (int) x2);
+        int overlapYStart = Math.max((int) y1, (int) y2);
+        int overlapXEnd = Math.min((int) (x1 + width1), (int) (x2 + width2));
+        int overlapYEnd = Math.min((int) (y1 + height1), (int) (y2 + height2));
+
+        // 겹치는 영역이 없으면 충돌 아님
+        if (overlapXStart >= overlapXEnd || overlapYStart >= overlapYEnd) {
+            return false;
+        }else{
+            // Pixmap 생성
+            Pixmap pixmap1 = getPixmapFromTextureRegion(region1);
+            Pixmap pixmap2 = getPixmapFromTextureRegion(region2);
+            // 겹치는 영역의 픽셀 투명도 확인
+            for (int x = overlapXStart; x < overlapXEnd; x++) {
+                for (int y = overlapYStart; y < overlapYEnd; y++) {
+                    // 실제 화면 좌표를 TextureRegion의 좌표로 변환
+                    float scaleX1 = region1.getRegionWidth() / width1;
+                    float scaleY1 = region1.getRegionHeight() / height1;
+                    float scaleX2 = region2.getRegionWidth() / width2;
+                    float scaleY2 = region2.getRegionHeight() / height2;
+
+                    int localX1 = (int) ((x - x1) * scaleX1) + region1.getRegionX();
+                    int localY1 = (int) ((y - y1) * scaleY1) + region1.getRegionY();
+                    int localX2 = (int) ((x - x2) * scaleX2) + region2.getRegionX();
+                    int localY2 = (int) ((y - y2) * scaleY2) + region2.getRegionY();
+
+                    // Pixmap 좌표계 변환 (Y축 뒤집기)
+                    int pixmapY1 = pixmap1.getHeight() - localY1 - 1;
+                    int pixmapY2 = pixmap2.getHeight() - localY2 - 1;
+
+                    // 픽셀의 알파값 확인
+                    int alpha1 = (pixmap1.getPixel(localX1, pixmapY1) >>> 24) & 0xff;
+                    int alpha2 = (pixmap2.getPixel(localX2, pixmapY2) >>> 24) & 0xff;
+
+                    // 두 픽셀이 모두 투명하지 않다면 충돌 발생
+                    if (alpha1 > 0 && alpha2 > 0) {
+                        pixmap1.dispose();
+                        pixmap2.dispose();
+                        return true;
+                    }
+                }
+            }
+
+            // Pixmap 메모리 해제
+            pixmap1.dispose();
+            pixmap2.dispose();
+            return false;
+        }
+    }
+
+
+
+
+
+
+
 
     private void checkObjectInteractions() {
         Vector2 playerPos = player.getPosition();
@@ -262,6 +408,7 @@ public class GameScreen implements Screen {
             isColliding(newPosition.x, newPosition.y + playerHeight) ||
             isColliding(newPosition.x + playerWidth, newPosition.y + playerHeight)) {
             player.setPosition(oldPosition);
+
         }
     }
 
@@ -269,7 +416,9 @@ public class GameScreen implements Screen {
         if (objId.matches("obj\\d+")) {
             // 미션이 이미 완료되었는지 확인
             if (!missionCompletionStatus.getOrDefault(objId, false)) {
-                MissionDialogm missionDialog = new MissionDialogm("미션", skin, uiStage);
+                isMissionActivated = true;
+                player.setCanMove(false);
+                missionDialog = new MissionDialogm("미션", skin, uiStage);
                 missionDialog.showMission(uiStage);
 
                 // 미션 완료 시 서버에 알림
@@ -307,6 +456,28 @@ public class GameScreen implements Screen {
         checkObjectInteractions();
         updateCamera(delta);
 
+        if (isMissionActivated) {
+            missionDialog.setPosition(
+                camera.position.x - (missionDialog.getWidth() / 2),
+                camera.position.y - (missionDialog.getHeight() / 2)
+            );
+        }
+
+        // 공격 이미지와 플레이어 이미지의 투명도를 포함한 충돌 체크
+        // 충돌 발생 시 충돌 여부 확인
+        if (mutalisk.getTextureRegion()!=null && player.getPlayerRegion() != null) {
+            if (checkCollisionWithTransparency(
+                mutalisk.getTextureRegion(), mutalisk.getX(), mutalisk.getY(), mutalisk.getWidth(), mutalisk.getHeight(),
+                player.getPlayerRegion(), player.getX(), player.getY(), playerWidth,playerHeight
+            )) {
+                Gdx.app.log("Collision", "");
+            } else {
+                Gdx.app.log("No Collision", "");
+            }
+        }
+        System.out.println(mutalisk.getTextureRegion()+", "+player.getPlayerRegion());
+        mutalisk.moving(delta);
+
         if (renderer != null) {
             renderer.setView(camera);
             renderer.render();
@@ -321,6 +492,8 @@ public class GameScreen implements Screen {
             player.render(renderer.getBatch());
             renderer.getBatch().end();
         }
+
+        mutalisk.moving(delta);
 
         // UI 렌더링
         uiStage.act(delta);
@@ -403,6 +576,105 @@ public class GameScreen implements Screen {
             Math.min(mapWidth - viewportHalfWidth, cameraPosition.x));
         cameraPosition.y = Math.max(viewportHalfHeight,
             Math.min(mapHeight - viewportHalfHeight, cameraPosition.y));
+    }
+
+    private class Mutalisk {
+        private TextureAtlas mutaliskAtlas = new TextureAtlas(Gdx.files.internal("mission4/mutalisk.atlas"));
+        private Array<TextureRegion> mutaliskRegionL = new Array<>();
+        private Animation<TextureRegion> mutaliskAnimeL;
+        private TextureRegionDrawable mutaliskDrawableL;
+        private Array<TextureRegion> mutaliskRegionR = new Array<>();
+        private Animation<TextureRegion> mutaliskAnimeR;
+        private TextureRegionDrawable mutaliskDrawableR;
+        private TextureRegion currentRegion;
+        private MissionDialog4.TransparentData mutaliskTransparent;
+        private Image mutalisk;
+        private float mutaliskStateTime = 0f;
+        private int mutaliskSize = 500;
+        private boolean movingLeft = true;
+        private float x, y;
+        private float localX, localY;
+        private float speed = 200f; // 이동 속도 (픽셀/초)
+        private float directionChangeCooldown; // 1~5초 사이 랜덤 쿨다운 시간
+        private float timeSinceLastDirectionChange = 0f;
+        private float angle;
+
+        private Mutalisk(float x, float y) {
+            for (int i = 0; i < 6; i++) {
+                mutaliskRegionL.add(mutaliskAtlas.findRegion("MutaliskL" + (i + 1)));
+                mutaliskRegionR.add(mutaliskAtlas.findRegion("MutaliskR" + (i + 1)));
+            }
+            mutaliskAnimeL = new Animation<TextureRegion>(0.13f, mutaliskRegionL, Animation.PlayMode.LOOP);
+            mutaliskDrawableL = new TextureRegionDrawable(mutaliskAnimeL.getKeyFrame(0));
+            mutaliskAnimeR = new Animation<TextureRegion>(0.13f, mutaliskRegionR, Animation.PlayMode.LOOP);
+            mutaliskDrawableR = new TextureRegionDrawable(mutaliskAnimeR.getKeyFrame(0));
+            mutalisk = new Image(mutaliskDrawableR);
+            mutalisk.setName("mutalisk");
+            mutalisk.setUserObject(this);
+            mutalisk.setSize(mutaliskSize,mutaliskSize);
+
+            // 초기 위치 및 각도 설정
+            this.x = x;
+            this.y = y;
+
+            mutalisk.setPosition(x,y);
+            angle = (movingLeft ? 180 : 0) + MathUtils.random(-40, 40);
+        }
+
+        //위치이동
+        private void moving(float delta){
+            // 상태 시간 업데이트
+            mutaliskStateTime += delta;
+            currentRegion = getAnimation().getKeyFrame(getMutaliskStateTime(), false);
+            // Image 객체의 Drawable을 현재 프레임으로 업데이트
+            ((TextureRegionDrawable) getImage().getDrawable()).setRegion(currentRegion);
+        }
+
+        //값 반환 메소드
+        private Image getImage(){
+            return mutalisk;
+        }
+
+        private TextureRegion getTextureRegion(){
+            return currentRegion;
+        }
+
+        private float getX(){
+            return mutalisk.getX();
+        }
+
+        private float getY(){
+            return mutalisk.getY();
+        }
+
+        private float getWidth(){
+            return mutalisk.getWidth();
+        }
+
+        private float getHeight(){
+            return mutalisk.getHeight();
+        }
+
+        private Animation<TextureRegion> getAnimation(){
+            if(this.movingLeft){
+                return mutaliskAnimeL;
+            }else{
+                return mutaliskAnimeR;
+            }
+        }
+
+        private int getMutaliskSize(){
+            return mutaliskSize;
+        }
+
+        private float getMutaliskStateTime(){
+            return mutaliskStateTime;
+        }
+
+        private boolean isMovingLeft(){
+            return movingLeft;
+        }
+        //~~~반환
     }
 
     @Override
