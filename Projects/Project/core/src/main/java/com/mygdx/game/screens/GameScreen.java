@@ -252,43 +252,6 @@ public class GameScreen implements Screen {
         return false;
     }
 
-    //맵 셀을 불러와 알파값을 찾음
-//    public boolean isCollidable(float x, float y) {
-//        int tileX = (int) (x / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
-//        int tileY = (int) (y / (map.getProperties().get("tileheight", Integer.class) * MAP_SCALE));
-//
-//        for (TiledMapTileLayer layer : collisionLayers) {
-//            Cell cell = layer.getCell(tileX, tileY);
-//            if (cell != null) {
-//                TiledMapTile tile = cell.getTile();
-//                if (tile != null) {
-//                    // 타일의 TextureRegion 가져오기
-//                    TextureRegion region = tile.getTextureRegion();
-//                    Texture texture = region.getTexture();
-//
-//                    // Pixmap을 통해 픽셀 데이터 확인
-//                    texture.getTextureData().prepare();
-//                    Pixmap pixmap = texture.getTextureData().consumePixmap();
-//
-//                    // 타일의 로컬 좌표 계산
-//                    float localX = x % region.getRegionWidth();
-//                    float localY = y % region.getRegionHeight();
-//
-//                    // 픽셀의 알파값 확인
-//                    int pixel = pixmap.getPixel((int)localX, (int)localY);
-//                    int alpha = (pixel >>> 24) & 0xFF; // 알파값 추출 (0-255)
-//                    pixmap.dispose(); // Pixmap 해제
-//
-//                    if (alpha == 0) {
-//                        return false; // 완전 투명하면 충돌 없음
-//                    }
-//                    return true; // 투명하지 않으면 충돌
-//                }
-//            }
-//        }
-//        return false; // 셀이나 타일이 없으면 충돌 없음
-//    }
-
     private Pixmap getPixmapFromTextureRegion(TextureRegion region) {
         Texture texture = region.getTexture();
         texture.getTextureData().prepare();
@@ -403,12 +366,13 @@ public class GameScreen implements Screen {
         player.update(delta);
 
         Vector2 newPosition = player.getPosition();
+        float tempPlayerWidth = playerWidth/2;
+        float tempPlayerHeight = playerHeight/2;
         if (isColliding(newPosition.x, newPosition.y) ||
-            isColliding(newPosition.x + playerWidth, newPosition.y) ||
-            isColliding(newPosition.x, newPosition.y + playerHeight) ||
-            isColliding(newPosition.x + playerWidth, newPosition.y + playerHeight)) {
+            isColliding(newPosition.x + tempPlayerWidth, newPosition.y) ||
+            isColliding(newPosition.x, newPosition.y + tempPlayerHeight) ||
+            isColliding(newPosition.x + tempPlayerWidth, newPosition.y + tempPlayerHeight)) {
             player.setPosition(oldPosition);
-
         }
     }
 
