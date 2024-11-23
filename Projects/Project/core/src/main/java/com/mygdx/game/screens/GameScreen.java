@@ -87,15 +87,13 @@ public class GameScreen implements Screen {
     private Dialog currentDialog; // 현재 표시 중인 다이얼로그
 
     //미니게임 관련
-    MissionDialogm missionDialog;
-    MissionDialogm missionDialog2;
-    MissionDialogm missionDialog3;
-    MissionDialogm missionDialog4;
-    MissionDialogm missionDialog5;
+    MissionDialog missionDialog;
     private boolean isMissionActivated=false;
 
     //투명 부분 충돌 실험을 위한 것들
     private Mutalisk mutalisk;
+
+    InputMultiplexer multiplexer = new InputMultiplexer();
 
     public GameScreen(Main game) {
         this.game = game;
@@ -145,7 +143,6 @@ public class GameScreen implements Screen {
         missionCompletionStatus = new HashMap<>();
 
         // 입력 처리를 위한 InputMultiplexer 설정
-        InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(uiStage);
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -356,6 +353,7 @@ public class GameScreen implements Screen {
         // 스페이스바로 상호작용 및 미니게임 실행
         if (currentInteractiveObj != null &&
             objActiveStates.get(currentInteractiveObj) &&
+            !isMissionActivated &&
             Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             showInteractionDialog(currentInteractiveObj);
         }
@@ -382,9 +380,9 @@ public class GameScreen implements Screen {
             if (!missionCompletionStatus.getOrDefault(objId, false)) {
                 isMissionActivated = true;
                 player.setCanMove(false);
-                missionDialog = new MissionDialogm("미션", skin, uiStage);
+                missionDialog = new MissionDialog("미션", skin, uiStage);
                 missionDialog.showMission(uiStage);
-
+                Gdx.input.setInputProcessor(multiplexer);
                 // 미션 완료 시 서버에 알림
                 missionDialog.setMissionCompleteCallback(() -> {
                     missionCompletionStatus.put(objId, true);
@@ -425,6 +423,13 @@ public class GameScreen implements Screen {
                 camera.position.x - (missionDialog.getWidth() / 2),
                 camera.position.y - (missionDialog.getHeight() / 2)
             );
+        }else{
+            player.setCanMove(true);
+        }
+
+        System.out.println(isMissionActivated);
+        if (missionDialog != null) {
+            isMissionActivated = missionDialog.isMissionNotClosed();
         }
 
         // 공격 이미지와 플레이어 이미지의 투명도를 포함한 충돌 체크

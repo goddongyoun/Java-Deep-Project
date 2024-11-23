@@ -55,6 +55,7 @@ public class MissionDialog extends Dialog implements Disposable {
     private boolean isNewRound = true;
     private int remainingBalls = 2;
     private float stateTime = 0f;
+    private boolean isMissionNotClosed = false;
 
     // 애니메이션 관련
     private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
@@ -107,6 +108,7 @@ public class MissionDialog extends Dialog implements Disposable {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
                 if (keycode == Input.Keys.ESCAPE) {
+                    isMissionNotClosed = false;
                     MissionDialog.this.hide();
                     return true;
                 }
@@ -184,9 +186,14 @@ public class MissionDialog extends Dialog implements Disposable {
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                isMissionNotClosed = false;
                 MissionDialog.this.hide();
             }
         });
+    }
+
+    public boolean isMissionNotClosed(){
+        return isMissionNotClosed;
     }
 
     private void addUIComponents(Table contentTable) {
@@ -210,6 +217,7 @@ public class MissionDialog extends Dialog implements Disposable {
     }
     public void showMission(Stage stage) {
         this.setSize(640, 360);
+        isMissionNotClosed = true;
         GameInitialization();
         this.invalidate();
         this.layout();
