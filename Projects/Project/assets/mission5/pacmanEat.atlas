@@ -1,0 +1,33 @@
+pacmanEat.png
+size: 640, 160
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+PacmanEat1
+  rotate: false
+  xy: 0, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+PacmanEat2
+  rotate: false
+  xy: 160, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+PacmanEat3
+  rotate: false
+  xy: 320, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+PacmanEat4
+  rotate: false
+  xy: 480, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1

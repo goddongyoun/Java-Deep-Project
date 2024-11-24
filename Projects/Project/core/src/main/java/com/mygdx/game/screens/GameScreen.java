@@ -5,9 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -19,9 +18,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -29,8 +26,7 @@ import com.mygdx.game.Main;
 import com.mygdx.game.Player;
 import com.mygdx.game.PlayerOfMulti;
 import com.mygdx.game.Room;
-import com.mygdx.game.ui.MissionDialog;
-import com.mygdx.game.util.FontManager;
+import com.mygdx.game.ui.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,8 +68,19 @@ public class GameScreen implements Screen {
     private Map<String, TiledMapTileLayer> objOnLayers;
     private Map<String, Boolean> objActiveStates;
     private String currentInteractiveObj;
+    private String objId;
     private Map<String, Boolean> missionCompletionStatus;  // 미션 완료 상태를 추적
-    
+
+    //미니게임 관련
+    MissionDialog missionDialog;
+    MissionDialog2 missionDialog2;
+    MissionDialog3 missionDialog3;
+    MissionDialog4 missionDialog4;
+    MissionDialog5 missionDialog5;
+    private boolean isMissionActivated=false;
+
+    InputMultiplexer multiplexer;
+
     private Dialog currentDialog; // 현재 표시 중인 다이얼로그
 
     public GameScreen(Main game) {
@@ -87,6 +94,13 @@ public class GameScreen implements Screen {
         // UI Stage 및 Skin 초기화
         this.uiStage = new Stage(viewport);
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+
+        //미션 초기화
+        missionDialog = new MissionDialog("미션",skin,uiStage);
+        missionDialog2 = new MissionDialog2("미션",skin,uiStage);
+        missionDialog3 = new MissionDialog3("미션",skin,uiStage);
+        missionDialog4 = new MissionDialog4("미션",skin,uiStage);
+        missionDialog5 = new MissionDialog5("미션",skin,uiStage);
 
         // 맵 로드
         loadMap();
@@ -109,16 +123,16 @@ public class GameScreen implements Screen {
         missionCompletionStatus = new HashMap<>();
 
         // 입력 처리를 위한 InputMultiplexer 설정
-        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(uiStage);
-        Gdx.input.setInputProcessor(multiplexer);
+        Gdx.input.setInputProcessor(multiplexer); // -> show 메소드 = 사용자가 최종적으로 화면에 보여질 때 실행됨, 즉 맨 마지막에 이 코드를 실행시켜야 모든 이벤트 리스너가 작동함
     }
-    
+
     private void initializePlayerSize() {
         playerWidth = 32 * MAP_SCALE * PLAYER_SCALE;
         playerHeight = playerWidth;
     }
-    
+
     private void loadMap() {
         try {
             map = new TmxMapLoader().load("maps/game_map.tmx");
@@ -180,6 +194,8 @@ public class GameScreen implements Screen {
                     Gdx.app.log("GameScreen", "Found obj-on layer: " + layerName);
                 }
             }
+
+            System.out.println(objOffLayers);
         }
     }
 
@@ -214,6 +230,68 @@ public class GameScreen implements Screen {
         return false;
     }
 
+    //이미지 겹칠시 투명부분 체크
+    private boolean checkCollisionWithTransparency(
+        TextureRegion region1, float x1, float y1, float width1, float height1,
+        TextureRegion region2, float x2, float y2, float width2, float height2
+    ) {
+        // 겹치는 영역 계산 (화면 좌표 기준)
+        int overlapXStart = Math.max((int) x1, (int) x2);
+        int overlapYStart = Math.max((int) y1, (int) y2);
+        int overlapXEnd = Math.min((int) (x1 + width1), (int) (x2 + width2));
+        int overlapYEnd = Math.min((int) (y1 + height1), (int) (y2 + height2));
+
+        // 겹치는 영역이 없으면 충돌 아님
+        if (overlapXStart >= overlapXEnd || overlapYStart >= overlapYEnd) {
+            return false;
+        }else{
+            // Pixmap 생성
+            Pixmap pixmap1 = getPixmapFromTextureRegion(region1);
+            Pixmap pixmap2 = getPixmapFromTextureRegion(region2);
+            // 겹치는 영역의 픽셀 투명도 확인
+            for (int x = overlapXStart; x < overlapXEnd; x++) {
+                for (int y = overlapYStart; y < overlapYEnd; y++) {
+                    // 실제 화면 좌표를 TextureRegion의 좌표로 변환
+                    float scaleX1 = region1.getRegionWidth() / width1;
+                    float scaleY1 = region1.getRegionHeight() / height1;
+                    float scaleX2 = region2.getRegionWidth() / width2;
+                    float scaleY2 = region2.getRegionHeight() / height2;
+
+                    int localX1 = (int) ((x - x1) * scaleX1) + region1.getRegionX();
+                    int localY1 = (int) ((y - y1) * scaleY1) + region1.getRegionY();
+                    int localX2 = (int) ((x - x2) * scaleX2) + region2.getRegionX();
+                    int localY2 = (int) ((y - y2) * scaleY2) + region2.getRegionY();
+
+                    // Pixmap 좌표계 변환 (Y축 뒤집기)
+                    int pixmapY1 = pixmap1.getHeight() - localY1 - 1;
+                    int pixmapY2 = pixmap2.getHeight() - localY2 - 1;
+
+                    // 픽셀의 알파값 확인
+                    int alpha1 = (pixmap1.getPixel(localX1, pixmapY1) >>> 24) & 0xff;
+                    int alpha2 = (pixmap2.getPixel(localX2, pixmapY2) >>> 24) & 0xff;
+
+                    // 두 픽셀이 모두 투명하지 않다면 충돌 발생
+                    if (alpha1 > 0 && alpha2 > 0) {
+                        pixmap1.dispose();
+                        pixmap2.dispose();
+                        return true;
+                    }
+                }
+            }
+
+            // Pixmap 메모리 해제
+            pixmap1.dispose();
+            pixmap2.dispose();
+            return false;
+        }
+    }
+
+    private Pixmap getPixmapFromTextureRegion(TextureRegion region) {
+        Texture texture = region.getTexture();
+        texture.getTextureData().prepare();
+        return texture.getTextureData().consumePixmap();
+    }
+
     private void checkObjectInteractions() {
         Vector2 playerPos = player.getPosition();
         float playerCenterX = playerPos.x + playerWidth / 2;
@@ -225,7 +303,7 @@ public class GameScreen implements Screen {
         boolean foundInteraction = false;
 
         for (Map.Entry<String, TiledMapTileLayer> entry : objOffLayers.entrySet()) {
-            String objId = entry.getKey();
+            objId = entry.getKey();
             TiledMapTileLayer offLayer = entry.getValue();
 
             Cell cell = offLayer.getCell(tileX, tileY);
@@ -250,6 +328,7 @@ public class GameScreen implements Screen {
         // 스페이스바로 상호작용 및 미니게임 실행
         if (currentInteractiveObj != null &&
             objActiveStates.get(currentInteractiveObj) &&
+            !isMissionActivated &&
             Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             showInteractionDialog(currentInteractiveObj);
         }
@@ -260,11 +339,25 @@ public class GameScreen implements Screen {
         player.update(delta);
 
         Vector2 newPosition = player.getPosition();
-        if (isColliding(newPosition.x, newPosition.y) ||
-            isColliding(newPosition.x + playerWidth, newPosition.y) ||
-            isColliding(newPosition.x, newPosition.y + playerHeight) ||
-            isColliding(newPosition.x + playerWidth, newPosition.y + playerHeight)) {
-            player.setPosition(oldPosition);
+        float tempPlayerWidth = playerWidth / 3;
+        float tempPlayerHeight = playerHeight / 3;
+
+        // 캐릭터 충돌 경계선 설정
+        float leftBorder = newPosition.x + tempPlayerWidth;
+        float rightBorder = newPosition.x + tempPlayerWidth * 2;
+        float topBorder = newPosition.y + tempPlayerHeight;
+        float bottomBorder = newPosition.y;
+
+        boolean collidedLeft = isColliding(leftBorder, topBorder) || isColliding(leftBorder, bottomBorder);
+        boolean collidedRight = isColliding(rightBorder, topBorder) || isColliding(rightBorder, bottomBorder);
+        boolean collidedTop = isColliding(leftBorder, topBorder) || isColliding(rightBorder, topBorder);
+        boolean collidedBottom = isColliding(leftBorder, bottomBorder) || isColliding(rightBorder, bottomBorder);
+
+        if (collidedLeft || collidedRight) {
+            player.setPosition(oldPosition.x, newPosition.y);
+        }
+        if (collidedTop || collidedBottom) {
+            player.setPosition(newPosition.x, oldPosition.y);
         }
     }
 
@@ -272,17 +365,131 @@ public class GameScreen implements Screen {
         if (objId.matches("obj\\d+")) {
             // 미션이 이미 완료되었는지 확인
             if (!missionCompletionStatus.getOrDefault(objId, false)) {
-                MissionDialog missionDialog = new MissionDialog("미션", skin, uiStage);
-                missionDialog.showMission(uiStage);
+                player.setCanMove(false);
+                switch (objId){
+                    case "obj1":
+                        missionDialog = new MissionDialog("미션1",skin,uiStage);
+                        missionDialog.showMission(uiStage);
 
-                // 미션 완료 시 서버에 알림
-                missionDialog.setMissionCompleteCallback(() -> {
-                    missionCompletionStatus.put(objId, true);
-                    // TODO: 서버에 미션 완료 상태 전송
-                    // _Imported_ClientBase.sendMissionComplete(objId);
-                    checkAllMissionsComplete();
-                });
+                        // 미션 완료 시 서버에 알림
+                        missionDialog.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+                            // TODO: 서버에 미션 완료 상태 전송
+                            // _Imported_ClientBase.sendMissionComplete(objId);
+                            checkAllMissionsComplete();
+                        });
+                        break;
+                    case "obj2":
+                        //객체를 다시 초기화하지 않음으로써 기존에 진행하던 과정 보존
+                        missionDialog2 = new MissionDialog2("미션2",skin,uiStage);
+                        missionDialog2.showMission(uiStage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog2.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+                            // TODO: 서버에 미션 완료 상태 전송
+                            // _Imported_ClientBase.sendMissionComplete(objId);
+                            checkAllMissionsComplete();
+                        });
+                        break;
+                    case "obj3":
+                        missionDialog3 = new MissionDialog3("미션3",skin,uiStage);
+                        missionDialog3.showMission(uiStage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog3.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+                            // TODO: 서버에 미션 완료 상태 전송
+                            // _Imported_ClientBase.sendMissionComplete(objId);
+                            checkAllMissionsComplete();
+                        });
+                        break;
+                    case "obj4":
+                        missionDialog4 = new MissionDialog4("미션4",skin,uiStage);
+                        missionDialog4.showMission(uiStage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog4.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+                            // TODO: 서버에 미션 완료 상태 전송
+                            // _Imported_ClientBase.sendMissionComplete(objId);
+                            checkAllMissionsComplete();
+                        });
+                        break;
+                    case "obj5":
+                        missionDialog5 = new MissionDialog5("미션5",skin,uiStage);
+                        missionDialog5.showMission(uiStage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog5.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+                            // TODO: 서버에 미션 완료 상태 전송
+                            // _Imported_ClientBase.sendMissionComplete(objId);
+                            checkAllMissionsComplete();
+                        });
+                        break;
+                }
             }
+        }
+    }
+
+    private void setMissionState(){
+        if (currentInteractiveObj != null) {
+            System.out.println(missionCompletionStatus.getOrDefault(currentInteractiveObj, false));
+            switch (currentInteractiveObj) {
+                case "obj1":
+                    if (missionDialog != null) {
+                        isMissionActivated = missionDialog.isShowingMission();
+                    }
+                    break;
+                case "obj2":
+                    if (missionDialog2 != null) {
+                        isMissionActivated = missionDialog2.isShowingMission2();
+                    }
+                    break;
+                case "obj3":
+                    if (missionDialog3 != null) {
+                        isMissionActivated = missionDialog3.isShowingMission3();
+                    }
+                    break;
+                case "obj4":
+                    if (missionDialog4 != null) {
+                        isMissionActivated = missionDialog4.isShowingMission4();
+                    }
+                    break;
+                case "obj5":
+                    if (missionDialog5 != null) {
+                        isMissionActivated = missionDialog5.isShowingMission5();
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void setMissionPosition(){
+        if (isMissionActivated) {
+            missionDialog.setPosition(
+                camera.position.x - (missionDialog.getWidth() / 2),
+                camera.position.y - (missionDialog.getHeight() / 2)
+            );
+            missionDialog2.setPosition(
+                camera.position.x - (missionDialog2.getWidth() / 2),
+                camera.position.y - (missionDialog2.getHeight() / 2)
+            );
+            missionDialog3.setPosition(
+                camera.position.x - (missionDialog3.getWidth() / 2),
+                camera.position.y - (missionDialog3.getHeight() / 2)
+            );
+            missionDialog4.setPosition(
+                camera.position.x - (missionDialog4.getWidth() / 2),
+                camera.position.y - (missionDialog4.getHeight() / 2)
+            );
+            missionDialog5.setPosition(
+                camera.position.x - (missionDialog5.getWidth() / 2),
+                camera.position.y - (missionDialog5.getHeight() / 2)
+            );
+        }else{
+            player.setCanMove(true);
         }
     }
 
@@ -309,6 +516,9 @@ public class GameScreen implements Screen {
         updateMultiplayerPositions(delta);
         checkObjectInteractions();
         updateCamera(delta);
+        setMissionState();
+        setMissionPosition();
+
 
         if (renderer != null) {
             renderer.setView(camera);
@@ -324,7 +534,7 @@ public class GameScreen implements Screen {
             player.render(renderer.getBatch());
             renderer.getBatch().end();
         }
-        
+
         // UI 렌더링
         uiStage.act(delta);
         uiStage.draw();
@@ -422,7 +632,7 @@ public class GameScreen implements Screen {
         if (skin != null) skin.dispose();
     }
 
-    @Override public void show() {}
+    @Override public void show() {Gdx.input.setInputProcessor(multiplexer);}
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}

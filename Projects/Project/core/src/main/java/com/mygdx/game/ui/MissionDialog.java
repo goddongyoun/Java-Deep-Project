@@ -2,8 +2,6 @@ package com.mygdx.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -18,7 +16,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
@@ -58,6 +55,7 @@ public class MissionDialog extends Dialog implements Disposable {
     private boolean isNewRound = true;
     private int remainingBalls = 2;
     private float stateTime = 0f;
+    private boolean isShowingMission = false;
 
     // 애니메이션 관련
     private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
@@ -110,6 +108,7 @@ public class MissionDialog extends Dialog implements Disposable {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
                 if (keycode == Input.Keys.ESCAPE) {
+                    isShowingMission = false;
                     MissionDialog.this.hide();
                     return true;
                 }
@@ -187,9 +186,15 @@ public class MissionDialog extends Dialog implements Disposable {
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                isShowingMission = false;
                 MissionDialog.this.hide();
             }
         });
+    }
+
+    //GameScreen에서 미니게임이 열려있는지 확인 용도
+    public boolean isShowingMission(){
+        return isShowingMission;
     }
 
     private void addUIComponents(Table contentTable) {
@@ -213,6 +218,8 @@ public class MissionDialog extends Dialog implements Disposable {
     }
     public void showMission(Stage stage) {
         this.setSize(640, 360);
+        stage.addActor(this);
+        isShowingMission = true;
         GameInitialization();
         this.invalidate();
         this.layout();
@@ -282,6 +289,13 @@ public class MissionDialog extends Dialog implements Disposable {
             missionComplete = true;
             notifyMissionComplete();
         }
+
+        // 몬스터볼 이미지의 회전 중심을 이미지의 중앙으로 설정
+        monsterBallImage.setOrigin(monsterBallImage.getWidth() / 2, monsterBallImage.getHeight() / 2);
+
+        // 조준선 회전 중심 설정
+        aimImage.setOrigin(aimImage.getWidth() / 2, monsterBallImage.getHeight() / 2);
+        aimImage.setRotation(aimingAngle-90);
     }
 
     private void setupMonsterForRound() {
@@ -477,6 +491,8 @@ public class MissionDialog extends Dialog implements Disposable {
         currentRound = 1;
         roundClear = false;
         roundFail = false;
+        fail.setVisible(false);
+        failStateTime=0f;
         remainingBalls = 2;
         currentMonsterMoving = false;
         missionComplete = false;

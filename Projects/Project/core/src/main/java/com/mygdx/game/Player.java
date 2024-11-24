@@ -46,6 +46,9 @@ public class Player {
     private GlyphLayout glyphLayout;
     private int fontSize = 19; // 폰트 크기를 조절할 수 있는 변수
 
+    //움직임 제한 boolean 변수
+    private boolean canMove = true;
+
     private enum PlayerState {
         IDLE, RUNNING
     }
@@ -133,6 +136,7 @@ public class Player {
     }
 
     public void update(float delta) {
+        if (!canMove) return;
         stateTime += delta;
 
         velocity.setZero();
@@ -167,6 +171,10 @@ public class Player {
         bounds.setPosition(position);
     }
 
+    public void setCanMove(boolean canMove) {
+        this.canMove = canMove;
+    }
+
     public void render(Batch batch) {
         TextureRegion currentFrame = null;
 
@@ -192,7 +200,7 @@ public class Player {
         } else {
             Gdx.app.error("Player", "No valid texture to render");
         }
-        
+
         String tempBName = null;
         // 닉네임 그리기 (윤곽선 포함)
         if(LobbyScreen.shouldStart == true) {
@@ -224,7 +232,7 @@ public class Player {
                 }
             }
         }
-        
+
         // 닉네임 그리기
         font.setColor(nicknameColor);
         if(tempBName == null) {
@@ -242,6 +250,11 @@ public class Player {
     public void setPosition(Vector2 position) {
         this.position.set(position);
         this.bounds.setPosition(position);
+    }
+
+    public void setPosition(float x, float y) {
+        this.position.set(x,y);
+        this.bounds.setPosition(x,y);
     }
 
     public Rectangle getBounds() {

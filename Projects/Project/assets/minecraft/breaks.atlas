@@ -1,0 +1,82 @@
+breaks.png
+size: 1760, 160
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Break0
+  rotate: false
+  xy: 0, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break1
+  rotate: false
+  xy: 160, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break2
+  rotate: false
+  xy: 320, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break3
+  rotate: false
+  xy: 480, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break4
+  rotate: false
+  xy: 640, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break5
+  rotate: false
+  xy: 800, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break6
+  rotate: false
+  xy: 960, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break7
+  rotate: false
+  xy: 1120, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break8
+  rotate: false
+  xy: 1280, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break9
+  rotate: false
+  xy: 1440, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+Break10
+  rotate: false
+  xy: 1600, 0
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1

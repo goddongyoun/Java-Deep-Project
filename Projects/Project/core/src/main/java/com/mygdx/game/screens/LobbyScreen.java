@@ -38,7 +38,7 @@ public class LobbyScreen implements Screen {
     private Table buttonTable;
     private final Room room;
     private boolean isJoined;
-    
+
     public static boolean shouldStart = false;
 
     private Dialog currentDialog; // 현재 표시 중인 다이얼로그
@@ -96,7 +96,7 @@ public class LobbyScreen implements Screen {
 
             buttonTable.add(startButton).padBottom(10).row();
         }
-        
+
         // 설정 버튼
         AnimatedImageButton editButton = createAnimatedButton(buttonTexture, "settingBtn",
             new ClickListener() {
@@ -115,7 +115,7 @@ public class LobbyScreen implements Screen {
                     handleRoomExit();
                 }
             });
-        
+
         buttonTable.add(editButton).padBottom(10).row();
         buttonTable.add(leaveButton);
 
@@ -232,7 +232,7 @@ public class LobbyScreen implements Screen {
     	if(shouldStart == true) {
     		handleGameStart();
     	}
-    	
+
         // 화면 클리어
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
