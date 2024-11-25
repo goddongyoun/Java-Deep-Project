@@ -150,6 +150,10 @@ public class Player {
             currentState = PlayerState.RUNNING;
         } else if(Gdx.input.isKeyPressed(Input.Keys.A)) { // TODO: just for the Test, should be deleted when published
         	_Imported_ClientBase.setIsDead("Player");
+        } else if(Gdx.input.isKeyPressed(Input.Keys.B)) { // TODO: just for the Test, should be deleted when published
+        	
+        	_Imported_ClientBase.setMission(0, true);
+        	
         }
         else {
             currentState = PlayerState.IDLE;

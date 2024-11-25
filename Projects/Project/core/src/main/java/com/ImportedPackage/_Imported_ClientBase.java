@@ -37,6 +37,7 @@ public class _Imported_ClientBase {
     static BufferedReader tcpReader_toSend;
     static BufferedWriter tcpWriter_toRecv;
     static BufferedReader tcpReader_toRecv;
+    public static boolean missionState[] = new boolean[5]; 
     
     private static String bossName = null;
 
@@ -218,6 +219,9 @@ public class _Imported_ClientBase {
 			LobbyScreen.shouldStart = false;
 			bossName = null;
 			name = null;
+			for(int i = 0;i<missionState.length; i++) {
+				missionState[i] = false;
+			}
 			return saver;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -251,6 +255,9 @@ public class _Imported_ClientBase {
 		LobbyScreen.shouldStart = false;
 		bossName = null;
 		name = null;
+		for(int i = 0;i<missionState.length; i++) {
+			missionState[i] = false;
+		}
 		return 1;
 	}
 	
@@ -404,6 +411,35 @@ public class _Imported_ClientBase {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param whatMission mission ID
+	 * @param successOrFail success is true, fail is false
+	 * @return
+	 */
+	public static String setMission(int whatMission, boolean successOrFail) {
+		String saver = null;
+		try {
+			if(successOrFail == true) {
+				tcpWriter_toSend.write("SetMissionToClear"); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.write(Integer.toString(whatMission)); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.flush();
+				saver = tcpReader_toSend.readLine();
+			}
+			else {
+				tcpWriter_toSend.write("SetMissionToFail"); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.write(Integer.toString(whatMission)); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.flush();
+				saver = tcpReader_toSend.readLine();
+			}
+			return saver;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "Error CLI 430 [LOG]";
+		} finally {
+		}
+	}
+	
 	private static boolean alreadyRunning = false;
 	
 	public static void changeName(String newName) {
@@ -417,6 +453,9 @@ public class _Imported_ClientBase {
 		else {
 			changeName(playerName);
 			return;
+		}
+		for(int i = 0;i<missionState.length; i++) {
+			missionState[i] = false;
 		}
 		System.out.println("[LOG] <-- means 'from ClientBase'");
 		name = playerName;
@@ -507,6 +546,21 @@ public class _Imported_ClientBase {
 	                        		LobbyScreen.shouldStart = true;
 	                        	}
 	                        	System.out.println("game Started [LOG]");
+	                        }
+	                        else if(saver.equals("updateM")) {
+	                        	int nowInd = 0;
+	                        	while (true) {
+	                                String tempMissionState = tcpReader_toRecv.readLine();
+	                                if (tempMissionState == null) break;  // 연결이 끊어진 경우
+	                                if (tempMissionState.equals("End")) break;  // 미션 메시지 끝
+	                                
+	                                // TODO: 여기서 missionState를 알맞게 미션 컨트롤함수에 보내야됨 Ex) changeMissionState(missionState)
+	                                missionState[nowInd++] = Boolean.parseBoolean(tempMissionState);
+	                                //System.out.println("\n" + tempMissionState + " / [LOG] mission");
+	                            }
+	                        	for(int i = 0; i<missionState.length; i++) {
+	                        		System.out.println("\n" + missionState[i] + " / [LOG] mission");
+	                        	}
 	                        }
 	                    }
 	                }
