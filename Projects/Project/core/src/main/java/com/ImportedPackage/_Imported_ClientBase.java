@@ -37,12 +37,8 @@ public class _Imported_ClientBase {
     static BufferedReader tcpReader_toSend;
     static BufferedWriter tcpWriter_toRecv;
     static BufferedReader tcpReader_toRecv;
-<<<<<<< HEAD
+    public static boolean missionState[] = new boolean[5];
 
-=======
-    public static boolean missionState[] = new boolean[5]; 
-    
->>>>>>> 2017dd360bb86028554bfbd38ee3955e9b794afb
     private static String bossName = null;
 
     static boolean isReceiverOut = true;
@@ -223,9 +219,6 @@ public class _Imported_ClientBase {
 			LobbyScreen.shouldStart = false;
 			bossName = null;
 			name = null;
-			for(int i = 0;i<missionState.length; i++) {
-				missionState[i] = false;
-			}
 			return saver;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -414,12 +407,9 @@ public class _Imported_ClientBase {
 			return "Error CLI 373 [LOG]";
 		}
 	}
-<<<<<<< HEAD
 
-=======
-	
 	/**
-	 * 
+	 *
 	 * @param whatMission mission ID
 	 * @param successOrFail success is true, fail is false
 	 * @return
@@ -446,8 +436,7 @@ public class _Imported_ClientBase {
 		} finally {
 		}
 	}
-	
->>>>>>> 2017dd360bb86028554bfbd38ee3955e9b794afb
+
 	private static boolean alreadyRunning = false;
 
 	public static void changeName(String newName) {
@@ -561,7 +550,7 @@ public class _Imported_ClientBase {
 	                                String tempMissionState = tcpReader_toRecv.readLine();
 	                                if (tempMissionState == null) break;  // 연결이 끊어진 경우
 	                                if (tempMissionState.equals("End")) break;  // 미션 메시지 끝
-	                                
+
 	                                // TODO: 여기서 missionState를 알맞게 미션 컨트롤함수에 보내야됨 Ex) changeMissionState(missionState)
 	                                missionState[nowInd++] = Boolean.parseBoolean(tempMissionState);
 	                                //System.out.println("\n" + tempMissionState + " / [LOG] mission");
