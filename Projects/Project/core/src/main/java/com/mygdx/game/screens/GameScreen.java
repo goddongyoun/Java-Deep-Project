@@ -137,6 +137,11 @@ public class GameScreen implements Screen {
         try {
             map = new TmxMapLoader().load("maps/game_map.tmx");
             renderer = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
+            OrthogonalTiledMapRenderer rendererOverPlayer = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
+
+            // fake_wall1 레이어 인덱스 가져오기
+            int fakeWallLayerIndex = map.getLayers().getIndex("fake_wall1");
+
 
             int mapWidth = map.getProperties().get("width", Integer.class);
             int mapHeight = map.getProperties().get("height", Integer.class);
@@ -522,16 +527,37 @@ public class GameScreen implements Screen {
 
         if (renderer != null) {
             renderer.setView(camera);
-            renderer.render();
 
+            // fake_wall1 레이어 이전의 모든 레이어를 렌더링 (플레이어보다 아래에 있음)
             renderer.getBatch().begin();
-            // 다른 플레이어들 렌더링
+            for (int i = 0; i < map.getLayers().getCount(); i++) {
+                if (i == map.getLayers().getIndex("fake_wall1")) {
+                    break;
+                }
+                renderer.renderTileLayer((TiledMapTileLayer) map.getLayers().get(i));
+            }
+            renderer.getBatch().end();
+
+            // 플레이어 및 다른 플레이어들 렌더링 (fake_wall1 레이어보다 아래)
+            renderer.getBatch().begin();
             for (int i = 0; i < currentRoom.pCount; i++) {
                 if (currentRoom.m_players[i] != null) {
                     currentRoom.m_players[i].render(renderer.getBatch());
                 }
             }
             player.render(renderer.getBatch());
+            renderer.getBatch().end();
+
+            // fake_wall1 레이어 렌더링 (플레이어 위에 위치하도록 렌더링)
+            renderer.getBatch().begin();
+            renderer.renderTileLayer((TiledMapTileLayer) map.getLayers().get(map.getLayers().getIndex("fake_wall1")));
+            renderer.getBatch().end();
+
+            // fake_wall1 이후의 모든 레이어 렌더링 (플레이어보다 아래에 있음)
+            renderer.getBatch().begin();
+            for (int i = map.getLayers().getIndex("fake_wall1") + 1; i < map.getLayers().getCount(); i++) {
+                renderer.renderTileLayer((TiledMapTileLayer) map.getLayers().get(i));
+            }
             renderer.getBatch().end();
         }
 

@@ -37,7 +37,12 @@ public class _Imported_ClientBase {
     static BufferedReader tcpReader_toSend;
     static BufferedWriter tcpWriter_toRecv;
     static BufferedReader tcpReader_toRecv;
+<<<<<<< HEAD
+
+=======
+    public static boolean missionState[] = new boolean[5]; 
     
+>>>>>>> 2017dd360bb86028554bfbd38ee3955e9b794afb
     private static String bossName = null;
 
     static boolean isReceiverOut = true;
@@ -67,9 +72,9 @@ public class _Imported_ClientBase {
             System.out.println("[LOG] Loopback인지 확인할 수 없었으나 개발자가 아니라면 상관없으니 신경쓰지 마십시오.");
         }
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param roomName literally
 	 * @return
 	 */
@@ -81,7 +86,7 @@ public class _Imported_ClientBase {
 			String readSaver = tcpReader_toSend.readLine();
 			System.out.println("[LOG] TCP received From Server -> " + readSaver);
 			System.out.println(readSaver + "[LOG] ");
-			
+
 			String[] parts = readSaver.split("/");
 			String recogPort = null;
 	        if (parts.length > 1) {
@@ -97,7 +102,7 @@ public class _Imported_ClientBase {
 	            System.out.println("[LOG] ??? ERROR CLI_86 정보를 찾을 수 없습니다.");
 				return "Failed makeGame/ERROR";
 	        }
-		} 
+		}
 		catch (SocketException e) {
 			if(e.getMessage().equals("Connection reset")) {
 				System.out.println("[LOG] 서버가 연결을 끊었습니다.");
@@ -109,7 +114,7 @@ public class _Imported_ClientBase {
 			return "Failed makeGame/ERROR";
 		}
 	}
-	
+
 	/**
 	 * DUMMY
 	 */
@@ -135,9 +140,9 @@ public class _Imported_ClientBase {
 			}
 		});
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param Port gameRoomPort
 	 * @param name what is your name to be displayed
 	 * @return
@@ -148,7 +153,7 @@ public class _Imported_ClientBase {
 			tcpWriter_toSend.write(Port); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.write(name); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.flush();
-			
+
 			String saver = tcpReader_toSend.readLine();
 			if(saver.equals("TooManyUsers")) {
 				System.out.println("[LOG] 유저 꽉 참");
@@ -203,9 +208,9 @@ public class _Imported_ClientBase {
 			return "Failed joinGame";
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return "Failed outGame" means failed
 	 */
 	public static String outGame() {
@@ -218,15 +223,18 @@ public class _Imported_ClientBase {
 			LobbyScreen.shouldStart = false;
 			bossName = null;
 			name = null;
+			for(int i = 0;i<missionState.length; i++) {
+				missionState[i] = false;
+			}
 			return saver;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "Failed outGame";
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param what
 	 * @return "Success" means success, "Faild sendChat" means failed
 	 */
@@ -242,36 +250,39 @@ public class _Imported_ClientBase {
 		} finally {
 		}
 	}
-	
+
 	private static boolean isShuttingdown = false;
-	
+
 	public static int SHUTDOWN() {
 		isShuttingdown = true;
 		executorService.shutdownNow();
 		LobbyScreen.shouldStart = false;
 		bossName = null;
 		name = null;
+		for(int i = 0;i<missionState.length; i++) {
+			missionState[i] = false;
+		}
 		return 1;
 	}
-	
+
 	public static class Player {
 		public String name = null;
 		public float x;
 		public float y;
 		public boolean isDead = false;
-		
+
 		public Player(String name, float x, float y, boolean isDead) {
 	        this.name = name;
 	        this.x = x;
 	        this.y = y;
 	        this.isDead = isDead;
 	    }
-		
+
 	}
-	
+
     public static Player[] players = new Player[5];
     public static int playerCount;
-    
+
 	public static int getLocation() {
 		try {
 			tcpWriter_toSend.write("GetLoc"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
@@ -291,7 +302,7 @@ public class _Imported_ClientBase {
 	                float x = Float.parseFloat(coords[1]); // x
 	                float y = Float.parseFloat(coords[2]); // y
 	                boolean isDead = Boolean.parseBoolean(coords[3]); // isDead
-	                
+
 	                if (players[i] == null) {
 	                    players[i] = new Player(name, x, y, isDead);
 	                } else {
@@ -314,7 +325,7 @@ public class _Imported_ClientBase {
 	            }
 	            System.out.println("[LOG] 현재 플레이어 정보 끝.");
 	            //*/
-	            
+
 	            return 0;
 			}
 		} catch (IOException e) {
@@ -333,7 +344,7 @@ public class _Imported_ClientBase {
 		finally {
 		}
 	}
-	
+
 	public static int updateLoc(int x, int y) {
 		try {
 			tcpWriter_toSend.write("NewLoc"); tcpWriter_toSend.newLine();
@@ -357,7 +368,7 @@ public class _Imported_ClientBase {
 			return -3;
 		}
 	}
-	
+
 	public static void startPls() {
 		try {
 			tcpWriter_toSend.write("PlsStart"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
@@ -370,9 +381,9 @@ public class _Imported_ClientBase {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} 
+		}
 	}
-	
+
 	public static String getBossName() {
 		if(bossName == null) {
 			System.out.println("BOSS NAME NULL ERROR [LOG]");
@@ -382,16 +393,16 @@ public class _Imported_ClientBase {
 			return bossName;
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param who Someone Who Should Die
 	 * @return Success: Successfully Died | Fail: Failed to kill
 	 */
 	public static String setIsDead(String who) {
 		try {
-			tcpWriter_toSend.write("SetDead"); tcpWriter_toSend.newLine(); 
-			tcpWriter_toSend.write(who); tcpWriter_toSend.newLine(); 
+			tcpWriter_toSend.write("SetDead"); tcpWriter_toSend.newLine();
+			tcpWriter_toSend.write(who); tcpWriter_toSend.newLine();
 			tcpWriter_toSend.flush();
 			String saver = tcpReader_toSend.readLine();
 			if(saver.equals("Success")) {
@@ -403,13 +414,46 @@ public class _Imported_ClientBase {
 			return "Error CLI 373 [LOG]";
 		}
 	}
+<<<<<<< HEAD
+
+=======
 	
+	/**
+	 * 
+	 * @param whatMission mission ID
+	 * @param successOrFail success is true, fail is false
+	 * @return
+	 */
+	public static String setMission(int whatMission, boolean successOrFail) {
+		String saver = null;
+		try {
+			if(successOrFail == true) {
+				tcpWriter_toSend.write("SetMissionToClear"); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.write(Integer.toString(whatMission)); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.flush();
+				saver = tcpReader_toSend.readLine();
+			}
+			else {
+				tcpWriter_toSend.write("SetMissionToFail"); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.write(Integer.toString(whatMission)); tcpWriter_toSend.newLine();
+				tcpWriter_toSend.flush();
+				saver = tcpReader_toSend.readLine();
+			}
+			return saver;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "Error CLI 430 [LOG]";
+		} finally {
+		}
+	}
+	
+>>>>>>> 2017dd360bb86028554bfbd38ee3955e9b794afb
 	private static boolean alreadyRunning = false;
-	
+
 	public static void changeName(String newName) {
 		name = newName;
 	}
-	
+
 	public static void run(String playerName) throws Exception {
 		if(alreadyRunning == false) {
 			alreadyRunning = true;
@@ -417,6 +461,9 @@ public class _Imported_ClientBase {
 		else {
 			changeName(playerName);
 			return;
+		}
+		for(int i = 0;i<missionState.length; i++) {
+			missionState[i] = false;
 		}
 		System.out.println("[LOG] <-- means 'from ClientBase'");
 		name = playerName;
@@ -431,14 +478,14 @@ public class _Imported_ClientBase {
 			System.out.println("[LOG] setOutError - 184");
 			e.printStackTrace();
 		}
-		
+
 		try {
 			tcpSock_toSend = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
 			tcpWriter_toSend = new BufferedWriter(new OutputStreamWriter(tcpSock_toSend.getOutputStream(), "UTF-8"));
 			tcpReader_toSend = new BufferedReader(new InputStreamReader(tcpSock_toSend.getInputStream(), "UTF-8"));
 			tcpWriter_toSend.write("MakeConnection"); tcpWriter_toSend.newLine(); tcpWriter_toSend.write("plsReceive"); tcpWriter_toSend.newLine(); tcpWriter_toSend.flush();
 			System.out.println("[LOG] TCP received From Server(1 == as Sender, 0 == as Receiver) -> " + tcpReader_toSend.readLine());
-			
+
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.out.println("[LOG] 서버가 꺼졌거나 문제가 생겼습니다. 관리자에게 문의하십시오.");
@@ -449,11 +496,11 @@ public class _Imported_ClientBase {
 			throw e;
 		} finally {
 		}
-		
+
 		final int EXIT = -44;
-		
+
 		System.out.println("[LOG] ClientBase Started");
-		
+
 		//!!! Important!! this method should be import to The Real Game client's code
 		executorService.execute(()->{
 			String saver = null;
@@ -475,7 +522,7 @@ public class _Imported_ClientBase {
 	                    tcpReader_toRecv.close();
 	                    break;
 	                }
-	                
+
 	                if (tcpReader_toRecv != null && !tcpSock_toRecv.isClosed()) {
 	                    saver = tcpReader_toRecv.readLine();
 	                    if (saver != null) {
@@ -485,11 +532,11 @@ public class _Imported_ClientBase {
 	                                String chatMessage = tcpReader_toRecv.readLine();
 	                                if (chatMessage == null) break;  // 연결이 끊어진 경우
 	                                if (chatMessage.equals("End")) break;  // 채팅 메시지 끝
-	                                
+
 	                                // TODO: 여기서 chatMessage를 알맞게 채팅 출력함수에 보내야됨 Ex) printChat(chatMessage)
 	                                System.out.println("\n" + chatMessage + " / [LOG] chat");
 	                            }
-	                        } 
+	                        }
 	                        // KA(Keep Alive)는 무시
 	                        else if (saver.equals("KA")) {
 	                            //Keep Alive 메시지는 별도 처리 없이 넘어감
@@ -508,6 +555,21 @@ public class _Imported_ClientBase {
 	                        	}
 	                        	System.out.println("game Started [LOG]");
 	                        }
+	                        else if(saver.equals("updateM")) {
+	                        	int nowInd = 0;
+	                        	while (true) {
+	                                String tempMissionState = tcpReader_toRecv.readLine();
+	                                if (tempMissionState == null) break;  // 연결이 끊어진 경우
+	                                if (tempMissionState.equals("End")) break;  // 미션 메시지 끝
+	                                
+	                                // TODO: 여기서 missionState를 알맞게 미션 컨트롤함수에 보내야됨 Ex) changeMissionState(missionState)
+	                                missionState[nowInd++] = Boolean.parseBoolean(tempMissionState);
+	                                //System.out.println("\n" + tempMissionState + " / [LOG] mission");
+	                            }
+	                        	for(int i = 0; i<missionState.length; i++) {
+	                        		System.out.println("\n" + missionState[i] + " / [LOG] mission");
+	                        	}
+	                        }
 	                    }
 	                }
 	            } catch (SocketException e) {
@@ -519,9 +581,9 @@ public class _Imported_ClientBase {
 	            } catch (InterruptedException e) {
 	                Thread.currentThread().interrupt();
 	                System.out.println("[LOG] The Thread was Interrupted.");
-	                break; 
+	                break;
 	            } finally {
-	            	
+
 				}
 			}
 			tcpReader_toRecv = null;
@@ -531,7 +593,7 @@ public class _Imported_ClientBase {
 		Thread.sleep(10); //To wait that excutorService.execute make Socket to Receive
 		System.out.println("[LOG] ExecutorServices Started");
 		//!!! Important ends!!
-		
+
 		//System.exit(0);
 	}
 

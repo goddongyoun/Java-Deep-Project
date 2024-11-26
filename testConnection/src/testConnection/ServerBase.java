@@ -43,6 +43,21 @@ class User{
 	}
 }
 
+class Mission{
+	boolean isCleard = false;
+	int typeOfMission = -1;
+	
+	Mission(int missionType){
+		this.isCleard = false;
+		this.typeOfMission = missionType;
+	}
+	
+	public void resetAll() {
+		this.isCleard = false;
+		this.typeOfMission = -1;
+	}
+}
+
 class Room{
 	public boolean unconnectable = false;
 	int gameRecogPort = 0;
@@ -54,10 +69,16 @@ class Room{
 	String roomName = null;
 	boolean start = false;
 	int bossInd = -1;
+	int missionNum = 5;
+	Mission missions[] = new Mission[missionNum]; // Mission Control Class
+	int updateTime = 0;
 	
 	Room(int gameRecogPort, String roomName){
 		this.gameRecogPort = gameRecogPort;
 		this.roomName = roomName;
+		for(int i = 0; i<missionNum; i++) {
+			missions[i] = new Mission(ServerBase.random.nextInt(5));
+		}
 		return;
 	}
 	
@@ -381,6 +402,30 @@ class Clients implements Runnable{
 							}
 						}
 					}
+					else if(saver.equals("SetMissionToClear")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();
+						}
+						else {
+							saver = tcpReader.readLine();
+							ServerBase.rooms.get(RecogPort).missions[Integer.parseInt(saver)].isCleard = true;
+							ServerBase.rooms.get(RecogPort).updateTime++;
+							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
+					else if(saver.equals("SetMissionToFail")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();
+						}
+						else {
+							saver = tcpReader.readLine();
+							ServerBase.rooms.get(RecogPort).missions[Integer.parseInt(saver)].isCleard = false;
+							ServerBase.rooms.get(RecogPort).updateTime++;
+							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
 					else {
 						System.out.println("? " + saver + sock.getInetAddress());
 						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
@@ -389,6 +434,8 @@ class Clients implements Runnable{
 			}
 			else if(isSender == 1) {
 				boolean isStarted = false;
+				int updateTime = 0;
+				
 				while(true) {
 					Thread.sleep(10);
 					if(RecogPort != -1) {
@@ -412,6 +459,14 @@ class Clients implements Runnable{
 								tcpWriter.write(tempR.users[tempR.bossInd].name); tcpWriter.newLine();
 							}
 							tcpWriter.flush();
+						}
+						else if(ServerBase.rooms.get(RecogPort).updateTime != updateTime) {
+							tcpWriter.write("updateM"); tcpWriter.newLine();
+							for(int i = 0; i<ServerBase.rooms.get(RecogPort).missionNum; i++) {
+								tcpWriter.write(Boolean.toString(ServerBase.rooms.get(RecogPort).missions[i].isCleard)); tcpWriter.newLine();
+							}
+							tcpWriter.write("End"); tcpWriter.newLine(); tcpWriter.flush();
+							updateTime = ServerBase.rooms.get(RecogPort).updateTime;
 						}
 						else {
 							tcpWriter.write("KA"); tcpWriter.newLine(); tcpWriter.flush(); // KA means Keep Alive
@@ -451,7 +506,7 @@ class Clients implements Runnable{
 }
 
 public class ServerBase {
-	
+	public static Random random = new Random();
 	static int RecogPortNext = 0;
 	public static List<Room> rooms = new ArrayList<>();
 	public static Map<String, Integer> strToI_map = new HashMap<>();
