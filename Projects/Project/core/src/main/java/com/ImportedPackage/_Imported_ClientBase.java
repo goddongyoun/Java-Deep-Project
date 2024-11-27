@@ -19,8 +19,6 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import com.mygdx.game.Main;
 import com.mygdx.game.screens.LobbyScreen;
 
 public class _Imported_ClientBase {
