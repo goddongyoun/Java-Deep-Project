@@ -27,6 +27,8 @@ class User{
 	float[] loc = new float[2];
 	InetAddress ip;
 	boolean isDead = false;
+	boolean isUsingSkill = false;
+	boolean skillFacingLeft = false;
 	
 	User(String _name, InetAddress _ip){
 		name = _name;
@@ -72,6 +74,7 @@ class Room{
 	int missionNum = 5;
 	Mission missions[] = new Mission[missionNum]; // Mission Control Class
 	int updateTime = 0;
+	int skillUpdateTime = 0;
 	
 	Room(int gameRecogPort, String roomName){
 		this.gameRecogPort = gameRecogPort;
@@ -188,6 +191,34 @@ class Room{
 		return -1;
 	}
 	
+	int useSkill(String name, boolean isFacingLeft) {
+		for (int i = 0; i < curUserNum; i++) {
+			if (users[i] != null && users[i].name.equals(name)) {
+				users[i].skillFacingLeft = isFacingLeft;
+				users[i].isUsingSkill = true;
+				this.skillUpdateTime++;
+				if(this.skillUpdateTime == Integer.MAX_VALUE) {
+					this.skillUpdateTime = 0;
+				}
+				return 0;
+			}
+		}
+		return -1;
+	}
+	
+	int endSkill(String name) {
+		for (int i = 0; i < curUserNum; i++) {
+			if (users[i] != null && users[i].name.equals(name)) {
+				users[i].isUsingSkill = false;
+				this.skillUpdateTime++;
+				if(this.skillUpdateTime == Integer.MAX_VALUE) {
+					this.skillUpdateTime = 0;
+				}
+				return 0;
+			}
+		}
+		return -1;
+	}
 }
 
 class SysoutColors{
@@ -411,6 +442,9 @@ class Clients implements Runnable{
 							saver = tcpReader.readLine();
 							ServerBase.rooms.get(RecogPort).missions[Integer.parseInt(saver)].isCleard = true;
 							ServerBase.rooms.get(RecogPort).updateTime++;
+							if(ServerBase.rooms.get(RecogPort).updateTime == Integer.MAX_VALUE) {
+								ServerBase.rooms.get(RecogPort).updateTime = 0;
+							}
 							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
 						}
 					}
@@ -426,6 +460,29 @@ class Clients implements Runnable{
 							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
 						}
 					}
+					else if(saver.equals("Roll")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine(); tcpReader.readLine();
+						}
+						else {
+							saver = tcpReader.readLine(); // Name 
+							String tempSaver = tcpReader.readLine();
+							ServerBase.rooms.get(RecogPort).useSkill(saver, Boolean.parseBoolean(tempSaver));
+							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
+					else if(saver.equals("endRoll")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+							tcpReader.readLine();
+						}
+						else {
+							saver = tcpReader.readLine(); // Name 
+							ServerBase.rooms.get(RecogPort).endSkill(saver);
+							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
 					else {
 						System.out.println("? " + saver + sock.getInetAddress());
 						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
@@ -435,6 +492,7 @@ class Clients implements Runnable{
 			else if(isSender == 1) {
 				boolean isStarted = false;
 				int updateTime = 0;
+				int skillUpdateTime = 0;
 				
 				while(true) {
 					Thread.sleep(10);
@@ -467,6 +525,22 @@ class Clients implements Runnable{
 							}
 							tcpWriter.write("End"); tcpWriter.newLine(); tcpWriter.flush();
 							updateTime = ServerBase.rooms.get(RecogPort).updateTime;
+						}
+						else if(ServerBase.rooms.get(RecogPort).skillUpdateTime != skillUpdateTime) {
+							tcpWriter.write("RollingState"); tcpWriter.newLine();
+							for(int i = 0; i<ServerBase.rooms.get(RecogPort).users.length; i++) {
+								if(ServerBase.rooms.get(RecogPort).users[i] != null) {
+									tcpWriter.write(ServerBase.rooms.get(RecogPort).users[i].name); tcpWriter.newLine();
+									tcpWriter.write(Boolean.toString(ServerBase.rooms.get(RecogPort).users[i].isUsingSkill)); tcpWriter.newLine();
+									tcpWriter.write(Boolean.toString(ServerBase.rooms.get(RecogPort).users[i].skillFacingLeft)); tcpWriter.newLine();
+								}
+								else {
+									tcpWriter.write(Boolean.toString(false)); tcpWriter.newLine();
+									tcpWriter.write(Boolean.toString(false)); tcpWriter.newLine();
+								}
+							}
+							tcpWriter.write("End"); tcpWriter.newLine(); tcpWriter.flush();
+							skillUpdateTime = ServerBase.rooms.get(RecogPort).skillUpdateTime;
 						}
 						else {
 							tcpWriter.write("KA"); tcpWriter.newLine(); tcpWriter.flush(); // KA means Keep Alive
