@@ -139,10 +139,6 @@ public class GameScreen implements Screen {
             renderer = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
             OrthogonalTiledMapRenderer rendererOverPlayer = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
 
-            // fake_wall1 레이어 인덱스 가져오기
-            int fakeWallLayerIndex = map.getLayers().getIndex("fake_wall1");
-
-
             int mapWidth = map.getProperties().get("width", Integer.class);
             int mapHeight = map.getProperties().get("height", Integer.class);
             int tileWidth = map.getProperties().get("tilewidth", Integer.class);
@@ -171,11 +167,12 @@ public class GameScreen implements Screen {
         Pattern blockPattern = Pattern.compile("block\\d*");
         Pattern objOffPattern = Pattern.compile("obj(\\d+)-off");
         Pattern objOnPattern = Pattern.compile("obj(\\d+)-on");
+        Pattern objPattern = Pattern.compile("obj(\\d+)");
 
         for (MapLayer layer : layers) {
             String layerName = layer.getName().toLowerCase();
 
-            if (blockPattern.matcher(layerName).matches()) {
+            if (blockPattern.matcher(layerName).matches()||objPattern.matcher(layerName).matches()) {
                 if (layer instanceof TiledMapTileLayer) {
                     collisionLayers.add((TiledMapTileLayer) layer);
                     Gdx.app.log("GameScreen", "Found collision layer: " + layerName);
@@ -186,6 +183,7 @@ public class GameScreen implements Screen {
                 if (layer instanceof TiledMapTileLayer) {
                     String id = layerName.split("-")[0];
                     objOffLayers.put(id, (TiledMapTileLayer) layer);
+                    objOffLayers.get(id).setVisible(false);
                     Gdx.app.log("GameScreen", "Found obj-off layer: " + layerName);
                 }
             }
@@ -300,7 +298,7 @@ public class GameScreen implements Screen {
     private void checkObjectInteractions() {
         Vector2 playerPos = player.getPosition();
         float playerCenterX = playerPos.x + playerWidth / 2;
-        float playerCenterY = playerPos.y + playerHeight / 2;
+        float playerCenterY = playerPos.y;
 
         int tileX = (int) (playerCenterX / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
         int tileY = (int) (playerCenterY / (map.getProperties().get("tileheight", Integer.class) * MAP_SCALE));
@@ -313,7 +311,7 @@ public class GameScreen implements Screen {
 
             Cell cell = offLayer.getCell(tileX, tileY);
             if (cell != null && cell.getTile() != null) {
-                if (!objActiveStates.get(objId)) {
+                if (!objActiveStates.get(objId) && !missionCompletionStatus.containsKey(objId)) {
                     objOnLayers.get(objId).setVisible(true);
                     objActiveStates.put(objId, true);
                 }
@@ -379,6 +377,7 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
+                            updateMissionCompletionStatus(); //미션 클리어시 동상 상호작용 레이어 안보이게 설정
                             // TODO: 서버에 미션 완료 상태 전송
                             // _Imported_ClientBase.sendMissionComplete(objId);
                             checkAllMissionsComplete();
@@ -392,6 +391,7 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog2.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
+                            updateMissionCompletionStatus();
                             // TODO: 서버에 미션 완료 상태 전송
                             // _Imported_ClientBase.sendMissionComplete(objId);
                             checkAllMissionsComplete();
@@ -404,6 +404,7 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog3.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
+                            updateMissionCompletionStatus();
                             // TODO: 서버에 미션 완료 상태 전송
                             // _Imported_ClientBase.sendMissionComplete(objId);
                             checkAllMissionsComplete();
@@ -416,6 +417,7 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog4.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
+                            updateMissionCompletionStatus();
                             // TODO: 서버에 미션 완료 상태 전송
                             // _Imported_ClientBase.sendMissionComplete(objId);
                             checkAllMissionsComplete();
@@ -428,12 +430,26 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog5.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
+                            updateMissionCompletionStatus();
                             // TODO: 서버에 미션 완료 상태 전송
                             // _Imported_ClientBase.sendMissionComplete(objId);
                             checkAllMissionsComplete();
                         });
                         break;
                 }
+            }
+        }
+    }
+
+    //미션 클리어하면 objonlayer가 보이던 것을 안보이게 설정함.
+    //이 메소드는 일시적인 것으로, 계속 안보이게 설정하는 것은 상호작용 관련 로직에 따로 설정함
+    private void updateMissionCompletionStatus() {
+        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
+            String checkObjId = entry.getKey();
+            boolean isMissionComplete = entry.getValue();
+
+            if (isMissionComplete) {
+                objOnLayers.get(checkObjId).setVisible(false);
             }
         }
     }
@@ -524,7 +540,6 @@ public class GameScreen implements Screen {
         setMissionState();
         setMissionPosition();
 
-
         if (renderer != null) {
             renderer.setView(camera);
 
@@ -534,7 +549,10 @@ public class GameScreen implements Screen {
                 if (i == map.getLayers().getIndex("fake_wall1")) {
                     break;
                 }
-                renderer.renderTileLayer((TiledMapTileLayer) map.getLayers().get(i));
+                MapLayer layer = map.getLayers().get(i);
+                if (layer.isVisible()) {
+                    renderer.renderTileLayer((TiledMapTileLayer) layer);
+                }
             }
             renderer.getBatch().end();
 
@@ -550,13 +568,19 @@ public class GameScreen implements Screen {
 
             // fake_wall1 레이어 렌더링 (플레이어 위에 위치하도록 렌더링)
             renderer.getBatch().begin();
-            renderer.renderTileLayer((TiledMapTileLayer) map.getLayers().get(map.getLayers().getIndex("fake_wall1")));
+            MapLayer fakeWallLayer = map.getLayers().get(map.getLayers().getIndex("fake_wall1"));
+            if (fakeWallLayer.isVisible()) {
+                renderer.renderTileLayer((TiledMapTileLayer) fakeWallLayer);
+            }
             renderer.getBatch().end();
 
             // fake_wall1 이후의 모든 레이어 렌더링 (플레이어보다 아래에 있음)
             renderer.getBatch().begin();
             for (int i = map.getLayers().getIndex("fake_wall1") + 1; i < map.getLayers().getCount(); i++) {
-                renderer.renderTileLayer((TiledMapTileLayer) map.getLayers().get(i));
+                MapLayer layer = map.getLayers().get(i);
+                if (layer.isVisible()) {
+                    renderer.renderTileLayer((TiledMapTileLayer) layer);
+                }
             }
             renderer.getBatch().end();
         }

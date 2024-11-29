@@ -488,7 +488,7 @@ public class MissionDialog2 extends Dialog implements Disposable {
         }
 
         //광물 다 모으면 게임 클리어
-        if (mineralCount == 5 && !gameClear) {
+        if (mineralCount == 6 && !gameClear) {
             Gdx.app.log("", "game clear!");
             gameClear = true;
             missionComplete = true;
