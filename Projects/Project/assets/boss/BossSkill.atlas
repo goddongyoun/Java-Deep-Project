@@ -1,0 +1,145 @@
+BossSkill.png
+size: 3840, 1600
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BossSkill1
+  rotate: false
+  xy: 0, 0
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill2
+  rotate: false
+  xy: 960, 0
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill3
+  rotate: false
+  xy: 1920, 0
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill4
+  rotate: false
+  xy: 2880, 0
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill5
+  rotate: false
+  xy: 0, 320
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill6
+  rotate: false
+  xy: 960, 320
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill7
+  rotate: false
+  xy: 1920, 320
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill8
+  rotate: false
+  xy: 2880, 320
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill9
+  rotate: false
+  xy: 0, 640
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill10
+  rotate: false
+  xy: 960, 640
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill11
+  rotate: false
+  xy: 1920, 640
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill12
+  rotate: false
+  xy: 2880, 640
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill13
+  rotate: false
+  xy: 0, 960
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill14
+  rotate: false
+  xy: 960, 960
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill15
+  rotate: false
+  xy: 1920, 960
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill16
+  rotate: false
+  xy: 2880, 960
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill17
+  rotate: false
+  xy: 0, 1280
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill18
+  rotate: false
+  xy: 960, 1280
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill19
+  rotate: false
+  xy: 1920, 1280
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1
+BossSkill20
+  rotate: false
+  xy: 2880, 1280
+  size: 960, 320
+  orig: 960, 320
+  offset: 0, 0
+  index: -1

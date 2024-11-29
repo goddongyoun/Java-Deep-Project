@@ -118,7 +118,7 @@ public class CreateRoomDialog extends Dialog {
 
                 //!!!!!!!!! should be killed when publish
                 game.setPlayerNickname(playerName);
-                Player host = new Player(playerName, 0, 0, 32);
+                Player host = new Player(playerName, 0, 0, 32, true);
                 Room newRoom = new Room(roomName, String.valueOf(roomCode), password, playerCount, host);
 
                 game.setCurrentRoom(newRoom);
@@ -133,7 +133,7 @@ public class CreateRoomDialog extends Dialog {
                 if(parts.length > 1) {
                     roomCode = parts[1];
                     game.setPlayerNickname(playerName);
-                    Player host = new Player(playerName, Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2, 32);
+                    Player host = new Player(playerName, Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2, 32, true);
                     Room newRoom = new Room(roomName, roomCode, password, playerCount, host);
 
                     game.setCurrentRoom(newRoom);

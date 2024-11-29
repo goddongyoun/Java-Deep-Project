@@ -1,0 +1,117 @@
+BossIdle.png
+size: 1920, 960
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BossIdleL1
+  rotate: false
+  xy: 0, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL2
+  rotate: false
+  xy: 320, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL3
+  rotate: false
+  xy: 640, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL4
+  rotate: false
+  xy: 960, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL5
+  rotate: false
+  xy: 1280, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL6
+  rotate: false
+  xy: 1600, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL7
+  rotate: false
+  xy: 0, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleL8
+  rotate: false
+  xy: 320, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR1
+  rotate: false
+  xy: 640, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR2
+  rotate: false
+  xy: 960, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR3
+  rotate: false
+  xy: 1280, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR4
+  rotate: false
+  xy: 1600, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR5
+  rotate: false
+  xy: 0, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR6
+  rotate: false
+  xy: 320, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR7
+  rotate: false
+  xy: 640, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossIdleR8
+  rotate: false
+  xy: 960, 640
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1

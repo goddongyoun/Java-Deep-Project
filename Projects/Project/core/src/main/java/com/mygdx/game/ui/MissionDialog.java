@@ -202,7 +202,7 @@ public class MissionDialog extends Dialog implements Disposable {
         contentTable.add(monsterBallImage).width(30).height(30).expand().fill().pad(10);
         contentTable.add(shooterImage).width(80).height(80).expand().fill().pad(10);
         contentTable.add(borderImage).width(640).height(365).expand().fill().pad(10);
-        contentTable.add(closeButton).width(45).height(45).expand().fill().pad(10);
+        contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
         contentTable.add(aimImage).width(150).height(150).expand().fill().pad(10);
         contentTable.add(card).width(250).height(80).expand().fill();
         contentTable.add(fail).width(250).height(100).expand().fill();

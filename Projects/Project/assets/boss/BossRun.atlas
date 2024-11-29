@@ -1,0 +1,89 @@
+BossRun.png
+size: 1920, 640
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BossRunL1
+  rotate: false
+  xy: 0, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunL2
+  rotate: false
+  xy: 320, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunL3
+  rotate: false
+  xy: 640, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunL4
+  rotate: false
+  xy: 960, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunL5
+  rotate: false
+  xy: 1280, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunL6
+  rotate: false
+  xy: 1600, 0
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunR1
+  rotate: false
+  xy: 0, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunR2
+  rotate: false
+  xy: 320, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunR3
+  rotate: false
+  xy: 640, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunR4
+  rotate: false
+  xy: 960, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunR5
+  rotate: false
+  xy: 1280, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+BossRunR6
+  rotate: false
+  xy: 1600, 320
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1

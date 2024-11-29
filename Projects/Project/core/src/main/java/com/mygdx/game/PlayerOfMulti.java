@@ -2,25 +2,20 @@ package com.mygdx.game;
 
 import com.ImportedPackage._Imported_ClientBase;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.mygdx.game.Player.PlayerState;
 import com.mygdx.game.screens.LobbyScreen;
 import com.mygdx.game.util.FontManager;
 
 public class PlayerOfMulti {
-
     private String nickname;
     private Vector2 position;
     private Vector2 velocity;
@@ -30,25 +25,66 @@ public class PlayerOfMulti {
     private float size;
     private Vector2 serverPosition = new Vector2();
 
-    private TextureAtlas atlas;
+    public boolean isUsingSkill = false;
+
+    // 기본 애니메이션 관련 변수
+    private TextureAtlas basicAtlas;
     private Animation<TextureRegion> idleLeftAnimation;
     private Animation<TextureRegion> idleRightAnimation;
     private Animation<TextureRegion> runLeftAnimation;
     private Animation<TextureRegion> runRightAnimation;
     private TextureRegion defaultTexture;
+
+    // 구르기 애니메이션 관련
+    private TextureAtlas rollingAtlas;
+    private Animation<TextureRegion> rollingLeftAnimation;
+    private Animation<TextureRegion> rollingRightAnimation;
+    private float rollingStartTime;
+
+    // 석화 애니메이션 관련
+    private TextureAtlas deadAtlas;
+    private Animation<TextureRegion> petrifiedLeftAnimation;
+    private Animation<TextureRegion> petrifiedRightAnimation;
+
+    // 보스 애니메이션 관련
+    private TextureAtlas bossIdleAtlas;
+    private TextureAtlas bossRunAtlas;
+    private TextureAtlas bossAttackAtlas;
+    private Animation<TextureRegion> bossIdleLeftAnimation;
+    private Animation<TextureRegion> bossIdleRightAnimation;
+    private Animation<TextureRegion> bossRunLeftAnimation;
+    private Animation<TextureRegion> bossRunRightAnimation;
+    private Animation<TextureRegion> bossAttackLeftAnimation;
+    private Animation<TextureRegion> bossAttackRightAnimation;
+
+    //구르기 관련
+    private float rollingCooldown = 3.0f;
+    private long lastRollingTime = 0;
+    private float rollingDuration = 0.5f;
+    private float rollingSpeedMultiplier = 1.5f;
+    private boolean isRolling = false;
+    private boolean isInGame = false;
+    private static final float ROLL_DISTANCE = 150f;
+    private Vector2 rollStartPosition = new Vector2();
+    private Vector2 rollDirection = new Vector2();
+    float rollTime;
+
     private float stateTime;
     private boolean facingLeft = false;
-    private boolean isReady;
-    private PlayerState currentState;
+    public PlayerState currentState;
+    public boolean isBoss = false;
+    private boolean isPetrified = false;
 
     private BitmapFont font;
     private Color nicknameColor;
     private Color outlineColor;
     private GlyphLayout glyphLayout;
-    private int fontSize = 19; // 폰트 크기를 조절할 수 있는 변수
+    private int fontSize = 19;
 
-    private enum PlayerState {
-        IDLE, RUNNING
+    public PlayerState serverPlayerState;
+
+    public enum PlayerState {
+        IDLE, RUNNING, ROLLING, PETRIFIED, BOSS_IDLE, BOSS_RUNNING, BOSS_ATTACKING
     }
 
     public PlayerOfMulti(String nickname, float x, float y, float size) {
@@ -57,7 +93,6 @@ public class PlayerOfMulti {
         this.velocity = new Vector2();
         this.size = size;
         this.bounds = new Rectangle(x, y, size, size);
-        this.isReady = false;
         this.currentState = PlayerState.IDLE;
         this.nicknameColor = Color.WHITE;
         this.outlineColor = Color.BLACK;
@@ -75,57 +110,122 @@ public class PlayerOfMulti {
 
     private void loadTextures() {
         try {
-            String atlasPath = "player/Frogs.atlas";
-            FileHandle atlasFile = Gdx.files.internal(atlasPath);
-            if (!atlasFile.exists()) {
-                Gdx.app.error("Player", "Atlas file not found: " + atlasPath);
-                createDefaultTexture();
-                return;
-            }
-
-            Gdx.app.log("Player", "Attempting to load atlas: " + atlasPath);
-            atlas = new TextureAtlas(atlasFile);
-
-            Gdx.app.log("Player", "Atlas loaded successfully. Regions: " + atlas.getRegions().size);
-
-            float frameDuration = 0.1f;
-
-            idleLeftAnimation = createAnimation("FrogIdleL", frameDuration);
-            idleRightAnimation = createAnimation("FrogIdleR", frameDuration);
-            runLeftAnimation = createAnimation("FrogRunL", frameDuration);
-            runRightAnimation = createAnimation("FrogRunR", frameDuration);
-
-            defaultTexture = atlas.findRegion("FrogIdleR1");
-            if (defaultTexture == null) {
-                Gdx.app.error("Player", "Failed to load default texture from atlas");
-                createDefaultTexture();
-            } else {
-                Gdx.app.log("Player", "Default texture set successfully");
-            }
-
-            Gdx.app.log("Player", "Animations loaded successfully");
+            loadBasicAnimations();
+            loadRollingAnimations();
+            loadPetrifiedAnimations();
+            loadBossAnimations();
         } catch (Exception e) {
-            Gdx.app.error("Player", "Error loading textures", e);
+            Gdx.app.error("PlayerOfMulti", "Error loading textures", e);
+            e.printStackTrace();
             createDefaultTexture();
         }
     }
 
-    private Animation<TextureRegion> createAnimation(String regionName, float frameDuration) {
-        Array<TextureAtlas.AtlasRegion> frames = new Array<>();
-        for (int i = 1; i <= 12; i++) {
+    private void loadBasicAnimations() {
+        String atlasPath = "player/Frogs.atlas";
+        basicAtlas = loadAtlas(atlasPath, "Basic");
+
+        float frameDuration = 0.1f;
+        idleLeftAnimation = createAnimation(basicAtlas, "FrogIdleL", 12, frameDuration, Animation.PlayMode.LOOP);
+        idleRightAnimation = createAnimation(basicAtlas, "FrogIdleR", 12, frameDuration, Animation.PlayMode.LOOP);
+        runLeftAnimation = createAnimation(basicAtlas, "FrogRunL", 12, frameDuration, Animation.PlayMode.LOOP);
+        runRightAnimation = createAnimation(basicAtlas, "FrogRunR", 12, frameDuration, Animation.PlayMode.LOOP);
+
+        defaultTexture = basicAtlas.findRegion("FrogIdleR1");
+        if (defaultTexture == null) {
+            createDefaultTexture();
+        }
+    }
+
+    private void loadRollingAnimations() {
+        String rollingPath = "player/FrogRolling.atlas";
+        rollingAtlas = loadAtlas(rollingPath, "Rolling");
+
+        if (rollingAtlas != null) {
+            float frameDuration = 0.1f;
+            rollingLeftAnimation = createAnimation(rollingAtlas, "FrogRollingL", 5, frameDuration, Animation.PlayMode.NORMAL);
+            rollingRightAnimation = createAnimation(rollingAtlas, "FrogRollingR", 5, frameDuration, Animation.PlayMode.NORMAL);
+        }
+    }
+
+    private void loadPetrifiedAnimations() {
+        String deadPath = "player/FrogDead.atlas";
+        deadAtlas = loadAtlas(deadPath, "Dead");
+
+        if (deadAtlas != null) {
+            Array<TextureRegion> framesLeft = new Array<>();
+            Array<TextureRegion> framesRight = new Array<>();
+            for (int i = 1; i <= 8; i++) {
+                framesLeft.add(deadAtlas.findRegion("FrogDeadL" + i));
+                framesRight.add(deadAtlas.findRegion("FrogDeadR" + i));
+            }
+            petrifiedLeftAnimation = new Animation<>(0.1f, framesLeft, Animation.PlayMode.NORMAL);
+            petrifiedRightAnimation = new Animation<>(0.1f, framesRight, Animation.PlayMode.NORMAL);
+        }
+    }
+
+    private void loadBossAnimations() {
+        // 보스 Idle 애니메이션
+        String bossIdlePath = "boss/BossIdle.atlas";
+        bossIdleAtlas = loadAtlas(bossIdlePath, "BossIdle");
+        if (bossIdleAtlas != null) {
+            float frameDuration = 0.1f;
+            bossIdleLeftAnimation = createAnimation(bossIdleAtlas, "BossIdleL", 8, frameDuration, Animation.PlayMode.LOOP);
+            bossIdleRightAnimation = createAnimation(bossIdleAtlas, "BossIdleR", 8, frameDuration, Animation.PlayMode.LOOP);
+        }
+
+        // 보스 Run 애니메이션
+        String bossRunPath = "boss/BossRun.atlas";
+        bossRunAtlas = loadAtlas(bossRunPath, "BossRun");
+        if (bossRunAtlas != null) {
+            float frameDuration = 0.1f;
+            bossRunLeftAnimation = createAnimation(bossRunAtlas, "BossRunL", 6, frameDuration, Animation.PlayMode.LOOP);
+            bossRunRightAnimation = createAnimation(bossRunAtlas, "BossRunR", 6, frameDuration, Animation.PlayMode.LOOP);
+        }
+
+        // 보스 Attack 애니메이션
+        String bossAttackPath = "boss/BossAttack.atlas";
+        bossAttackAtlas = loadAtlas(bossAttackPath, "BossAttack");
+        if (bossAttackAtlas != null) {
+            float frameDuration = 0.1f;
+            bossAttackLeftAnimation = createAnimation(bossAttackAtlas, "BossAttackL", 6, frameDuration, Animation.PlayMode.NORMAL);
+            bossAttackRightAnimation = createAnimation(bossAttackAtlas, "BossAttackR", 6, frameDuration, Animation.PlayMode.NORMAL);
+        }
+    }
+    private TextureAtlas loadAtlas(String path, String type) {
+        FileHandle atlasFile = Gdx.files.internal(path);
+        if (!atlasFile.exists()) {
+            Gdx.app.error("PlayerOfMulti", type + " atlas file not found: " + path);
+            return null;
+        }
+
+        Gdx.app.log("PlayerOfMulti", "Loading " + type + " atlas: " + path);
+        return new TextureAtlas(atlasFile);
+    }
+
+    private Animation<TextureRegion> createAnimation(TextureAtlas atlas, String regionName, int frameCount, float frameDuration, Animation.PlayMode playMode) {
+        if (atlas == null) {
+            Gdx.app.error("Player", "Atlas is null for " + regionName);
+            return null;
+        }
+
+        Array<TextureRegion> frames = new Array<>();
+        for (int i = 1; i <= frameCount; i++) {
             TextureAtlas.AtlasRegion region = atlas.findRegion(regionName + i);
             if (region != null) {
                 frames.add(region);
-            } else {
-                break;
             }
         }
-        Gdx.app.log("Player", regionName + " Frames: " + frames.size);
-        return new Animation<>(frameDuration, frames, Animation.PlayMode.LOOP);
+
+        if (frames.size == 0) {
+            Gdx.app.error("Player", "No frames found for animation: " + regionName);
+            return null;
+        }
+
+        return new Animation<>(frameDuration, frames, playMode);
     }
 
     private void createDefaultTexture() {
-        Gdx.app.log("Player", "Creating default texture");
         Pixmap pixmap = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.MAGENTA);
         pixmap.fill();
@@ -133,200 +233,279 @@ public class PlayerOfMulti {
         pixmap.dispose();
     }
 
-	public void update(float x, float y, float delta) {
-		stateTime += delta;
+    public void update(float x, float y, float delta) {
+        stateTime += delta;
+        serverPosition.set(x, y);
 
-		// 서버 위치 저장
-		serverPosition.set(x, y);
+        float dx = serverPosition.x - position.x;
+        float dy = serverPosition.y - position.y;
 
-		// 현재 위치와 서버 위치의 차이 계산
-		float dx = serverPosition.x - position.x;
-		float dy = serverPosition.y - position.y;
+        // 구르기 상태일 때는 보간 처리로 부드럽게 이동
+        if (currentState == PlayerState.ROLLING) {
+            updateRolling(delta);
 
-		// 텔레포트가 필요한 거리 체크 (예: 100 이상 차이나면)
-		float teleportThreshold = 100f;
-		if (Math.abs(dx) > teleportThreshold || Math.abs(dy) > teleportThreshold) {
-			// 직접 서버 위치로 텔레포트
-			position.x = serverPosition.x;
-			position.y = serverPosition.y;
-			velocity.setZero();
-			currentState = PlayerState.IDLE;
-		} else {
-			// 일반적인 이동 처리
-			velocity.setZero();
-			float moveThreshold = 1f;
+            // 구르기 중에는 서버 위치로 부드럽게 보간
+            float lerpFactor = 5f * delta; // 보간 속도 조절
+            position.x += dx * lerpFactor;
+            position.y += dy * lerpFactor;
+        } else {
+            // 텔레포트가 필요한 거리 체크
+            float teleportThreshold = 100f;
+            if (Math.abs(dx) > teleportThreshold || Math.abs(dy) > teleportThreshold) {
+                position.set(serverPosition);
+            } else {
+                updateMovement(dx, dy, delta);
+            }
+        }
 
-			if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
-				velocity.x = dx;
-				velocity.y = dy;
-				velocity.nor(); // 방향 정규화
+        if (serverPlayerState == PlayerState.ROLLING && currentState != PlayerState.ROLLING) {
+            startRolling();
+        }
 
-				// 이동 상태 설정
-				currentState = PlayerState.RUNNING; // 어떤 방향이든 이동중이면 RUNNING
+        bounds.setPosition(position);
+    }
 
-				// x 방향 이동시 방향 설정
-				if (Math.abs(dx) > moveThreshold) {
-					if (velocity.x < 0) {
-						facingLeft = true;
-					} else if (velocity.x > 0) {
-						facingLeft = false;
-					}
-				}
-			} else {
-				currentState = PlayerState.IDLE;
-			}
+    private void updateRolling(float delta) {
+        float rollTime = stateTime - rollingStartTime;
 
-			// velocity를 사용한 부드러운 이동
-			position.x += velocity.x * speedX * delta;
-			position.y += velocity.y * speedY * delta;
-		}
+        if (rollTime >= rollingDuration ||
+            position.dst(rollStartPosition) >= ROLL_DISTANCE) {
+            endRolling();
+            return;
+        }
 
-		bounds.setPosition(position);
-	}
+        // 구르기 방향으로 이동
+        float currentSpeedX = speedX * rollingSpeedMultiplier;
+        float currentSpeedY = speedY * rollingSpeedMultiplier;
+        position.x += rollDirection.x * currentSpeedX * delta;
+        position.y += rollDirection.y * currentSpeedY * delta;
+        bounds.setPosition(position);
+    }
+
+    private void endRolling() {
+        isRolling = false;
+        // 구르기 끝날 때 IDLE 상태로 전환하고 서버에 전송
+        if (isInGame) {
+            String state = isBoss ? "BOSS_IDLE" : "IDLE";
+            _Imported_ClientBase.endRoll();
+        }
+        currentState = isBoss ? PlayerState.BOSS_IDLE : PlayerState.IDLE;
+        serverPlayerState = currentState;
+    }
+
+    private void updateMovement(float dx, float dy, float delta) {
+        velocity.setZero();
+        float moveThreshold = 1f;
+
+        if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
+            velocity.x = dx;
+            velocity.y = dy;
+            velocity.nor();
+
+            if (Math.abs(dx) > moveThreshold) {
+                facingLeft = velocity.x < 0;
+            }
+
+            if (!isRolling) {
+                currentState = isBoss ? PlayerState.BOSS_RUNNING : PlayerState.RUNNING;
+            }
+        } else {
+            if (!isRolling) {
+                currentState = isBoss ? PlayerState.BOSS_IDLE : PlayerState.IDLE;
+            }
+        }
+
+        float speedMultiplier = isRolling ? 1.5f : 1.0f;
+        position.x += velocity.x * speedX * speedMultiplier * delta;
+        position.y += velocity.y * speedY * speedMultiplier * delta;
+    }
+
+    public void handleStateUpdate(String state) {
+        // TODO: 상태 업데이트 처리
+        // - 서버로부터 받은 상태(구르기/보스변신/보스스킬)를 처리
+        // - 각 상태에 맞는 애니메이션 재생
+        // - 특히 구르기의 경우 방향 정보도 함께 처리
+        try {
+            if (state.contains("/")) {
+                String[] parts = state.split("/");
+                PlayerState newState = PlayerState.valueOf(parts[0]);
+                if (newState == PlayerState.ROLLING) {
+                    facingLeft = Boolean.parseBoolean(parts[1]);
+                    startRolling();
+                }
+                setState(newState);
+            } else {
+                setState(PlayerState.valueOf(state));
+            }
+        } catch (IllegalArgumentException e) {
+            Gdx.app.error("PlayerOfMulti", "Invalid state received: " + state);
+        }
+    }
+
+    private void startRolling() {
+        isRolling = true;
+        rollingStartTime = stateTime;
+        currentState = PlayerState.ROLLING;
+        lastRollingTime = TimeUtils.millis();
+        rollStartPosition.set(position);
+    }
+
+    private void setState(PlayerState state) {
+        this.currentState = state;
+        if (state != PlayerState.ROLLING) {
+            isRolling = false;
+        }
+    }
 
     public void render(Batch batch) {
-        TextureRegion currentFrame = null;
-
-        try {
-            switch (currentState) {
-                case RUNNING:
-                    currentFrame = facingLeft ? runLeftAnimation.getKeyFrame(stateTime, true) : runRightAnimation.getKeyFrame(stateTime, true);
-                    break;
-                case IDLE:
-                default:
-                    currentFrame = facingLeft ? idleLeftAnimation.getKeyFrame(stateTime, true) : idleRightAnimation.getKeyFrame(stateTime, true);
-                    break;
-            }
-        } catch (Exception e) {
-            Gdx.app.error("Player", "Error getting animation frame", e);
-        }
-
+        TextureRegion currentFrame = getCurrentFrame();
         if (currentFrame != null && currentFrame.getTexture() != null) {
             batch.draw(currentFrame, position.x, position.y, size, size);
-        } else if (defaultTexture != null && defaultTexture.getTexture() != null) {
-            Gdx.app.log("Player", "Using default texture");
-            batch.draw(defaultTexture, position.x, position.y, size, size);
-        } else {
-            Gdx.app.error("Player", "No valid texture to render");
         }
-        
+
+        renderNickname(batch);
+    }
+
+    public void transformToBoss() {
+        // TODO: 보스 변신 관련
+        // - 보스 변신 상태를 서버에 전송
+        // - 다른 플레이어의 화면에서도 보스 모습으로 변하도록 처리
+        // - 크기 변경 및 보스 상태로 전환
+        isBoss = true;
+        currentState = PlayerState.BOSS_IDLE;
+        size *= 1.2f;
+        bounds.setSize(size, size);
+        // 보스 변신 상태를 서버에 전송
+        //_Imported_ClientBase.sendBossTransform(true); TODO: erased
+    }
+
+    private TextureRegion getCurrentFrame() {
+        try {
+            if (isPetrified) {
+                return facingLeft ?
+                    petrifiedLeftAnimation.getKeyFrame(stateTime, false) :
+                    petrifiedRightAnimation.getKeyFrame(stateTime, false);
+            }
+
+            if (isBoss) {
+                switch (currentState) {
+                    case BOSS_RUNNING:
+                        return facingLeft ?
+                            bossRunLeftAnimation.getKeyFrame(stateTime, true) :
+                            bossRunRightAnimation.getKeyFrame(stateTime, true);
+                    case BOSS_ATTACKING:
+                        return facingLeft ?
+                            bossAttackLeftAnimation.getKeyFrame(stateTime, false) :
+                            bossAttackRightAnimation.getKeyFrame(stateTime, false);
+                    case BOSS_IDLE:
+                    default:
+                        return facingLeft ?
+                            bossIdleLeftAnimation.getKeyFrame(stateTime, true) :
+                            bossIdleRightAnimation.getKeyFrame(stateTime, true);
+                }
+            }
+
+            switch (currentState) {
+                case RUNNING:
+                    return facingLeft ?
+                        runLeftAnimation.getKeyFrame(stateTime, true) :
+                        runRightAnimation.getKeyFrame(stateTime, true);
+                case ROLLING:
+                    float rollTime = stateTime - rollingStartTime;
+                    if (rollTime <= rollingDuration) {
+                        Animation<TextureRegion> currentAnim = facingLeft ? rollingLeftAnimation : rollingRightAnimation;
+                        if (currentAnim != null) {
+                            return currentAnim.getKeyFrame(rollTime, false);
+                        }
+                    }
+                    isRolling = false;
+                    currentState = isBoss ? PlayerState.BOSS_IDLE : PlayerState.IDLE;
+                    return facingLeft ?
+                        idleLeftAnimation.getKeyFrame(stateTime, true) :
+                        idleRightAnimation.getKeyFrame(stateTime, true);
+                case IDLE:
+                default:
+                    return facingLeft ?
+                        idleLeftAnimation.getKeyFrame(stateTime, true) :
+                        idleRightAnimation.getKeyFrame(stateTime, true);
+            }
+        } catch (Exception e) {
+            Gdx.app.error("PlayerOfMulti", "Error getting animation frame", e);
+        }
+        return defaultTexture;
+    }
+
+    private void renderNickname(Batch batch) {
         String tempBName = null;
-        // 닉네임 그리기 (윤곽선 포함)
-        if(LobbyScreen.shouldStart == true) {
-        	if(nickname.equals(_Imported_ClientBase.getBossName())) {
-            	if(nicknameColor != Color.RED) {
-            		nicknameColor = Color.RED;
-            	}
-            	tempBName = "*BOSS* "+nickname;
+        if (LobbyScreen.shouldStart == true) {
+            if (nickname.equals(_Imported_ClientBase.getBossName())) {
+                if (nicknameColor != Color.RED) {
+                    nicknameColor = Color.RED;
+                }
+                tempBName = "*BOSS* " + nickname;
                 glyphLayout.setText(font, tempBName);
-        	}
+            }
+        } else {
+            glyphLayout.setText(font, nickname);
         }
-        else {
-        	glyphLayout.setText(font, nickname);
-        }
+
         float nicknameX = position.x + size / 2 - glyphLayout.width / 2;
         float nicknameY = position.y + size + glyphLayout.height + 5;
 
-        // 윤곽선 그리기
         font.setColor(outlineColor);
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 if (i != 0 || j != 0) {
-                	if(tempBName == null) {
-                		font.draw(batch, nickname, nicknameX + i, nicknameY + j);
-                	}
-                	else {
-                		font.draw(batch, tempBName, nicknameX + i, nicknameY + j);
-                	}
+                    font.draw(batch, tempBName != null ? tempBName : nickname,
+                        nicknameX + i, nicknameY + j);
                 }
             }
         }
-        
-        // 닉네임 그리기
+
         font.setColor(nicknameColor);
-        if(tempBName == null) {
-    		font.draw(batch, nickname, nicknameX, nicknameY);
-    	}
-    	else {
-    		font.draw(batch, tempBName, nicknameX, nicknameY);
-    	}
+        font.draw(batch, tempBName != null ? tempBName : nickname, nicknameX, nicknameY);
     }
 
-    public void setSize(float size) {
-        this.size = size;
-    }
-
-    public float getSize() {
-        return this.size;
-    }
-
-    public Vector2 getPosition() {
-        return position;
-    }
-
+    // Getters and Setters
+    public Vector2 getPosition() { return position; }
     public void setPosition(Vector2 position) {
         this.position.set(position);
         this.bounds.setPosition(position);
     }
-
-    public Rectangle getBounds() {
-        return bounds;
+    public Rectangle getBounds() { return bounds; }
+    public float getSize() { return size; }
+    public void setSize(float size) { this.size = size; }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
+    public void setPetrified(boolean petrified) {
+        if (petrified && !this.isPetrified) {
+            stateTime = 0; // 석화 시작 시 애니메이션 시간 초기화
+            velocity.setZero();
+        }
+        this.isPetrified = petrified;
+        if (petrified) {
+            currentState = PlayerState.PETRIFIED;
+        }
     }
-
-    public float getSpeedX() {
-        return speedX;
-    }
-
-    public void setSpeedX(float speedX) {
-        this.speedX = speedX;
-    }
-
-    public float getSpeedY() {
-        return speedY;
-    }
-
-    public void setSpeedY(float speedY) {
-        this.speedY = speedY;
+    public boolean isPetrified() { return isPetrified; }
+    public void setBoss(boolean boss) {
+        this.isBoss = boss;
+        if (boss) {
+            size *= 1.2f;
+            bounds.setSize(size, size);
+            currentState = PlayerState.BOSS_IDLE;
+        }
     }
 
     public void dispose() {
-        if (atlas != null) {
-            atlas.dispose();
-        }
+        if (basicAtlas != null) basicAtlas.dispose();
+        if (rollingAtlas != null) rollingAtlas.dispose();
+        if (deadAtlas != null) deadAtlas.dispose();
+        if (bossIdleAtlas != null) bossIdleAtlas.dispose();
+        if (bossRunAtlas != null) bossRunAtlas.dispose();
+        if (bossAttackAtlas != null) bossAttackAtlas.dispose();
         if (defaultTexture != null && defaultTexture.getTexture() != null) {
             defaultTexture.getTexture().dispose();
         }
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public boolean isReady() {
-        return isReady;
-    }
-
-    public void setReady(boolean ready) {
-        isReady = ready;
-    }
-
-    // 폰트 크기를 조절하는 메서드
-    public void setFontSize(int size) {
-        this.fontSize = size;
-        initializeFont();
-    }
-
-    // 닉네임 색상을 설정하는 메서드
-    public void setNicknameColor(Color color) {
-        this.nicknameColor = color;
-    }
-
-    // 윤곽선 색상을 설정하는 메서드
-    public void setOutlineColor(Color color) {
-        this.outlineColor = color;
     }
 }

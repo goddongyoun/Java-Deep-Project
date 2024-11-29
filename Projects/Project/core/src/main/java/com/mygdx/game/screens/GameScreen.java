@@ -6,7 +6,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -14,12 +14,14 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
@@ -40,8 +42,10 @@ public class GameScreen implements Screen {
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
     private Room currentRoom;
-    private Stage uiStage;
+    private Stage stage;
     private Skin skin;
+    private SpriteBatch batch;
+    private GameUI gameUI;
 
     // 맵 스케일 설정
     private static final float MAP_SCALE = 2.0f;
@@ -53,6 +57,13 @@ public class GameScreen implements Screen {
     private static final float MAX_ZOOM = 2f;
     private static final float ZOOM_SPEED = 0.1f;
 
+    private float gameStartTimer = 0;
+    private static final float BOSS_ACTIVATION_TIME = 20f;
+    private boolean bossActivated = false;
+    private boolean isBossPlayer = false;
+    private float bossSkillCooldown = 5f;
+    private float bossSkillDuration = 1f;
+
     // 플레이어 크기 관련 변수
     private float playerWidth;
     private float playerHeight;
@@ -60,7 +71,6 @@ public class GameScreen implements Screen {
     // 카메라 관련 변수
     private float currentZoom = 1f;
     private Vector3 cameraPosition = new Vector3();
-    private Vector2 tempVec = new Vector2();
 
     // 충돌 및 상호작용 관련
     private Array<TiledMapTileLayer> collisionLayers;
@@ -70,6 +80,24 @@ public class GameScreen implements Screen {
     private String currentInteractiveObj;
     private String objId;
     private Map<String, Boolean> missionCompletionStatus;  // 미션 완료 상태를 추적
+    private Dialog currentDialog;
+
+    // 보스 스킬 관련 상수
+    private static final float BOSS_SKILL_RANGE = 100f; // 스킬 기본 크기 조정
+    private static final float BOSS_SKILL_DURATION = 0.5f; // 스킬 지속 시간
+    private static final float BOSS_SKILL_COOLDOWN = 3f; // 스킬 쿨다운
+
+    // 보스 스킬 관련 필드
+    private float currentBossSkillTime = 0;
+    private float lastBossSkillTime = 0;
+    private boolean isUsingBossSkill = false;
+    private boolean showSkillHitbox = false;
+    private Rectangle skillHitbox;
+    private TextureAtlas bossSkillAtlas;
+
+    // 보스 공격 애니메이션
+    private Animation<TextureRegion> bossAttackLeftAnimation;
+    private Animation<TextureRegion> bossAttackRightAnimation;
 
     //미니게임 관련
     MissionDialog missionDialog;
@@ -78,29 +106,74 @@ public class GameScreen implements Screen {
     MissionDialog4 missionDialog4;
     MissionDialog5 missionDialog5;
     private boolean isMissionActivated=false;
+    private boolean allComplete=false;
+
+    //탈출 관련
+    private boolean isEscape=false;
+
+    private Pattern doorClosePattern;
 
     InputMultiplexer multiplexer;
-
-    private Dialog currentDialog; // 현재 표시 중인 다이얼로그
 
     public GameScreen(Main game) {
         this.game = game;
         this.currentRoom = game.getCurrentRoom();
+
+        // 스킬 히트박스 초기화
+        skillHitbox = new Rectangle(0, 0, BOSS_SKILL_RANGE, BOSS_SKILL_RANGE);
+
+        // 스킬 아틀라스 로드
+        bossSkillAtlas = new TextureAtlas(Gdx.files.internal("boss/BossSkill.atlas"));
+
+        // 보스 공격 애니메이션 로드
+        TextureAtlas bossAttackAtlas = new TextureAtlas(Gdx.files.internal("boss/BossAttack.atlas"));
+
+        // 왼쪽 공격 애니메이션 생성
+        Array<TextureRegion> attackLeftFrames = new Array<>();
+        for (int i = 1; i <= 6; i++) {
+            TextureRegion region = bossAttackAtlas.findRegion("BossAttackL" + i);
+            if (region != null) {
+                attackLeftFrames.add(region);
+            }
+        }
+        bossAttackLeftAnimation = new Animation<>(0.1f, attackLeftFrames, Animation.PlayMode.NORMAL);
+
+        // 오른쪽 공격 애니메이션 생성
+        Array<TextureRegion> attackRightFrames = new Array<>();
+        for (int i = 1; i <= 6; i++) {
+            TextureRegion region = bossAttackAtlas.findRegion("BossAttackR" + i);
+            if (region != null) {
+                attackRightFrames.add(region);
+            }
+        }
+        bossAttackRightAnimation = new Animation<>(0.1f, attackRightFrames, Animation.PlayMode.NORMAL);
+
+        if (this.currentRoom == null) {
+            Gdx.app.error("GameScreen", "Current room is null!");
+            return;
+        }
+
+        player = currentRoom.getme();
+        if (player == null) {
+            Gdx.app.error("GameScreen", "Player is null!");
+            return;
+        }
 
         // 카메라 초기화
         camera = new OrthographicCamera();
         viewport = new ExtendViewport(Main.WINDOW_WIDTH, Main.WINDOW_HEIGHT, camera);
 
         // UI Stage 및 Skin 초기화
-        this.uiStage = new Stage(viewport);
+        this.batch = new SpriteBatch();
+        this.stage = new Stage(viewport, this.batch);
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
 
         //미션 초기화
-        missionDialog = new MissionDialog("미션",skin,uiStage);
-        missionDialog2 = new MissionDialog2("미션",skin,uiStage);
-        missionDialog3 = new MissionDialog3("미션",skin,uiStage);
-        missionDialog4 = new MissionDialog4("미션",skin,uiStage);
-        missionDialog5 = new MissionDialog5("미션",skin,uiStage);
+        missionDialog = new MissionDialog("",skin, stage);
+        missionDialog2 = new MissionDialog2("",skin, stage);
+        missionDialog3 = new MissionDialog3("",skin, stage);
+        missionDialog4 = new MissionDialog4("",skin, stage);
+        missionDialog5 = new MissionDialog5("",skin, stage);
 
         // 맵 로드
         loadMap();
@@ -109,35 +182,44 @@ public class GameScreen implements Screen {
         initializePlayerSize();
 
         // 플레이어 초기화
-        player = currentRoom.getme();
-        resetPlayerPosition();
+        player.setInGame(true);
 
-        // 다른 플레이어들 크기 조정
-        for (int i = 0; i < currentRoom.pCount; i++) {
-            if (currentRoom.m_players[i] != null) {
-                currentRoom.m_players[i].setSize(playerWidth);
+        if (currentRoom.pCount > 0) {
+            for (int i = 0; i < currentRoom.pCount; i++) {
+                if (currentRoom.m_players[i] != null) {
+                    currentRoom.m_players[i].setSize(playerWidth);
+                }
             }
         }
 
+        skillHitbox = new Rectangle(0, 0, BOSS_SKILL_RANGE * 2, BOSS_SKILL_RANGE * 2);
+        bossSkillAtlas = new TextureAtlas(Gdx.files.internal("boss/BossSkill.atlas"));
+
         findLayers();
         missionCompletionStatus = new HashMap<>();
+        this.gameUI = new GameUI(batch, player);
 
         // 입력 처리를 위한 InputMultiplexer 설정
         multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(uiStage);
+        multiplexer.addProcessor(stage);
         Gdx.input.setInputProcessor(multiplexer); // -> show 메소드 = 사용자가 최종적으로 화면에 보여질 때 실행됨, 즉 맨 마지막에 이 코드를 실행시켜야 모든 이벤트 리스너가 작동함
     }
 
     private void initializePlayerSize() {
+        if (player == null) {
+            Gdx.app.error("GameScreen", "Cannot initialize player size - player is null");
+            return;
+        }
+        resetPlayerPosition();
         playerWidth = 32 * MAP_SCALE * PLAYER_SCALE;
         playerHeight = playerWidth;
+        player.size = playerWidth;
     }
 
     private void loadMap() {
         try {
             map = new TmxMapLoader().load("maps/game_map.tmx");
             renderer = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
-            OrthogonalTiledMapRenderer rendererOverPlayer = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
 
             int mapWidth = map.getProperties().get("width", Integer.class);
             int mapHeight = map.getProperties().get("height", Integer.class);
@@ -168,11 +250,14 @@ public class GameScreen implements Screen {
         Pattern objOffPattern = Pattern.compile("obj(\\d+)-off");
         Pattern objOnPattern = Pattern.compile("obj(\\d+)-on");
         Pattern objPattern = Pattern.compile("obj(\\d+)");
+        doorClosePattern = Pattern.compile("door-close\\d*");
 
         for (MapLayer layer : layers) {
             String layerName = layer.getName().toLowerCase();
 
-            if (blockPattern.matcher(layerName).matches()||objPattern.matcher(layerName).matches()) {
+            if (blockPattern.matcher(layerName).matches()
+                ||objPattern.matcher(layerName).matches()
+                ||doorClosePattern.matcher(layerName).matches()) {
                 if (layer instanceof TiledMapTileLayer) {
                     collisionLayers.add((TiledMapTileLayer) layer);
                     Gdx.app.log("GameScreen", "Found collision layer: " + layerName);
@@ -200,6 +285,131 @@ public class GameScreen implements Screen {
 
             System.out.println(objOffLayers);
         }
+    }
+
+    private void updateGameState(float delta) {
+        if (!bossActivated) {
+            gameStartTimer += delta;
+            if (gameStartTimer >= BOSS_ACTIVATION_TIME) {
+                // TODO: 보스 변신 처리
+                // - 20초 후 보스 변신 처리
+                // - 보스 플레이어 확인 및 변신 처리
+                // - 변신 상태 서버에 전송
+                // - 다른 플레이어들에게도 보스 변신이 보이도록 처리
+                bossActivated = true;
+                String bossName = _Imported_ClientBase.getBossName();
+                isBossPlayer = bossName != null && bossName.equals(player.getNickname());
+
+                if (isBossPlayer) {
+                    player.transformToBoss();
+                }
+                else {
+                    for(int i = 0; i<currentRoom.pCount; i++) {
+                        if(currentRoom.m_players[i] != null) {
+                            if(currentRoom.m_players[i].getNickname().equals(bossName)) {
+                                currentRoom.m_players[i].isBoss = true;
+                                currentRoom.m_players[i].transformToBoss();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (bossActivated && isBossPlayer) {
+            updateBossSkills(delta);
+        }
+
+        gameUI.update(delta);
+        gameUI.setBossActivated(bossActivated);
+        gameUI.setIsBossPlayer(isBossPlayer);
+        if (isBossPlayer) {
+            gameUI.setLastBossSkillTime(lastBossSkillTime);
+        }
+    }
+
+    private void updateBossSkills(float delta) {
+        if (isUsingBossSkill) {
+            currentBossSkillTime += delta;
+
+            if (showSkillHitbox) {
+                for (int i = 0; i < currentRoom.pCount; i++) {
+                    PlayerOfMulti target = currentRoom.m_players[i];
+                    if (target != null && !target.isPetrified() && checkSkillCollision(target)) {
+                        //TODO 석화되는 애니메이션 다른 플레이어한테 보이게 하기
+                        System.out.println("hit");
+                        currentRoom.m_players[i].setPetrified(true);
+                        _Imported_ClientBase.setIsDead(target.getNickname());
+                    }
+                }
+            }
+
+            if (currentBossSkillTime >= bossSkillDuration) {
+                endBossSkill();
+            }
+        }
+
+        if (!isUsingBossSkill && Gdx.input.isKeyJustPressed(Input.Keys.A)) {
+            float timeSinceLastUse = gameStartTimer - lastBossSkillTime;
+            if (timeSinceLastUse >= BOSS_SKILL_COOLDOWN) {
+                // isBossPlayer 여부와 관계없이 startRoll 호출, 서버에서 보스 여부 확인
+                _Imported_ClientBase.startRoll(player.isFacingLeft());
+
+                if (isBossPlayer) {
+                    useBossSkill();
+                }
+            }
+        }
+    }
+
+    private void updateSkillHitbox() {
+        if (showSkillHitbox) {
+            Vector2 playerPos = player.getPosition();
+            skillHitbox.setCenter(
+                playerPos.x + player.size/2,
+                playerPos.y + player.size/2
+            );
+
+            for (int i = 0; i < currentRoom.pCount; i++) {
+                PlayerOfMulti target = currentRoom.m_players[i];
+                if (target != null && !target.isPetrified() && checkSkillCollision(target)) {
+                    _Imported_ClientBase.setIsDead(target.getNickname());
+                }
+            }
+        }
+    }
+
+    private boolean checkSkillCollision(PlayerOfMulti target) {
+        Rectangle targetBounds = new Rectangle(
+            target.getPosition().x,
+            target.getPosition().y,
+            target.getSize(),
+            target.getSize()
+        );
+        return skillHitbox.overlaps(targetBounds);
+    }
+
+
+
+    private void useBossSkill() {
+        isUsingBossSkill = true;
+        currentBossSkillTime = 0;
+        lastBossSkillTime = gameStartTimer;
+        showSkillHitbox = true;
+
+        // 보스 공격 상태로 전환하고 stateTime 초기화
+        player.currentState = Player.PlayerState.BOSS_ATTACKING;
+        player.resetStateTime();
+
+        Gdx.app.log("GameScreen", "Boss skill activated, state: " + player.getCurrentState());
+    }
+
+    private void endBossSkill() {
+        isUsingBossSkill = false;
+        showSkillHitbox = false;
+        // 다시 IDLE 상태로 돌아가기
+        player.currentState = Player.PlayerState.BOSS_IDLE;
+        _Imported_ClientBase.endRoll();
     }
 
     private void resetPlayerPosition() {
@@ -232,6 +442,522 @@ public class GameScreen implements Screen {
         }
         return false;
     }
+
+    private boolean isCollidingWithShadow(float x, float y) {
+        int tileX = (int) (x / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
+        int tileY = (int) (y / (map.getProperties().get("tileheight", Integer.class) * MAP_SCALE));
+
+        TiledMapTileLayer shadowLayer = (TiledMapTileLayer) map.getLayers().get("door_shadow");
+        if (shadowLayer == null) {
+            return false;
+        }
+
+        TiledMapTileLayer.Cell cell = shadowLayer.getCell(tileX, tileY);
+        return cell != null && cell.getTile() != null;
+    }
+
+    private void checkObjectInteractions() {
+        Vector2 playerPos = player.getPosition();
+        float playerCenterX = playerPos.x + playerWidth / 2;
+        float playerCenterY = playerPos.y;
+
+        int tileX = (int) (playerCenterX / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
+        int tileY = (int) (playerCenterY / (map.getProperties().get("tileheight", Integer.class) * MAP_SCALE));
+
+        boolean foundInteraction = false;
+
+        for (Map.Entry<String, TiledMapTileLayer> entry : objOffLayers.entrySet()) {
+            objId = entry.getKey();
+            TiledMapTileLayer offLayer = entry.getValue();
+
+            Cell cell = offLayer.getCell(tileX, tileY);
+            if (cell != null && cell.getTile() != null) {
+                if (!objActiveStates.get(objId)) {
+                    objOnLayers.get(objId).setVisible(true);
+                    objActiveStates.put(objId, true);
+                }
+                currentInteractiveObj = objId;
+                foundInteraction = true;
+            }
+        }
+
+        if (!foundInteraction && currentInteractiveObj != null) {
+            if (objActiveStates.get(currentInteractiveObj)) {
+                objOnLayers.get(currentInteractiveObj).setVisible(false);
+                objActiveStates.put(currentInteractiveObj, false);
+            }
+            currentInteractiveObj = null;
+        }
+
+        //TODO 미션 근처에서 스페이스마 누르면 구르는 모션 발동되는거 해결하기
+        // 스페이스바로 상호작용 및 미니게임 실행
+        if (currentInteractiveObj != null &&
+            objActiveStates.get(currentInteractiveObj) &&
+            !isMissionActivated &&
+            Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            showInteractionDialog(currentInteractiveObj);
+        }
+    }
+
+    private void handlePlayerMovement(float delta) {
+        Vector2 oldPosition = player.getPosition().cpy();
+        player.update(delta);
+
+        Vector2 newPosition = player.getPosition();
+        float tempPlayerWidth = playerWidth / 3;
+        float tempPlayerHeight = playerHeight / 3;
+
+        // 캐릭터 충돌 경계선 설정
+        float leftBorder = newPosition.x + tempPlayerWidth;
+        float rightBorder = newPosition.x + tempPlayerWidth * 2;
+        float topBorder = newPosition.y + tempPlayerHeight;
+        float bottomBorder = newPosition.y;
+
+        boolean collidedLeft = isColliding(leftBorder, topBorder) || isColliding(leftBorder, bottomBorder);
+        boolean collidedRight = isColliding(rightBorder, topBorder) || isColliding(rightBorder, bottomBorder);
+        boolean collidedTop = isColliding(leftBorder, topBorder) || isColliding(rightBorder, topBorder);
+        boolean collidedBottom = isColliding(leftBorder, bottomBorder) || isColliding(rightBorder, bottomBorder);
+
+        if (collidedLeft || collidedRight) {
+            player.setPosition(oldPosition.x, newPosition.y);
+        }
+        if (collidedTop || collidedBottom) {
+            player.setPosition(newPosition.x, oldPosition.y);
+        }
+    }
+
+    private void showInteractionDialog(String objId) {
+        if (objId.matches("obj\\d+")) {
+            for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
+                Gdx.app.log("Mission Load", entry.getKey() + " status: " + entry.getValue());
+            }
+            System.out.println(missionCompletionStatus.getOrDefault(objId, false));
+            // 미션이 이미 완료되었는지 확인
+            if (!missionCompletionStatus.getOrDefault(objId, false)) {
+                player.setCanMove(false);
+                switch (objId){
+                    case "obj1":
+                        missionDialog = new MissionDialog("",skin, stage);
+                        missionDialog.showMission(stage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+                            //TODO 미션 클리어하면 objon안보이게 설정
+//                            updateMissionCompletionStatus(); //미션 클리어시 동상 상호작용 레이어 안보이게 설정
+                            _Imported_ClientBase.setMission(0,true);
+                        });
+                        break;
+                    case "obj2":
+                        //객체를 다시 초기화하지 않음으로써 기존에 진행하던 과정 보존
+//                        missionDialog2 = new MissionDialog2("미션2",skin,uiStage);
+                        missionDialog2.showMission(stage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog2.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+//                            updateMissionCompletionStatus();
+                            _Imported_ClientBase.setMission(1,true);
+                        });
+                        break;
+                    case "obj3":
+                        missionDialog3 = new MissionDialog3("미션3",skin, stage);
+                        missionDialog3.showMission(stage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog3.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+//                            updateMissionCompletionStatus();
+                            _Imported_ClientBase.setMission(2,true);
+                        });
+                        break;
+                    case "obj4":
+                        missionDialog4 = new MissionDialog4("미션4",skin, stage);
+                        missionDialog4.showMission(stage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog4.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+//                            updateMissionCompletionStatus();
+                            _Imported_ClientBase.setMission(3,true);
+                        });
+                        break;
+                    case "obj5":
+                        missionDialog5 = new MissionDialog5("미션5",skin, stage);
+                        missionDialog5.showMission(stage);
+
+                        // 미션 완료 시 서버에 알림
+                        missionDialog5.setMissionCompleteCallback(() -> {
+                            missionCompletionStatus.put(objId, true);
+//                            updateMissionCompletionStatus();
+                            _Imported_ClientBase.setMission(4,true);
+                        });
+                        break;
+                }
+            }
+        }
+    }
+
+    // 서버에서 미션 완료 상태를 받아와 missionCompletionStatus에 저장하는 메서드
+    private void loadMissionCompletionStatusFromServer() {
+        try {
+            // 서버의 missionState 배열 값을 missionCompletionStatus에 반영
+            for (int i = 0; i < _Imported_ClientBase.missionState.length; i++) {
+                missionCompletionStatus.put("obj" + (i + 1), _Imported_ClientBase.missionState[i]);
+            }
+
+        } catch (Exception e) {
+            Gdx.app.log("Mission Load", "Error loading mission completion status from server", e);
+        }
+    }
+
+
+    //미션 클리어하면 objonlayer가 보이던 것을 안보이게 설정함.
+    //이 메소드는 일시적인 것으로, 계속 안보이게 설정하는 것은 상호작용 관련 로직에 따로 설정함
+    private void updateMissionCompletionStatus() {
+        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
+            String checkObjId = entry.getKey();
+            boolean isMissionComplete = entry.getValue();
+
+            if (isMissionComplete) {
+                objOnLayers.get(checkObjId).setVisible(false);
+            }
+        }
+    }
+
+    private void setMissionState(){
+        if (currentInteractiveObj != null) {
+//            System.out.println(missionCompletionStatus.getOrDefault(currentInteractiveObj, false));
+            switch (currentInteractiveObj) {
+                case "obj1":
+                    if (missionDialog != null) {
+                        isMissionActivated = missionDialog.isShowingMission();
+                    }
+                    break;
+                case "obj2":
+                    if (missionDialog2 != null) {
+                        isMissionActivated = missionDialog2.isShowingMission2();
+                    }
+                    break;
+                case "obj3":
+                    if (missionDialog3 != null) {
+                        isMissionActivated = missionDialog3.isShowingMission3();
+                    }
+                    break;
+                case "obj4":
+                    if (missionDialog4 != null) {
+                        isMissionActivated = missionDialog4.isShowingMission4();
+                    }
+                    break;
+                case "obj5":
+                    if (missionDialog5 != null) {
+                        isMissionActivated = missionDialog5.isShowingMission5();
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void setMissionPosition(){
+        if (isMissionActivated) {
+            missionDialog.setPosition(
+                camera.position.x - (missionDialog.getWidth() / 2),
+                camera.position.y - (missionDialog.getHeight() / 2)
+            );
+            missionDialog2.setPosition(
+                camera.position.x - (missionDialog2.getWidth() / 2),
+                camera.position.y - (missionDialog2.getHeight() / 2)
+            );
+            missionDialog3.setPosition(
+                camera.position.x - (missionDialog3.getWidth() / 2),
+                camera.position.y - (missionDialog3.getHeight() / 2)
+            );
+            missionDialog4.setPosition(
+                camera.position.x - (missionDialog4.getWidth() / 2),
+                camera.position.y - (missionDialog4.getHeight() / 2)
+            );
+            missionDialog5.setPosition(
+                camera.position.x - (missionDialog5.getWidth() / 2),
+                camera.position.y - (missionDialog5.getHeight() / 2)
+            );
+        }else{
+            player.setCanMove(true);
+        }
+    }
+
+    private void checkAllMissionsComplete() {
+        allComplete = true;
+        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
+            if (!entry.getValue()) {
+                allComplete = false;
+                break;
+            }
+        }
+
+        if (allComplete) {
+            System.out.println("all mission clear");
+            // TODO: 게임 클리어 처리
+        }else{
+            System.out.println("some missions are left");
+        }
+    }
+
+    private void deleteDoorClose() {
+        // door-close, door-close1, ... door-close15 레이어들을 모두 제거
+        Array<String> layerNamesToRemove = new Array<>();
+
+        if (layerNamesToRemove.size < 16) {
+            // 먼저 삭제할 레이어의 이름을 수집합니다.
+            for (MapLayer layer : map.getLayers()) {
+                if (layer.getName().startsWith("door-close")) {
+                    layerNamesToRemove.add(layer.getName());
+                }
+            }
+        }
+
+        // 레이어의 이름을 수집한 후, 순차적으로 타이머로 제거합니다.
+        removeDoorCloseLayerSequentially(layerNamesToRemove, layerNamesToRemove.size-1);
+    }
+
+    private void removeDoorCloseLayerSequentially(Array<String> layerNamesToRemove, int index) {
+        // 모든 레이어가 제거되었으면 종료
+        if (index < 0) {
+            return;
+        }
+
+        // 0.5초 후에 현재 레이어를 제거하고, 다음 레이어 제거를 예약합니다.
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                // 현재 레이어 이름 가져오기
+                String layerName = layerNamesToRemove.get(index);
+
+                // 레이어 제거
+                MapLayer layer = map.getLayers().get(layerName);
+                if (layer != null) {
+                    map.getLayers().remove(layer);
+                }
+
+                // collisionLayers에서도 제거
+                for (int i = 0; i < collisionLayers.size; i++) {
+                    TiledMapTileLayer collisionLayer = collisionLayers.get(i);
+                    if (layerName.equals(collisionLayer.getName())) {
+                        collisionLayers.removeIndex(i);
+                        break; // 더 이상의 반복은 필요하지 않으므로 중단
+                    }
+                }
+
+                // 다음 레이어를 제거하도록 재귀 호출 (0.5초 후)
+                removeDoorCloseLayerSequentially(layerNamesToRemove, index - 1);
+            }
+        }, 0.1f); // 0.5초 간격으로 실행
+    }
+
+
+    private void ifColliedShadow() {
+        Vector2 oldPosition = player.getPosition().cpy();
+
+        Vector2 newPosition = player.getPosition();
+        float tempPlayerWidth = playerWidth / 3;
+        float tempPlayerHeight = playerHeight/2 + playerHeight;
+
+        // 캐릭터 충돌 경계선 설정
+        float leftBorder = newPosition.x + tempPlayerWidth;
+        float rightBorder = newPosition.x + tempPlayerWidth * 2;
+        float topBorder = newPosition.y + tempPlayerHeight;
+        float bottomBorder = newPosition.y - tempPlayerHeight;
+
+        boolean collidedLeft = isCollidingWithShadow(leftBorder, topBorder) || isCollidingWithShadow(leftBorder, bottomBorder);
+        boolean collidedRight = isCollidingWithShadow(rightBorder, topBorder) || isCollidingWithShadow(rightBorder, bottomBorder);
+        boolean collidedTop = isCollidingWithShadow(leftBorder, topBorder) || isCollidingWithShadow(rightBorder, topBorder);
+        boolean collidedBottom = isCollidingWithShadow(leftBorder, bottomBorder) || isCollidingWithShadow(rightBorder, bottomBorder);
+
+        if (collidedLeft || collidedRight || collidedTop || collidedBottom) {
+            isEscape=true;
+        }
+    }
+
+    @Override
+    public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        // 게임 시간 업데이트
+        gameStartTimer += delta;  // 이 부분을 updateGameState에서 여기로 이동
+
+        updateGameState(delta);
+        handlePlayerMovement(delta);
+        updateMultiplayerPositions(delta);
+        checkObjectInteractions();
+        updateCamera(delta);
+        setMissionState();
+        setMissionPosition();
+        loadMissionCompletionStatusFromServer();
+        checkAllMissionsComplete();
+
+        if (renderer != null) {
+            renderer.setView(camera);
+
+            MapLayer floorLayer = map.getLayers().get("floor");
+            if (floorLayer != null && floorLayer.isVisible()) {
+
+                renderer.getBatch().begin();
+                renderer.renderTileLayer((TiledMapTileLayer) floorLayer);
+                renderer.getBatch().end();
+            }
+
+            MapLayer onfloorLayer = map.getLayers().get("on_floor");
+            if (onfloorLayer != null && onfloorLayer.isVisible()) {
+
+                renderer.getBatch().begin();
+                renderer.renderTileLayer((TiledMapTileLayer) onfloorLayer);
+                renderer.getBatch().end();
+            }
+
+            //모든 미션 클리어시
+            if (allComplete) {
+                //문 닫힌거 제거
+                deleteDoorClose();
+
+                //탈출구 츨입 확인
+                ifColliedShadow();
+            }
+
+            //탈출구에 출입할시
+            if (isEscape){
+                renderer.getBatch().begin();
+                player.render(renderer.getBatch());
+                renderer.getBatch().end();
+
+                player.setIsEscapeState(true);
+
+                // 플레이어의 위치 가져오기
+                Vector2 playerPos = player.getPosition();
+
+                // 플레이어가 y 좌표로 계속 이동하도록 설정
+                player.setPosition(playerPos.x, playerPos.y += 120 * delta);
+            }
+
+            // fake_wall1 레이어 이전의 모든 레이어를 렌더링 (플레이어보다 아래에 있음)
+            renderer.getBatch().begin();
+            for (int i = 0; i < map.getLayers().getCount(); i++) {
+                if (i == map.getLayers().getIndex("fake_wall1")) {
+                    break;
+                }
+                MapLayer layer = map.getLayers().get(i);
+                if (layer.isVisible() && !layer.getName().equals("on_floor") && !layer.getName().equals("floor")) {
+                    renderer.renderTileLayer((TiledMapTileLayer) layer);
+                }
+            }
+            renderer.getBatch().end();
+
+            // 다른 플레이어들 렌더링 (fake_wall1 레이어보다 아래)
+            renderer.getBatch().begin();
+            for (int i = 0; i < currentRoom.pCount; i++) {
+                if (currentRoom.m_players[i] != null) {
+                    currentRoom.m_players[i].render(renderer.getBatch());
+                }
+            }
+
+            if (isUsingBossSkill && showSkillHitbox) {
+                renderBossSkill(renderer.getBatch());
+            }
+
+            renderer.getBatch().end();
+
+            if (!isEscape){
+                // 본인 캐릭터 렌더링 (다른 플레이어와 분리하여 따로 렌더링)
+                renderer.getBatch().begin();
+                player.render(renderer.getBatch());
+                renderer.getBatch().end();
+            }
+
+            // fake_wall1 레이어 렌더링 (플레이어 위에 위치하도록 렌더링)
+            renderer.getBatch().begin();
+            MapLayer fakeWallLayer = map.getLayers().get(map.getLayers().getIndex("fake_wall1"));
+            if (fakeWallLayer.isVisible()) {
+                renderer.renderTileLayer((TiledMapTileLayer) fakeWallLayer);
+            }
+            renderer.getBatch().end();
+
+            // fake_wall1 이후의 모든 레이어 렌더링 (플레이어보다 아래에 있음)
+            renderer.getBatch().begin();
+            for (int i = map.getLayers().getIndex("fake_wall1") + 1; i < map.getLayers().getCount(); i++) {
+                MapLayer layer = map.getLayers().get(i);
+                if (layer.isVisible()) {
+                    renderer.renderTileLayer((TiledMapTileLayer) layer);
+                }
+            }
+            renderer.getBatch().end();
+        }
+
+        // 디버그 정보 출력 - 실제 필요할 때만 출력하도록 수정
+        if (bossActivated && isBossPlayer && isUsingBossSkill) {
+            float cooldownRemaining = Math.max(0, BOSS_SKILL_COOLDOWN - (gameStartTimer - lastBossSkillTime));
+            Gdx.app.debug("GameScreen", String.format(
+                "Skill State: active=%b, cooldown=%.1f, time=%.1f",
+                isUsingBossSkill,
+                cooldownRemaining,
+                currentBossSkillTime
+            ));
+        }
+
+        gameUI.render();
+
+        // UI 렌더링
+        stage.act(delta);
+        stage.draw();
+    }
+
+    private void renderBossSkill(Batch batch) {
+        if (bossSkillAtlas != null) {
+            float frameTime = currentBossSkillTime / bossSkillDuration;
+            int frameIndex = Math.min((int)(frameTime * 20) + 1, 20);
+            TextureRegion skillFrame = bossSkillAtlas.findRegion("BossSkill" + frameIndex);
+
+            if (skillFrame != null) {
+                Vector2 playerPos = player.getPosition();
+                float playerCenterX = playerPos.x + player.size/2;
+                float playerCenterY = playerPos.y + player.size/2;
+
+                // 스킬 크기 조정
+                float skillWidth = BOSS_SKILL_RANGE;
+                float skillHeight = BOSS_SKILL_RANGE;
+
+                // 스킬 오프셋 설정 (캐릭터로부터의 거리)
+                float skillOffsetX = 40f;
+
+                // 스킬 위치 계산
+                float skillX;
+                if (player.isFacingLeft()) {
+                    // 왼쪽을 볼 때 (<O)
+                    skillX = playerCenterX - skillWidth - skillOffsetX;
+                    batch.draw(skillFrame,
+                        skillX + skillWidth,
+                        playerCenterY - skillHeight/2,
+                        -skillWidth,
+                        skillHeight
+                    );
+                } else {
+                    // 오른쪽을 볼 때 (O>)
+                    skillX = playerCenterX + skillOffsetX;
+                    batch.draw(skillFrame,
+                        skillX,
+                        playerCenterY - skillHeight/2,
+                        skillWidth,
+                        skillHeight
+                    );
+                }
+
+                // 스킬 히트박스 업데이트
+                skillHitbox.x = skillX;
+                skillHitbox.y = playerCenterY - skillHeight/2;
+                skillHitbox.width = skillWidth;
+                skillHitbox.height = skillHeight;
+            }
+        }
+    }
+
 
     //이미지 겹칠시 투명부분 체크
     private boolean checkCollisionWithTransparency(
@@ -295,302 +1021,10 @@ public class GameScreen implements Screen {
         return texture.getTextureData().consumePixmap();
     }
 
-    private void checkObjectInteractions() {
-        Vector2 playerPos = player.getPosition();
-        float playerCenterX = playerPos.x + playerWidth / 2;
-        float playerCenterY = playerPos.y;
-
-        int tileX = (int) (playerCenterX / (map.getProperties().get("tilewidth", Integer.class) * MAP_SCALE));
-        int tileY = (int) (playerCenterY / (map.getProperties().get("tileheight", Integer.class) * MAP_SCALE));
-
-        boolean foundInteraction = false;
-
-        for (Map.Entry<String, TiledMapTileLayer> entry : objOffLayers.entrySet()) {
-            objId = entry.getKey();
-            TiledMapTileLayer offLayer = entry.getValue();
-
-            Cell cell = offLayer.getCell(tileX, tileY);
-            if (cell != null && cell.getTile() != null) {
-                if (!objActiveStates.get(objId) && !missionCompletionStatus.containsKey(objId)) {
-                    objOnLayers.get(objId).setVisible(true);
-                    objActiveStates.put(objId, true);
-                }
-                currentInteractiveObj = objId;
-                foundInteraction = true;
-            }
-        }
-
-        if (!foundInteraction && currentInteractiveObj != null) {
-            if (objActiveStates.get(currentInteractiveObj)) {
-                objOnLayers.get(currentInteractiveObj).setVisible(false);
-                objActiveStates.put(currentInteractiveObj, false);
-            }
-            currentInteractiveObj = null;
-        }
-
-        // 스페이스바로 상호작용 및 미니게임 실행
-        if (currentInteractiveObj != null &&
-            objActiveStates.get(currentInteractiveObj) &&
-            !isMissionActivated &&
-            Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            showInteractionDialog(currentInteractiveObj);
-        }
-    }
-
-    private void handlePlayerMovement(float delta) {
-        Vector2 oldPosition = player.getPosition().cpy();
-        player.update(delta);
-
-        Vector2 newPosition = player.getPosition();
-        float tempPlayerWidth = playerWidth / 3;
-        float tempPlayerHeight = playerHeight / 3;
-
-        // 캐릭터 충돌 경계선 설정
-        float leftBorder = newPosition.x + tempPlayerWidth;
-        float rightBorder = newPosition.x + tempPlayerWidth * 2;
-        float topBorder = newPosition.y + tempPlayerHeight;
-        float bottomBorder = newPosition.y;
-
-        boolean collidedLeft = isColliding(leftBorder, topBorder) || isColliding(leftBorder, bottomBorder);
-        boolean collidedRight = isColliding(rightBorder, topBorder) || isColliding(rightBorder, bottomBorder);
-        boolean collidedTop = isColliding(leftBorder, topBorder) || isColliding(rightBorder, topBorder);
-        boolean collidedBottom = isColliding(leftBorder, bottomBorder) || isColliding(rightBorder, bottomBorder);
-
-        if (collidedLeft || collidedRight) {
-            player.setPosition(oldPosition.x, newPosition.y);
-        }
-        if (collidedTop || collidedBottom) {
-            player.setPosition(newPosition.x, oldPosition.y);
-        }
-    }
-
-    private void showInteractionDialog(String objId) {
-        if (objId.matches("obj\\d+")) {
-            // 미션이 이미 완료되었는지 확인
-            if (!missionCompletionStatus.getOrDefault(objId, false)) {
-                player.setCanMove(false);
-                switch (objId){
-                    case "obj1":
-                        missionDialog = new MissionDialog("미션1",skin,uiStage);
-                        missionDialog.showMission(uiStage);
-
-                        // 미션 완료 시 서버에 알림
-                        missionDialog.setMissionCompleteCallback(() -> {
-                            missionCompletionStatus.put(objId, true);
-                            updateMissionCompletionStatus(); //미션 클리어시 동상 상호작용 레이어 안보이게 설정
-                            // TODO: 서버에 미션 완료 상태 전송
-                            // _Imported_ClientBase.sendMissionComplete(objId);
-                            checkAllMissionsComplete();
-                        });
-                        break;
-                    case "obj2":
-                        //객체를 다시 초기화하지 않음으로써 기존에 진행하던 과정 보존
-                        missionDialog2 = new MissionDialog2("미션2",skin,uiStage);
-                        missionDialog2.showMission(uiStage);
-
-                        // 미션 완료 시 서버에 알림
-                        missionDialog2.setMissionCompleteCallback(() -> {
-                            missionCompletionStatus.put(objId, true);
-                            updateMissionCompletionStatus();
-                            // TODO: 서버에 미션 완료 상태 전송
-                            // _Imported_ClientBase.sendMissionComplete(objId);
-                            checkAllMissionsComplete();
-                        });
-                        break;
-                    case "obj3":
-                        missionDialog3 = new MissionDialog3("미션3",skin,uiStage);
-                        missionDialog3.showMission(uiStage);
-
-                        // 미션 완료 시 서버에 알림
-                        missionDialog3.setMissionCompleteCallback(() -> {
-                            missionCompletionStatus.put(objId, true);
-                            updateMissionCompletionStatus();
-                            // TODO: 서버에 미션 완료 상태 전송
-                            // _Imported_ClientBase.sendMissionComplete(objId);
-                            checkAllMissionsComplete();
-                        });
-                        break;
-                    case "obj4":
-                        missionDialog4 = new MissionDialog4("미션4",skin,uiStage);
-                        missionDialog4.showMission(uiStage);
-
-                        // 미션 완료 시 서버에 알림
-                        missionDialog4.setMissionCompleteCallback(() -> {
-                            missionCompletionStatus.put(objId, true);
-                            updateMissionCompletionStatus();
-                            // TODO: 서버에 미션 완료 상태 전송
-                            // _Imported_ClientBase.sendMissionComplete(objId);
-                            checkAllMissionsComplete();
-                        });
-                        break;
-                    case "obj5":
-                        missionDialog5 = new MissionDialog5("미션5",skin,uiStage);
-                        missionDialog5.showMission(uiStage);
-
-                        // 미션 완료 시 서버에 알림
-                        missionDialog5.setMissionCompleteCallback(() -> {
-                            missionCompletionStatus.put(objId, true);
-                            updateMissionCompletionStatus();
-                            // TODO: 서버에 미션 완료 상태 전송
-                            // _Imported_ClientBase.sendMissionComplete(objId);
-                            checkAllMissionsComplete();
-                        });
-                        break;
-                }
-            }
-        }
-    }
-
-    //미션 클리어하면 objonlayer가 보이던 것을 안보이게 설정함.
-    //이 메소드는 일시적인 것으로, 계속 안보이게 설정하는 것은 상호작용 관련 로직에 따로 설정함
-    private void updateMissionCompletionStatus() {
-        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
-            String checkObjId = entry.getKey();
-            boolean isMissionComplete = entry.getValue();
-
-            if (isMissionComplete) {
-                objOnLayers.get(checkObjId).setVisible(false);
-            }
-        }
-    }
-
-    private void setMissionState(){
-        if (currentInteractiveObj != null) {
-            System.out.println(missionCompletionStatus.getOrDefault(currentInteractiveObj, false));
-            switch (currentInteractiveObj) {
-                case "obj1":
-                    if (missionDialog != null) {
-                        isMissionActivated = missionDialog.isShowingMission();
-                    }
-                    break;
-                case "obj2":
-                    if (missionDialog2 != null) {
-                        isMissionActivated = missionDialog2.isShowingMission2();
-                    }
-                    break;
-                case "obj3":
-                    if (missionDialog3 != null) {
-                        isMissionActivated = missionDialog3.isShowingMission3();
-                    }
-                    break;
-                case "obj4":
-                    if (missionDialog4 != null) {
-                        isMissionActivated = missionDialog4.isShowingMission4();
-                    }
-                    break;
-                case "obj5":
-                    if (missionDialog5 != null) {
-                        isMissionActivated = missionDialog5.isShowingMission5();
-                    }
-                    break;
-            }
-        }
-    }
-
-    private void setMissionPosition(){
-        if (isMissionActivated) {
-            missionDialog.setPosition(
-                camera.position.x - (missionDialog.getWidth() / 2),
-                camera.position.y - (missionDialog.getHeight() / 2)
-            );
-            missionDialog2.setPosition(
-                camera.position.x - (missionDialog2.getWidth() / 2),
-                camera.position.y - (missionDialog2.getHeight() / 2)
-            );
-            missionDialog3.setPosition(
-                camera.position.x - (missionDialog3.getWidth() / 2),
-                camera.position.y - (missionDialog3.getHeight() / 2)
-            );
-            missionDialog4.setPosition(
-                camera.position.x - (missionDialog4.getWidth() / 2),
-                camera.position.y - (missionDialog4.getHeight() / 2)
-            );
-            missionDialog5.setPosition(
-                camera.position.x - (missionDialog5.getWidth() / 2),
-                camera.position.y - (missionDialog5.getHeight() / 2)
-            );
-        }else{
-            player.setCanMove(true);
-        }
-    }
-
-    private void checkAllMissionsComplete() {
-        boolean allComplete = true;
-        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
-            if (!entry.getValue()) {
-                allComplete = false;
-                break;
-            }
-        }
-
-        if (allComplete) {
-            // TODO: 게임 클리어 처리
-        }
-    }
-
-    @Override
-    public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        handlePlayerMovement(delta);
-        updateMultiplayerPositions(delta);
-        checkObjectInteractions();
-        updateCamera(delta);
-        setMissionState();
-        setMissionPosition();
-
-        if (renderer != null) {
-            renderer.setView(camera);
-
-            // fake_wall1 레이어 이전의 모든 레이어를 렌더링 (플레이어보다 아래에 있음)
-            renderer.getBatch().begin();
-            for (int i = 0; i < map.getLayers().getCount(); i++) {
-                if (i == map.getLayers().getIndex("fake_wall1")) {
-                    break;
-                }
-                MapLayer layer = map.getLayers().get(i);
-                if (layer.isVisible()) {
-                    renderer.renderTileLayer((TiledMapTileLayer) layer);
-                }
-            }
-            renderer.getBatch().end();
-
-            // 플레이어 및 다른 플레이어들 렌더링 (fake_wall1 레이어보다 아래)
-            renderer.getBatch().begin();
-            for (int i = 0; i < currentRoom.pCount; i++) {
-                if (currentRoom.m_players[i] != null) {
-                    currentRoom.m_players[i].render(renderer.getBatch());
-                }
-            }
-            player.render(renderer.getBatch());
-            renderer.getBatch().end();
-
-            // fake_wall1 레이어 렌더링 (플레이어 위에 위치하도록 렌더링)
-            renderer.getBatch().begin();
-            MapLayer fakeWallLayer = map.getLayers().get(map.getLayers().getIndex("fake_wall1"));
-            if (fakeWallLayer.isVisible()) {
-                renderer.renderTileLayer((TiledMapTileLayer) fakeWallLayer);
-            }
-            renderer.getBatch().end();
-
-            // fake_wall1 이후의 모든 레이어 렌더링 (플레이어보다 아래에 있음)
-            renderer.getBatch().begin();
-            for (int i = map.getLayers().getIndex("fake_wall1") + 1; i < map.getLayers().getCount(); i++) {
-                MapLayer layer = map.getLayers().get(i);
-                if (layer.isVisible()) {
-                    renderer.renderTileLayer((TiledMapTileLayer) layer);
-                }
-            }
-            renderer.getBatch().end();
-        }
-
-        // UI 렌더링
-        uiStage.act(delta);
-        uiStage.draw();
-    }
-
     private void updateCamera(float delta) {
+        if (isEscape){
+            return;
+        }
         if (Gdx.input.isKeyPressed(Input.Keys.EQUALS)) {
             currentZoom = Math.max(MIN_ZOOM, currentZoom - ZOOM_SPEED * delta);
         }
@@ -675,14 +1109,32 @@ public class GameScreen implements Screen {
     }
 
     @Override
+    public void show() {
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);
+        Gdx.input.setInputProcessor(multiplexer);
+    }
+
+    @Override
     public void dispose() {
         if (renderer != null) renderer.dispose();
         if (map != null) map.dispose();
-        if (uiStage != null) uiStage.dispose();
+        if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
+        if (batch != null) batch.dispose();
+        if (bossSkillAtlas != null) bossSkillAtlas.dispose();
+        if (gameUI != null) gameUI.dispose();
+        if (bossSkillAtlas != null) {
+            bossSkillAtlas.dispose();
+        }
+        if (bossAttackLeftAnimation != null && bossAttackLeftAnimation.getKeyFrame(0) != null) {
+            bossAttackLeftAnimation.getKeyFrame(0).getTexture().dispose();
+        }
+        if (bossAttackRightAnimation != null && bossAttackRightAnimation.getKeyFrame(0) != null) {
+            bossAttackRightAnimation.getKeyFrame(0).getTexture().dispose();
+        }
     }
 
-    @Override public void show() {Gdx.input.setInputProcessor(multiplexer);}
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}

@@ -99,7 +99,8 @@ public class SinglePlayerGameScreen implements Screen {
     }
 
     private void createSinglePlayer() {
-        player = new Player("훈련중", 0, 0, playerWidth);
+        player = new Player("훈련중", 0, 0, playerWidth, true);
+
     }
 
     private void loadMap() {
