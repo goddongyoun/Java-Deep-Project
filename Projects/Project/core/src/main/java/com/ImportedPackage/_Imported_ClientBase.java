@@ -22,6 +22,7 @@ import java.util.concurrent.Future;
 
 import com.mygdx.game.PlayerOfMulti;
 import com.mygdx.game.PlayerOfMulti.PlayerState;
+import com.mygdx.game.screens.GameScreen;
 import com.mygdx.game.screens.LobbyScreen;
 
 public class _Imported_ClientBase {
@@ -474,6 +475,22 @@ public class _Imported_ClientBase {
         }
     }
 
+    public static String setEnd() {
+    	String saver = null;
+        try {
+            tcpWriter_toSend.write("setEnd"); tcpWriter_toSend.newLine();
+            tcpWriter_toSend.flush();
+            saver = tcpReader_toSend.readLine();
+
+            return saver;
+        } catch(IOException e) {
+            e.printStackTrace();
+            return "Error CLI 488 [LOG]";
+        } finally {
+
+        }
+    }
+    
     private static boolean alreadyRunning = false;
 
     public static void changeName(String newName) {
@@ -626,6 +643,9 @@ public class _Imported_ClientBase {
                                     }
                                 }
                                 System.out.println("end");
+                            }
+                            else if(saver.equals("EveryBodyEnded")) {
+                            	GameScreen.everybodyEnd = true;
                             }
                         }
                     }

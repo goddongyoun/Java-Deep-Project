@@ -22,7 +22,7 @@ public class PlayerOfMulti {
     private float speedX = 160f;
     private float speedY = 120f;
     private Rectangle bounds;
-    private float size;
+    public float size;
     private Vector2 serverPosition = new Vector2();
 
     public boolean isUsingSkill = false;
@@ -70,13 +70,13 @@ public class PlayerOfMulti {
     float rollTime;
 
     private float stateTime;
-    private boolean facingLeft = false;
+    public boolean facingLeft = false;
     public PlayerState currentState;
     public boolean isBoss = false;
     private boolean isPetrified = false;
 
     private BitmapFont font;
-    private Color nicknameColor;
+    public Color nicknameColor;
     private Color outlineColor;
     private GlyphLayout glyphLayout;
     private int fontSize = 19;
@@ -87,6 +87,10 @@ public class PlayerOfMulti {
         IDLE, RUNNING, ROLLING, PETRIFIED, BOSS_IDLE, BOSS_RUNNING, BOSS_ATTACKING
     }
 
+    public void resetStateTime() {
+        stateTime = 0;
+    }
+    
     public PlayerOfMulti(String nickname, float x, float y, float size) {
         this.nickname = nickname;
         this.position = new Vector2(x, y);
@@ -108,6 +112,19 @@ public class PlayerOfMulti {
         this.font.getData().setScale(1);
     }
 
+    public void startBossAttack() {
+        if (isBoss) {
+            currentState = PlayerState.BOSS_ATTACKING;
+            stateTime = 0; // 애니메이션 시간 초기화
+        }
+    }
+
+    public void endBossAttack() {
+        if (isBoss) {
+            currentState = PlayerState.BOSS_IDLE;
+        }
+    }
+    
     private void loadTextures() {
         try {
             loadBasicAnimations();
@@ -257,7 +274,8 @@ public class PlayerOfMulti {
                 updateMovement(dx, dy, delta);
             }
         }
-
+        
+        //System.out.println(serverPlayerState + " " + currentState);
         if (serverPlayerState == PlayerState.ROLLING && currentState != PlayerState.ROLLING) {
             startRolling();
         }
@@ -325,7 +343,7 @@ public class PlayerOfMulti {
         // - 서버로부터 받은 상태(구르기/보스변신/보스스킬)를 처리
         // - 각 상태에 맞는 애니메이션 재생
         // - 특히 구르기의 경우 방향 정보도 함께 처리
-        try {
+    	try {
             if (state.contains("/")) {
                 String[] parts = state.split("/");
                 PlayerState newState = PlayerState.valueOf(parts[0]);
@@ -335,7 +353,11 @@ public class PlayerOfMulti {
                 }
                 setState(newState);
             } else {
-                setState(PlayerState.valueOf(state));
+                PlayerState newState = PlayerState.valueOf(state);
+                if (newState == PlayerState.BOSS_ATTACKING) {
+                    stateTime = 0;  // 보스 공격 애니메이션 시작 시 시간 초기화
+                }
+                setState(newState);
             }
         } catch (IllegalArgumentException e) {
             Gdx.app.error("PlayerOfMulti", "Invalid state received: " + state);
@@ -343,9 +365,11 @@ public class PlayerOfMulti {
     }
 
     private void startRolling() {
+    	System.out.println("multi Start Roll Came");
         isRolling = true;
         rollingStartTime = stateTime;
         currentState = PlayerState.ROLLING;
+        serverPlayerState = currentState;
         lastRollingTime = TimeUtils.millis();
         rollStartPosition.set(position);
     }
@@ -379,6 +403,11 @@ public class PlayerOfMulti {
         //_Imported_ClientBase.sendBossTransform(true); TODO: erased
     }
 
+    public void transformToFlog() {
+    	isBoss = false;
+        currentState = PlayerState.IDLE;
+    }
+    
     private TextureRegion getCurrentFrame() {
         try {
             if (isPetrified) {
@@ -388,12 +417,16 @@ public class PlayerOfMulti {
             }
 
             if (isBoss) {
+            	// 상태 전환 디버그 로그 추가
+                //Gdx.app.log("Player", "Current state: " + currentState + ", stateTime: " + stateTime);
+
                 switch (currentState) {
                     case BOSS_RUNNING:
                         return facingLeft ?
                             bossRunLeftAnimation.getKeyFrame(stateTime, true) :
                             bossRunRightAnimation.getKeyFrame(stateTime, true);
                     case BOSS_ATTACKING:
+                        Gdx.app.log("Player", "Playing boss attack animation");
                         return facingLeft ?
                             bossAttackLeftAnimation.getKeyFrame(stateTime, false) :
                             bossAttackRightAnimation.getKeyFrame(stateTime, false);

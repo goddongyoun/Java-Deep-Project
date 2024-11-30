@@ -29,6 +29,7 @@ class User{
 	boolean isDead = false;
 	boolean isUsingSkill = false;
 	boolean skillFacingLeft = false;
+	boolean isEnd = false;
 	
 	User(String _name, InetAddress _ip){
 		name = _name;
@@ -75,6 +76,7 @@ class Room{
 	Mission missions[] = new Mission[missionNum]; // Mission Control Class
 	int updateTime = 0;
 	int skillUpdateTime = 0;
+	boolean everybodyEnd = false;
 	
 	Room(int gameRecogPort, String roomName){
 		this.gameRecogPort = gameRecogPort;
@@ -140,8 +142,33 @@ class Room{
 			chatNum = -1;
 			start = false;
 			bossInd = -1;
+			updateTime = 0;
+			skillUpdateTime = 0;
+			chatLog.clear();
+			for(int i = 0; i<missionNum; i++) {
+				missions[i].resetAll();
+			}
+			everybodyEnd = false;
 			return -4;
 		}
+		return 0;
+	}
+	
+	int resetToRejoin() {
+		System.out.println(gameRecogPort + " now been resetted");
+		chatNum = -1;
+		start = false;
+		bossInd = -1;
+		updateTime = 0;
+		skillUpdateTime = 0;
+		chatLog.clear();
+		for(int i = 0; i<missionNum; i++) {
+			missions[i].resetAll();
+		}
+		for(int i = 0; i<missionNum; i++) {
+			missions[i] = new Mission(ServerBase.random.nextInt(5));
+		}
+		everybodyEnd = false;
 		return 0;
 	}
 	
@@ -218,6 +245,40 @@ class Room{
 			}
 		}
 		return -1;
+	}
+	
+	int setEnd(String name) {
+		for (int i = 0; i < curUserNum; i++) {
+			if (users[i] != null && users[i].name.equals(name)) {
+				users[i].isEnd = true;
+				break;
+			}
+		}
+		
+		boolean allEnded = true;
+		for (int i = 0; i < curUserNum; i++) {
+			if (users[i] != null && i == bossInd) {
+				continue;
+			}
+		    if (users[i] != null && !users[i].isEnd) {
+		        allEnded = false;
+		        break;
+		    }
+		}
+		if (allEnded) {
+			start = false;
+			everybodyEnd = true;
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			resetToRejoin();
+		    return 77;
+		}
+		else {
+			return 0;
+		}
 	}
 }
 
@@ -483,6 +544,15 @@ class Clients implements Runnable{
 							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
 						}
 					}
+					else if(saver.equals("setEnd")) {
+						if(RecogPort == -1) {
+							tcpWriter.write("NotJoinedYet"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+						else {
+							ServerBase.rooms.get(RecogPort).setEnd(name);
+							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
+						}
+					}
 					else {
 						System.out.println("? " + saver + sock.getInetAddress());
 						tcpWriter.write("Unknown Request."); tcpWriter.newLine(); tcpWriter.flush();
@@ -541,6 +611,12 @@ class Clients implements Runnable{
 							}
 							tcpWriter.write("End"); tcpWriter.newLine(); tcpWriter.flush();
 							skillUpdateTime = ServerBase.rooms.get(RecogPort).skillUpdateTime;
+						}
+						else if(ServerBase.rooms.get(RecogPort).everybodyEnd == true) {
+							tcpWriter.write("EveryBodyEnded"); tcpWriter.newLine(); tcpWriter.flush();
+							isStarted = false;
+							updateTime = 0;
+							skillUpdateTime = 0;
 						}
 						else {
 							tcpWriter.write("KA"); tcpWriter.newLine(); tcpWriter.flush(); // KA means Keep Alive

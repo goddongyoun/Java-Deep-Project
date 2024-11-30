@@ -27,6 +27,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
 import com.mygdx.game.Player;
 import com.mygdx.game.PlayerOfMulti;
+import com.mygdx.game.PlayerOfMulti.PlayerState;
 import com.mygdx.game.Room;
 import com.mygdx.game.ui.*;
 
@@ -100,11 +101,11 @@ public class GameScreen implements Screen {
     private Animation<TextureRegion> bossAttackRightAnimation;
 
     //미니게임 관련
-    MissionDialog missionDialog;
-    MissionDialog2 missionDialog2;
-    MissionDialog3 missionDialog3;
-    MissionDialog4 missionDialog4;
-    MissionDialog5 missionDialog5;
+    public MissionDialog missionDialog;
+    public MissionDialog2 missionDialog2;
+    public MissionDialog3 missionDialog3;
+    public MissionDialog4 missionDialog4;
+    public MissionDialog5 missionDialog5;
     private boolean isMissionActivated=false;
     private boolean allComplete=false;
 
@@ -113,9 +114,13 @@ public class GameScreen implements Screen {
 
     private Pattern doorClosePattern;
 
+    public static boolean everybodyEnd = false;
+    
     InputMultiplexer multiplexer;
 
     public GameScreen(Main game) {
+        everybodyEnd = false;
+        allComplete = false;
         this.game = game;
         this.currentRoom = game.getCurrentRoom();
 
@@ -289,13 +294,9 @@ public class GameScreen implements Screen {
 
     private void updateGameState(float delta) {
         if (!bossActivated) {
-            gameStartTimer += delta;
+            //gameStartTimer += delta;
             if (gameStartTimer >= BOSS_ACTIVATION_TIME) {
-                // TODO: 보스 변신 처리
-                // - 20초 후 보스 변신 처리
-                // - 보스 플레이어 확인 및 변신 처리
-                // - 변신 상태 서버에 전송
-                // - 다른 플레이어들에게도 보스 변신이 보이도록 처리
+            	System.out.println("Boss came " + gameStartTimer);
                 bossActivated = true;
                 String bossName = _Imported_ClientBase.getBossName();
                 isBossPlayer = bossName != null && bossName.equals(player.getNickname());
@@ -319,6 +320,9 @@ public class GameScreen implements Screen {
         if (bossActivated && isBossPlayer) {
             updateBossSkills(delta);
         }
+        else if(bossActivated) {
+        	updateBossSkillsM(delta);
+        }
 
         gameUI.update(delta);
         gameUI.setBossActivated(bossActivated);
@@ -336,7 +340,6 @@ public class GameScreen implements Screen {
                 for (int i = 0; i < currentRoom.pCount; i++) {
                     PlayerOfMulti target = currentRoom.m_players[i];
                     if (target != null && !target.isPetrified() && checkSkillCollision(target)) {
-                        //TODO 석화되는 애니메이션 다른 플레이어한테 보이게 하기
                         System.out.println("hit");
                         currentRoom.m_players[i].setPetrified(true);
                         _Imported_ClientBase.setIsDead(target.getNickname());
@@ -360,6 +363,16 @@ public class GameScreen implements Screen {
                 }
             }
         }
+    }
+    
+    private void updateBossSkillsM(float delta) {
+    	if (isUsingBossSkill) {
+            currentBossSkillTime += delta;
+            
+            if (currentBossSkillTime >= bossSkillDuration) {
+                endBossSkill();
+            }
+    	}
     }
 
     private void updateSkillHitbox() {
@@ -389,8 +402,6 @@ public class GameScreen implements Screen {
         return skillHitbox.overlaps(targetBounds);
     }
 
-
-
     private void useBossSkill() {
         isUsingBossSkill = true;
         currentBossSkillTime = 0;
@@ -402,6 +413,19 @@ public class GameScreen implements Screen {
         player.resetStateTime();
 
         Gdx.app.log("GameScreen", "Boss skill activated, state: " + player.getCurrentState());
+    }
+    
+    private void useBossSkillM(int pnum) {
+        isUsingBossSkill = true;
+        currentBossSkillTime = 0;
+        lastBossSkillTime = gameStartTimer;
+        showSkillHitbox = true;
+
+        // 보스 공격 상태로 전환하고 stateTime 초기화
+        currentRoom.m_players[pnum].currentState = PlayerOfMulti.PlayerState.BOSS_ATTACKING;
+        currentRoom.m_players[pnum].resetStateTime();
+
+        Gdx.app.log("GameScreen", "Boss skill activated, state: " + currentRoom.m_players[pnum].currentState);
     }
 
     private void endBossSkill() {
@@ -489,13 +513,13 @@ public class GameScreen implements Screen {
             currentInteractiveObj = null;
         }
 
-        //TODO 미션 근처에서 스페이스마 누르면 구르는 모션 발동되는거 해결하기
         // 스페이스바로 상호작용 및 미니게임 실행
         if (currentInteractiveObj != null &&
             objActiveStates.get(currentInteractiveObj) &&
             !isMissionActivated &&
-            Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            showInteractionDialog(currentInteractiveObj);
+            Gdx.input.isKeyJustPressed(Input.Keys.SPACE) &&
+            player.isBoss() == false) {
+            	showInteractionDialog(currentInteractiveObj);
         }
     }
 
@@ -695,10 +719,10 @@ public class GameScreen implements Screen {
         }
 
         if (allComplete) {
-            System.out.println("all mission clear");
+            //System.out.println("all mission clear");
             // TODO: 게임 클리어 처리
         }else{
-            System.out.println("some missions are left");
+            //System.out.println("some missions are left");
         }
     }
 
@@ -773,10 +797,18 @@ public class GameScreen implements Screen {
         boolean collidedBottom = isCollidingWithShadow(leftBorder, bottomBorder) || isCollidingWithShadow(rightBorder, bottomBorder);
 
         if (collidedLeft || collidedRight || collidedTop || collidedBottom) {
-            isEscape=true;
+        	if(player.isBoss() == false) {
+        		isEscape=true;
+        	}
         }
     }
 
+    private float escapeAnimationDuration = 5.0f; // 탈출 애니메이션 지속 시간
+    private float escapeAnimationTimer = 0f;
+    private float petrifiedDuration = 3.0f;  // 석화 지속 시간
+    private float petrifiedTimer = 0f;
+    private boolean isDefeatScreenTriggered = false;
+    
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -794,7 +826,20 @@ public class GameScreen implements Screen {
         setMissionPosition();
         loadMissionCompletionStatusFromServer();
         checkAllMissionsComplete();
-
+        if (player.isPetrified() && !isDefeatScreenTriggered) {
+            petrifiedTimer += delta;
+            
+            if (petrifiedTimer >= petrifiedDuration) {
+                isDefeatScreenTriggered = true;
+                game.setScreen(new EscapeResultScreen(game, false));
+                //dispose();
+            }
+        }
+        
+        if(everybodyEnd == true && player.isBoss()) {
+        	game.setScreen(new EscapeResultScreen(game, true));
+        }
+        
         if (renderer != null) {
             renderer.setView(camera);
 
@@ -835,7 +880,17 @@ public class GameScreen implements Screen {
                 Vector2 playerPos = player.getPosition();
 
                 // 플레이어가 y 좌표로 계속 이동하도록 설정
-                player.setPosition(playerPos.x, playerPos.y += 120 * delta);
+                if (playerPos.y < 2800f) {
+                    player.setPosition(playerPos.x, playerPos.y += 120 * delta);
+                }
+                System.out.println(playerPos.y);
+                
+                escapeAnimationTimer += delta;
+                
+                if (escapeAnimationTimer >= escapeAnimationDuration) {
+                    game.setScreen(new EscapeResultScreen(game, true));
+                    //dispose(); // 현재 화면의 리소스 정리
+                }
             }
 
             // fake_wall1 레이어 이전의 모든 레이어를 렌더링 (플레이어보다 아래에 있음)
@@ -860,7 +915,12 @@ public class GameScreen implements Screen {
             }
 
             if (isUsingBossSkill && showSkillHitbox) {
-                renderBossSkill(renderer.getBatch());
+            	if(player.isBoss()) {
+            		renderBossSkill(renderer.getBatch());
+            	}
+            	else {
+            		renderBossSkillM(renderer.getBatch(), _Imported_ClientBase.getBossName());
+            	}
             }
 
             renderer.getBatch().end();
@@ -930,6 +990,63 @@ public class GameScreen implements Screen {
                 // 스킬 위치 계산
                 float skillX;
                 if (player.isFacingLeft()) {
+                    // 왼쪽을 볼 때 (<O)
+                    skillX = playerCenterX - skillWidth - skillOffsetX;
+                    batch.draw(skillFrame,
+                        skillX + skillWidth,
+                        playerCenterY - skillHeight/2,
+                        -skillWidth,
+                        skillHeight
+                    );
+                } else {
+                    // 오른쪽을 볼 때 (O>)
+                    skillX = playerCenterX + skillOffsetX;
+                    batch.draw(skillFrame,
+                        skillX,
+                        playerCenterY - skillHeight/2,
+                        skillWidth,
+                        skillHeight
+                    );
+                }
+
+                // 스킬 히트박스 업데이트
+                skillHitbox.x = skillX;
+                skillHitbox.y = playerCenterY - skillHeight/2;
+                skillHitbox.width = skillWidth;
+                skillHitbox.height = skillHeight;
+            }
+        }
+    }
+    
+    int bossInd = -1;
+    
+    private void renderBossSkillM(Batch batch, String bossName) {
+        if (bossSkillAtlas != null) {
+            float frameTime = currentBossSkillTime / bossSkillDuration;
+            int frameIndex = Math.min((int)(frameTime * 20) + 1, 20);
+            TextureRegion skillFrame = bossSkillAtlas.findRegion("BossSkill" + frameIndex);
+
+            if (skillFrame != null) {
+            	for(int i = 0; i<currentRoom.pCount; i++) {
+            		if(currentRoom.m_players[i].getNickname().equals(bossName)) {
+            			bossInd = i;
+            			break;
+            		}
+            	}
+                Vector2 playerPos = currentRoom.m_players[bossInd].getPosition();
+                float playerCenterX = playerPos.x + player.size/2;
+                float playerCenterY = playerPos.y + player.size/2;
+
+                // 스킬 크기 조정
+                float skillWidth = BOSS_SKILL_RANGE;
+                float skillHeight = BOSS_SKILL_RANGE;
+
+                // 스킬 오프셋 설정 (캐릭터로부터의 거리)
+                float skillOffsetX = 40f;
+
+                // 스킬 위치 계산
+                float skillX;
+                if (currentRoom.m_players[bossInd].facingLeft) {
                     // 왼쪽을 볼 때 (<O)
                     skillX = playerCenterX - skillWidth - skillOffsetX;
                     batch.draw(skillFrame,
@@ -1047,6 +1164,8 @@ public class GameScreen implements Screen {
         camera.update();
     }
 
+    private boolean skillAnimating = false;
+    
     private void updateMultiplayerPositions(float delta) {
         Vector2 playerPos = player.getPosition();
         float playerCenterX = playerPos.x + playerWidth / 2;
@@ -1063,7 +1182,7 @@ public class GameScreen implements Screen {
         int temp = 0;
         for (int i = 0; i < 5; i++) {
             if (_Imported_ClientBase.players[i] != null) {
-                if (!(_Imported_ClientBase.players[i].name.equals(currentRoom.getme().getNickname()))) {
+                if (!(_Imported_ClientBase.players[i].name.equals(player.getNickname()))) {
                     if (currentRoom.m_players[temp] == null) {
                         currentRoom.m_players[temp] = new PlayerOfMulti(
                             _Imported_ClientBase.players[i].name,
@@ -1072,12 +1191,30 @@ public class GameScreen implements Screen {
                             playerWidth
                         );
                     }
+                    currentRoom.m_players[temp].setPetrified(_Imported_ClientBase.players[i].isDead);
+                    if(_Imported_ClientBase.players[i].isUsingSkill == true) {
+                    	if(_Imported_ClientBase.players[i].name.equals(_Imported_ClientBase.getBossName()) && bossActivated == true) {
+                    		if (!skillAnimating) {  // 애니메이션이 진행중이 아닐 때만 실행
+                                useBossSkillM(temp);
+                                skillAnimating = true;
+                            }
+                    	}
+                    	else {
+                    		currentRoom.m_players[temp].serverPlayerState = PlayerState.ROLLING;
+                    	}
+                    }
+                    else if(_Imported_ClientBase.players[i].name.equals(_Imported_ClientBase.getBossName())) {
+                    	skillAnimating = false;
+                    }
                     currentRoom.m_players[temp].update(
                         _Imported_ClientBase.players[i].x - playerWidth / 2,
                         _Imported_ClientBase.players[i].y - playerHeight / 2,
                         delta
                     );
                     temp++;
+                }
+                else {
+                	player.setPetrified(_Imported_ClientBase.players[i].isDead);
                 }
             }
         }

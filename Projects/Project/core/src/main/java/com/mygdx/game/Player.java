@@ -78,7 +78,7 @@ public class Player {
     private Vector2 rollDirection;
 
     private BitmapFont font;
-    private Color nicknameColor;
+    public Color nicknameColor;
     private Color outlineColor;
     private GlyphLayout glyphLayout;
     private int fontSize = 19;
@@ -265,7 +265,9 @@ public class Player {
 
 
     public void update(float delta) {
-        if (!canMove) return;
+    	if (!canMove) return;
+
+        stateTime += delta;  // stateTime은 항상 업데이트되어야 함
 
         if (isPetrified) {
             currentState = PlayerState.PETRIFIED;
@@ -276,8 +278,6 @@ public class Player {
             isEscape(delta);
             return;
         }
-
-        stateTime += delta;
 
         // 게임 상태에서만 구르기 허용
         if (isInGame && !isBoss && Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && canRoll()) {
@@ -295,6 +295,9 @@ public class Player {
         velocity.setZero();
         boolean isMoving = false;
 
+        if(isPetrified == true) {
+        	return;
+        }
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             velocity.x -= 1;
             facingLeft = true;
@@ -312,6 +315,15 @@ public class Player {
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
             velocity.y -= 1;
             isMoving = true;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.C)) {
+        	
+            _Imported_ClientBase.setMission(0,true);
+            _Imported_ClientBase.setMission(1,true);
+            _Imported_ClientBase.setMission(2,true);
+            _Imported_ClientBase.setMission(3,true);
+            _Imported_ClientBase.setMission(4,true);
+            
         }
 
         if (!velocity.isZero()) {
@@ -417,7 +429,12 @@ public class Player {
         // 보스 변신 상태를 서버에 전송
         //_Imported_ClientBase.sendBossTransform(true); TODO: erased
     }
-
+    
+    public void transformToFlog() {
+    	isBoss = false;
+        currentState = PlayerState.IDLE;
+    }
+    
     public void render(Batch batch) {
         TextureRegion currentFrame = getCurrentFrame();
         if (currentFrame != null && currentFrame.getTexture() != null) {
@@ -456,7 +473,7 @@ public class Player {
 
             if (isBoss) {
                 // 상태 전환 디버그 로그 추가
-                Gdx.app.log("Player", "Current state: " + currentState + ", stateTime: " + stateTime);
+                //Gdx.app.log("Player", "Current state: " + currentState + ", stateTime: " + stateTime);
 
                 switch (currentState) {
                     case BOSS_RUNNING:

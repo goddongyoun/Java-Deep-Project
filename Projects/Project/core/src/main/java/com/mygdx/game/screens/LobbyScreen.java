@@ -37,7 +37,7 @@ public class LobbyScreen implements Screen {
     private final TextureAtlas buttonAtlas;
     private Table buttonTable;
     private final Room room;
-    private boolean isJoined;
+    public static boolean isJoined = false;
 
     public static boolean shouldStart = false;
 
@@ -53,7 +53,8 @@ public class LobbyScreen implements Screen {
         this.layout = new GlyphLayout();
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
         this.room = game.getCurrentRoom();
-        this.isJoined = isJoined;
+        LobbyScreen.isJoined = isJoined;
+        shouldStart = false;
 
         // 방 정보 배경 이미지 로드
         this.roomInfoBackground = new Texture(Gdx.files.internal("ui/Room_info.png"));
@@ -232,7 +233,9 @@ public class LobbyScreen implements Screen {
     	if(shouldStart == true) {
     		handleGameStart();
     	}
-
+    	
+    	//System.out.println(room.getme().size);
+    	
         // 화면 클리어
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
