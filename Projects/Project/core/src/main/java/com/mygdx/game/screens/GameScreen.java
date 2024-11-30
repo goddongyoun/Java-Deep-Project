@@ -115,7 +115,7 @@ public class GameScreen implements Screen {
     private Pattern doorClosePattern;
 
     public static boolean everybodyEnd = false;
-    
+
     InputMultiplexer multiplexer;
 
     public GameScreen(Main game) {
@@ -364,11 +364,11 @@ public class GameScreen implements Screen {
             }
         }
     }
-    
+
     private void updateBossSkillsM(float delta) {
     	if (isUsingBossSkill) {
             currentBossSkillTime += delta;
-            
+
             if (currentBossSkillTime >= bossSkillDuration) {
                 endBossSkill();
             }
@@ -414,7 +414,7 @@ public class GameScreen implements Screen {
 
         Gdx.app.log("GameScreen", "Boss skill activated, state: " + player.getCurrentState());
     }
-    
+
     private void useBossSkillM(int pnum) {
         isUsingBossSkill = true;
         currentBossSkillTime = 0;
@@ -808,7 +808,7 @@ public class GameScreen implements Screen {
     private float petrifiedDuration = 3.0f;  // 석화 지속 시간
     private float petrifiedTimer = 0f;
     private boolean isDefeatScreenTriggered = false;
-    
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -826,20 +826,23 @@ public class GameScreen implements Screen {
         setMissionPosition();
         loadMissionCompletionStatusFromServer();
         checkAllMissionsComplete();
+
         if (player.isPetrified() && !isDefeatScreenTriggered) {
             petrifiedTimer += delta;
-            
+
             if (petrifiedTimer >= petrifiedDuration) {
                 isDefeatScreenTriggered = true;
+                initialAllPlayerStatus();
                 game.setScreen(new EscapeResultScreen(game, false));
                 //dispose();
             }
         }
-        
+
         if(everybodyEnd == true && player.isBoss()) {
+            initialAllPlayerStatus();
         	game.setScreen(new EscapeResultScreen(game, true));
         }
-        
+
         if (renderer != null) {
             renderer.setView(camera);
 
@@ -884,10 +887,11 @@ public class GameScreen implements Screen {
                     player.setPosition(playerPos.x, playerPos.y += 120 * delta);
                 }
                 System.out.println(playerPos.y);
-                
+
                 escapeAnimationTimer += delta;
-                
+
                 if (escapeAnimationTimer >= escapeAnimationDuration) {
+                    initialAllPlayerStatus();
                     game.setScreen(new EscapeResultScreen(game, true));
                     //dispose(); // 현재 화면의 리소스 정리
                 }
@@ -1017,9 +1021,9 @@ public class GameScreen implements Screen {
             }
         }
     }
-    
+
     int bossInd = -1;
-    
+
     private void renderBossSkillM(Batch batch, String bossName) {
         if (bossSkillAtlas != null) {
             float frameTime = currentBossSkillTime / bossSkillDuration;
@@ -1075,6 +1079,15 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void initialAllPlayerStatus(){
+        player.initialPlayerStatus();
+        for (int i = 0; i < currentRoom.pCount; i++) {
+            if (currentRoom.m_players[i] != null && currentRoom.m_players[i].isPetrified()) {
+                currentRoom.m_players[i].setPetrified(false);
+                _Imported_ClientBase.players[i].isDead=false;
+            }
+        }
+    }
 
     //이미지 겹칠시 투명부분 체크
     private boolean checkCollisionWithTransparency(
@@ -1165,7 +1178,7 @@ public class GameScreen implements Screen {
     }
 
     private boolean skillAnimating = false;
-    
+
     private void updateMultiplayerPositions(float delta) {
         Vector2 playerPos = player.getPosition();
         float playerCenterX = playerPos.x + playerWidth / 2;

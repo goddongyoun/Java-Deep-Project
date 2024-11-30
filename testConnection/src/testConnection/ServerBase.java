@@ -30,17 +30,24 @@ class User{
 	boolean isUsingSkill = false;
 	boolean skillFacingLeft = false;
 	boolean isEnd = false;
-	
+
 	User(String _name, InetAddress _ip){
 		name = _name;
 		ip = _ip;
 	}
-	
+
+	void resetStatus() {
+		isDead = false;
+		isUsingSkill = false;
+		skillFacingLeft = false;
+		isEnd = false;
+	}
+
 	void setLocation(float x, float y) {
 		loc[0] = x;
 		loc[1] = y;
 	}
-	
+
 	float[] getLocation() {
 		return loc;
 	}
@@ -49,12 +56,12 @@ class User{
 class Mission{
 	boolean isCleard = false;
 	int typeOfMission = -1;
-	
+
 	Mission(int missionType){
 		this.isCleard = false;
 		this.typeOfMission = missionType;
 	}
-	
+
 	public void resetAll() {
 		this.isCleard = false;
 		this.typeOfMission = -1;
@@ -65,7 +72,7 @@ class Room{
 	public boolean unconnectable = false;
 	int gameRecogPort = 0;
 	User users[] = new User[5];
-	final int MAX_USER = 5; 
+	final int MAX_USER = 5;
 	int curUserNum = 0;
 	public List<String> chatLog = new ArrayList<>();
 	public int chatNum = -1;
@@ -77,7 +84,7 @@ class Room{
 	int updateTime = 0;
 	int skillUpdateTime = 0;
 	boolean everybodyEnd = false;
-	
+
 	Room(int gameRecogPort, String roomName){
 		this.gameRecogPort = gameRecogPort;
 		this.roomName = roomName;
@@ -86,10 +93,10 @@ class Room{
 		}
 		return;
 	}
-	
-	/** 
+
+	/**
 	 * -1 Too Many users, -2 same Ip found, -3 Unconnectable, -4 Same Name Found, 0 success
-	 * 
+	 *
 	 */
 	int newUserCome(String name, InetAddress ip) {
 		if(unconnectable == true) {
@@ -100,10 +107,10 @@ class Room{
 		}
 		for(int i = 0; i < curUserNum; i++) {
 			if(users[i] != null) {
-				/*if(users[i].ip.equals(ip)) {
-					return -2;
-				}
-				else*/ if(users[i].name.equals(name)) {
+            /*if(users[i].ip.equals(ip)) {
+               return -2;
+            }
+            else*/ if(users[i].name.equals(name)) {
 					System.out.println("Same Name");
 					return -4;
 				}
@@ -113,7 +120,7 @@ class Room{
 		System.out.println("Now curUserNum is " + curUserNum + " from " + gameRecogPort);
 		return 0;
 	}
-	
+
 	/**
 	 * Request to user out
 	 * @param name
@@ -144,6 +151,11 @@ class Room{
 			bossInd = -1;
 			updateTime = 0;
 			skillUpdateTime = 0;
+			for(int i = 0; i<MAX_USER; i++) {
+				if(users[i] != null) {
+					users[i].resetStatus();
+				}
+			}
 			chatLog.clear();
 			for(int i = 0; i<missionNum; i++) {
 				missions[i].resetAll();
@@ -153,7 +165,7 @@ class Room{
 		}
 		return 0;
 	}
-	
+
 	int resetToRejoin() {
 		System.out.println(gameRecogPort + " now been resetted");
 		chatNum = -1;
@@ -168,10 +180,15 @@ class Room{
 		for(int i = 0; i<missionNum; i++) {
 			missions[i] = new Mission(ServerBase.random.nextInt(5));
 		}
+		for(int i = 0; i<MAX_USER; i++) {
+			if(users[i] != null) {
+				users[i].resetStatus();
+			}
+		}
 		everybodyEnd = false;
 		return 0;
 	}
-	
+
 	float[][] getLocations() {
 		float[][] locations = new float[curUserNum][2];
 		int idx = 0;
@@ -182,32 +199,32 @@ class Room{
 		}
 		return locations;
 	}
-	
+
 	public String getLocToSortString() {
 		StringBuilder sb = null;
 		boolean again = true;
-        while(again == true) {
-        	again = false;
-    		sb = new StringBuilder();
-            sb.append(curUserNum);
-        	for (int i = 0; i < MAX_USER; i++) {
-    			try {
-    				User user = users[i];
-    				if(user != null) {
-    					sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/")
-						.append(user.getLocation()[1]).append("/").append(user.isDead);
-    				}
-    			} catch (Exception e) {
-    				//e.printStackTrace();
-    				//again = true;
-    				break;
-    			}
-    		}
-        }
+		while(again == true) {
+			again = false;
+			sb = new StringBuilder();
+			sb.append(curUserNum);
+			for (int i = 0; i < MAX_USER; i++) {
+				try {
+					User user = users[i];
+					if(user != null) {
+						sb.append(" ").append(user.name).append("/").append(user.getLocation()[0]).append("/")
+								.append(user.getLocation()[1]).append("/").append(user.isDead);
+					}
+				} catch (Exception e) {
+					//e.printStackTrace();
+					//again = true;
+					break;
+				}
+			}
+		}
 
-        return sb.toString();
+		return sb.toString();
 	}
-	
+
 	int setLocation(String name, float x, float y) {
 		for (int i = 0; i < curUserNum; i++) {
 			if (users[i] != null && users[i].name.equals(name)) {
@@ -217,7 +234,7 @@ class Room{
 		}
 		return -1;
 	}
-	
+
 	int useSkill(String name, boolean isFacingLeft) {
 		for (int i = 0; i < curUserNum; i++) {
 			if (users[i] != null && users[i].name.equals(name)) {
@@ -232,7 +249,7 @@ class Room{
 		}
 		return -1;
 	}
-	
+
 	int endSkill(String name) {
 		for (int i = 0; i < curUserNum; i++) {
 			if (users[i] != null && users[i].name.equals(name)) {
@@ -246,7 +263,7 @@ class Room{
 		}
 		return -1;
 	}
-	
+
 	int setEnd(String name) {
 		for (int i = 0; i < curUserNum; i++) {
 			if (users[i] != null && users[i].name.equals(name)) {
@@ -254,16 +271,16 @@ class Room{
 				break;
 			}
 		}
-		
+
 		boolean allEnded = true;
 		for (int i = 0; i < curUserNum; i++) {
 			if (users[i] != null && i == bossInd) {
 				continue;
 			}
-		    if (users[i] != null && !users[i].isEnd) {
-		        allEnded = false;
-		        break;
-		    }
+			if (users[i] != null && !users[i].isEnd) {
+				allEnded = false;
+				break;
+			}
 		}
 		if (allEnded) {
 			start = false;
@@ -274,7 +291,7 @@ class Room{
 				e.printStackTrace();
 			}
 			resetToRejoin();
-		    return 77;
+			return 77;
 		}
 		else {
 			return 0;
@@ -297,12 +314,12 @@ class Clients implements Runnable{
 	InetAddress connectedIP = null;
 	int currentChatNum = 0;
 	String name = "undefined";
-	
+
 	Clients(Socket _sock){
 		sock = _sock;
 		connectedIP = sock.getInetAddress();
 	}
-	
+
 	@Override
 	public void run() {
 		BufferedReader tcpReader;
@@ -310,20 +327,20 @@ class Clients implements Runnable{
 		try {
 			tcpReader = new BufferedReader(new InputStreamReader(sock.getInputStream(), "UTF-8"));
 			tcpWriter = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream(), "UTF-8"));
-			
+
 			String saver = tcpReader.readLine();
 			System.out.println("first message => '" + saver + "' From "+ sock.getRemoteSocketAddress());
-			
+
 			if(saver.equals("MakeConnection")) { // first Connection Check ; Unstructured Request Sockets will be closed
 				saver = tcpReader.readLine();
 				if(saver.equals("plsSend")) {
 					isSender = 1;
 					saver = tcpReader.readLine();
 					String[] parts = saver.split("/");
-			        if (parts.length > 1) {
-			            RecogPort = ServerBase.strToI_map.get(parts[1]);
-			            System.out.println("RecogPort(Int): " + RecogPort);
-			        }
+					if (parts.length > 1) {
+						RecogPort = ServerBase.strToI_map.get(parts[1]);
+						System.out.println("RecogPort(Int): " + RecogPort);
+					}
 					System.out.println(SysoutColors.GREEN + "Connection made to Send " + sock.getRemoteSocketAddress() + SysoutColors.RESET);
 				}
 				else if(saver.equals("plsReceive")) {
@@ -338,13 +355,13 @@ class Clients implements Runnable{
 				sock.close();
 				return;
 			}
-			
+
 			if(isSender == 0) {
 				while((saver = tcpReader.readLine()) != null) {
 					if(!(saver.equals("NewLoc") || saver.equals("GetLoc"))) {
 						System.out.println("TCP received "+ saver + sock.getRemoteSocketAddress());
 					}
-					
+
 					if(saver.equals("MakeGame")) {
 						if(RecogPort == -1) {
 							String temp = tcpReader.readLine();
@@ -354,7 +371,7 @@ class Clients implements Runnable{
 							name = temp;
 							ServerBase.rooms.get(RecogPort).newUserCome(temp, sock.getInetAddress());
 							System.out.println("New Room Init RecogPort is " + (RecogPort));
-							tcpWriter.write("Game Init RecogPort is /" + (ServerBase.iToStr_map.get(RecogPort))); tcpWriter.newLine(); 
+							tcpWriter.write("Game Init RecogPort is /" + (ServerBase.iToStr_map.get(RecogPort))); tcpWriter.newLine();
 							tcpWriter.flush();
 							System.out.println("Sended. new game recog port");
 						}
@@ -527,7 +544,7 @@ class Clients implements Runnable{
 							tcpReader.readLine(); tcpReader.readLine();
 						}
 						else {
-							saver = tcpReader.readLine(); // Name 
+							saver = tcpReader.readLine(); // Name
 							String tempSaver = tcpReader.readLine();
 							ServerBase.rooms.get(RecogPort).useSkill(saver, Boolean.parseBoolean(tempSaver));
 							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
@@ -539,7 +556,7 @@ class Clients implements Runnable{
 							tcpReader.readLine();
 						}
 						else {
-							saver = tcpReader.readLine(); // Name 
+							saver = tcpReader.readLine(); // Name
 							ServerBase.rooms.get(RecogPort).endSkill(saver);
 							tcpWriter.write("Success"); tcpWriter.newLine(); tcpWriter.flush();
 						}
@@ -563,7 +580,7 @@ class Clients implements Runnable{
 				boolean isStarted = false;
 				int updateTime = 0;
 				int skillUpdateTime = 0;
-				
+
 				while(true) {
 					Thread.sleep(10);
 					if(RecogPort != -1) {
@@ -578,7 +595,7 @@ class Clients implements Runnable{
 						else if(ServerBase.rooms.get(RecogPort).start == true && isStarted == false) {
 							isStarted = true;
 							tcpWriter.write("StartGame"); tcpWriter.newLine();
-							
+
 							Room tempR = ServerBase.rooms.get(RecogPort);
 							if(tempR.users[tempR.bossInd] == null) {
 								tcpWriter.write("BossIndError"); tcpWriter.newLine();
@@ -652,7 +669,7 @@ class Clients implements Runnable{
 			}
 		}
 	}
-	
+
 }
 
 public class ServerBase {
@@ -661,30 +678,30 @@ public class ServerBase {
 	public static List<Room> rooms = new ArrayList<>();
 	public static Map<String, Integer> strToI_map = new HashMap<>();
 	public static Map<Integer, String> iToStr_map = new HashMap<>();
-	
+
 	private static String setRanStr() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder(6);
-        
-        for (int i = 0; i < 6; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
-	
+		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		Random random = new Random();
+		StringBuilder sb = new StringBuilder(6);
+
+		for (int i = 0; i < 6; i++) {
+			sb.append(chars.charAt(random.nextInt(chars.length())));
+		}
+		return sb.toString();
+	}
+
 	static void RecogPortDecre() {
 		if((RecogPortNext-1) >= 0) {
 			RecogPortNext--;
 		}
 		return;
 	}
-	
+
 	static int RecogPortIncre() {
 		RecogPortNext++;
 		return RecogPortNext-1;
 	}
-	
+
 	static int MakeNewGame(String nameOfRoom) {
 		for(int i = 0; i < RecogPortNext; i++) {
 			if(rooms.get(i).unconnectable == true) {
@@ -695,13 +712,13 @@ public class ServerBase {
 		rooms.add(new Room(RecogPortIncre(), nameOfRoom));
 		return RecogPortNext-1;
 	}
-	
+
 	static boolean SEND_LOCKED = false;
-	
+
 	static boolean needSend = false;
 	static String stringToBeSended;
 	static InetAddress addressToSend;
-	
+
 	public static void main(String[] args) {
 		try {
 			System.setOut(new PrintStream(System.out, true, "UTF-8"));
@@ -710,20 +727,20 @@ public class ServerBase {
 			e.printStackTrace();
 		}
 		try {/*
-			System.out.println("Trying to connect with DB...");
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/javadeep", "root", "521869");
-			@SuppressWarnings("unused")
-			Statement stmt = conn.createStatement();
-			System.out.println("connect success with DB");*/
-			
+         System.out.println("Trying to connect with DB...");
+         Class.forName("com.mysql.cj.jdbc.Driver");
+         Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/javadeep", "root", "521869");
+         @SuppressWarnings("unused")
+         Statement stmt = conn.createStatement();
+         System.out.println("connect success with DB");*/
+
 			for (int i = 0; i <= 99; i++) {
 				String tempSaver = setRanStr();
-	            strToI_map.put(tempSaver, i);
-	            iToStr_map.put(i, tempSaver);
-	        }
+				strToI_map.put(tempSaver, i);
+				iToStr_map.put(i, tempSaver);
+			}
 			System.out.println("Completed to reset roomcodes...");
-			
+
 			System.out.println("Server trying to start...");
 			//TCP
 			@SuppressWarnings("resource")
@@ -734,12 +751,12 @@ public class ServerBase {
 			@SuppressWarnings("resource")
 			DatagramSocket udpSock = new DatagramSocket(4000);
 			//System.out.println("Port is " + udpSock.getPort());
-			
+
 			System.out.println("Server is receiving.");
-			
+
 			//멀티 스레드 고정 설정
 			ExecutorService executorService = Executors.newCachedThreadPool();
-			
+
 			// UDP receiver
 			executorService.execute(()->{
 				try {
@@ -760,7 +777,7 @@ public class ServerBase {
 					e.printStackTrace();
 				}
 			});
-			
+
 			// UDP sender
 			executorService.execute(()->{
 				try {
@@ -790,7 +807,7 @@ public class ServerBase {
 					e.printStackTrace();
 				}
 			});
-			
+
 			executorService.execute(()->{
 				@SuppressWarnings("resource")
 				Scanner sc = new Scanner(System.in);
@@ -813,7 +830,7 @@ public class ServerBase {
 					}
 				}
 			});
-			
+
 			//TCP receiver
 			while(true) {
 				tcpClientSock = tcpSock.accept();

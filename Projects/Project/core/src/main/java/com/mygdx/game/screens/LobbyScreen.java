@@ -138,7 +138,7 @@ public class LobbyScreen implements Screen {
         int totalPlayers = currentRoom.pCount + 1; // 현재 플레이어 수 (자신 포함)
 
         // 플레이어 수 체크
-        if (totalPlayers < 1) {
+        if (totalPlayers < 2) {
             showDialog("게임 시작 불가", "게임을 시작하려면 최소 2명의 플레이어가 필요합니다.");
             return;
         }
@@ -233,9 +233,9 @@ public class LobbyScreen implements Screen {
     	if(shouldStart == true) {
     		handleGameStart();
     	}
-    	
+
     	//System.out.println(room.getme().size);
-    	
+
         // 화면 클리어
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

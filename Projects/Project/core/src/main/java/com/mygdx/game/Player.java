@@ -83,12 +83,13 @@ public class Player {
     private GlyphLayout glyphLayout;
     private int fontSize = 19;
 
+    //석화상태
     private boolean isPetrified = false;
 
     //움직임 제한 boolean 변수
     private boolean canMove = true;
 
-    //탈출관련
+    //탈출상태
     private boolean isEscape = false;
 
     public enum PlayerState {
@@ -317,13 +318,13 @@ public class Player {
             isMoving = true;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.C)) {
-        	
+
             _Imported_ClientBase.setMission(0,true);
             _Imported_ClientBase.setMission(1,true);
             _Imported_ClientBase.setMission(2,true);
             _Imported_ClientBase.setMission(3,true);
             _Imported_ClientBase.setMission(4,true);
-            
+
         }
 
         if (!velocity.isZero()) {
@@ -429,12 +430,12 @@ public class Player {
         // 보스 변신 상태를 서버에 전송
         //_Imported_ClientBase.sendBossTransform(true); TODO: erased
     }
-    
+
     public void transformToFlog() {
     	isBoss = false;
         currentState = PlayerState.IDLE;
     }
-    
+
     public void render(Batch batch) {
         TextureRegion currentFrame = getCurrentFrame();
         if (currentFrame != null && currentFrame.getTexture() != null) {
@@ -560,6 +561,11 @@ public class Player {
     public void setPosition(float x, float y) {
         this.position.set(x,y);
         this.bounds.setPosition(x,y);
+    }
+
+    public void initialPlayerStatus(){
+        this.isPetrified=false;
+        this.isEscape=false;
     }
 
     public Rectangle getBounds() {
