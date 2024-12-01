@@ -190,17 +190,18 @@ public class EscapeResultScreen implements Screen {
 
         // 5초가 지나면 로비로 전환
         if (screenTimer >= screenDuration) {
-            player.setPosition(Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2);
-            player.size = 32;
-            player.transformToFlog();
-            player.nicknameColor = Color.WHITE;
-            for(int i = 0; i<currentRoom.pCount; i++) {
-                if(currentRoom.m_players[i] != null) {
-                    currentRoom.m_players[i].size = 64;
-                    currentRoom.m_players[i].transformToFlog();
-                    currentRoom.m_players[i].nicknameColor = Color.WHITE;
-                }
-            }
+        	player.setPosition(Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2);
+        	player.size = 32;
+        	player.transformToFlog();
+        	player.nicknameColor = Color.WHITE;
+        	player.setCanMove(true);
+        	for(int i = 0; i<currentRoom.pCount; i++) {
+        		if(currentRoom.m_players[i] != null) {
+        			currentRoom.m_players[i].size = 64;
+        			currentRoom.m_players[i].transformToFlog();
+        			currentRoom.m_players[i].nicknameColor = Color.WHITE;
+        		}
+        	}
             game.setScreen(new LobbyScreen(game, LobbyScreen.isJoined));
             //dispose();
             return;

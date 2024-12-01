@@ -521,7 +521,7 @@ public class GameScreen implements Screen {
         if (currentInteractiveObj != null &&
             objActiveStates.get(currentInteractiveObj) &&
             !isMissionActivated &&
-            Gdx.input.isKeyJustPressed(Input.Keys.SPACE) &&
+            Gdx.input.isKeyJustPressed(Input.Keys.Z) &&
             player.isBoss() == false) {
             	showInteractionDialog(currentInteractiveObj);
         }
