@@ -90,6 +90,9 @@ public class _Imported_ClientBase {
             if (parts.length > 1) {
                 recogPort = parts[1];
                 System.out.println("RecogPort: " + recogPort);
+                if(tcpSock_toRecv.isClosed() == true) {
+                    tcpSock_toRecv = new Socket(SERVER_ADDRESS, SERVER_PORT_TCP);
+                }
                 tcpWriter_toRecv = new BufferedWriter(new OutputStreamWriter(tcpSock_toRecv.getOutputStream(), "UTF-8"));
                 tcpReader_toRecv = new BufferedReader(new InputStreamReader(tcpSock_toRecv.getInputStream(), "UTF-8"));
                 tcpWriter_toRecv.write("MakeConnection"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("plsSend"); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.write("Port is /"+recogPort); tcpWriter_toRecv.newLine(); tcpWriter_toRecv.flush();

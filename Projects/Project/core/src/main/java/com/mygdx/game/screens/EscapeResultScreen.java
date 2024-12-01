@@ -52,10 +52,10 @@ public class EscapeResultScreen implements Screen {
         this.totalPlayer = totalPlayer;
         this.deadPlayer = deadPlayer;
         isWin = winOrDead;
-
+        /*
         if(!player.isBoss()) {
             _Imported_ClientBase.setEnd();
-        }
+        }*/
 
         if(isWin) {
             resultTexture = new Texture(Gdx.files.internal("ui/win.png"));
@@ -190,6 +190,9 @@ public class EscapeResultScreen implements Screen {
 
         // 5초가 지나면 로비로 전환
         if (screenTimer >= screenDuration) {
+        	for(int i = 0; i<_Imported_ClientBase.missionState.length; i++) {
+        		_Imported_ClientBase.missionState[i] = false;
+        	}
         	player.setPosition(Main.WINDOW_WIDTH/2, Main.WINDOW_HEIGHT/2);
         	player.size = 32;
         	player.transformToFlog();

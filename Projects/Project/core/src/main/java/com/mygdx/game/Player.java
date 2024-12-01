@@ -18,6 +18,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.screens.LobbyScreen;
+import com.mygdx.game.ui.MissionDialog;
 import com.mygdx.game.util.FontManager;
 import org.w3c.dom.ls.LSOutput;
 
@@ -281,7 +282,7 @@ public class Player {
         }
 
         // 게임 상태에서만 구르기 허용
-        if (isInGame && !isBoss && Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && canRoll()) {
+        if (isInGame && !isBoss && Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && canRoll() && LobbyScreen.shouldStart == true) {
             startRolling();
         }
 

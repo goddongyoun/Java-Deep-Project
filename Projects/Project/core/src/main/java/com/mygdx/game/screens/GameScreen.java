@@ -122,6 +122,8 @@ public class GameScreen implements Screen {
     InputMultiplexer multiplexer;
 
     public GameScreen(Main game) {
+    	_Imported_ClientBase.endRoll();
+    	endShoted = false;
         everybodyEnd = false;
         allComplete = false;
         this.game = game;
@@ -532,7 +534,7 @@ public class GameScreen implements Screen {
             objActiveStates.get(currentInteractiveObj) &&
             !isMissionActivated &&
             Gdx.input.isKeyJustPressed(Input.Keys.Z) &&
-            player.isBoss() == false) {
+            player.isBoss() == false && player.isPetrified() == false) {
             	showInteractionDialog(currentInteractiveObj);
         }
     }
@@ -803,6 +805,8 @@ public class GameScreen implements Screen {
     private float petrifiedTimer = 0f;
     private boolean isDefeatScreenTriggered = false;
 
+    public static boolean endShoted = false;
+    
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -821,15 +825,44 @@ public class GameScreen implements Screen {
         loadMissionCompletionStatusFromServer();
         checkAllMissionsComplete();
 
-        if (player.isPetrified() && !isDefeatScreenTriggered) {
-            petrifiedTimer += delta;
-
-            if (petrifiedTimer >= petrifiedDuration) {
-                isDefeatScreenTriggered = true;
-                game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
-                initialAllPlayerStatus();
-                //dispose();
-            }
+        if(player.isPetrified()) {
+        	if(petrifiedTimer < petrifiedDuration) {
+        		petrifiedTimer+=delta;
+        	}
+        	else {
+        		if(endShoted == false) {
+        			_Imported_ClientBase.setEnd();
+                	endShoted = true;
+        		}
+        	}
+        	
+        	if(missionDialog.isShowingMission()) {
+            	System.out.println("came1");
+        		missionDialog.stopShowMission();
+        	}
+        	if(missionDialog2.isShowingMission()) {
+            	System.out.println("came2");
+        		missionDialog2.stopShowMission();
+        	}
+        	if(missionDialog3.isShowingMission()) {
+            	System.out.println("came3");
+        		missionDialog3.stopShowMission();
+        	}
+        	if(missionDialog4.isShowingMission()) {
+            	System.out.println("came4");
+        		missionDialog4.stopShowMission();
+        	}
+        	if(missionDialog5.isShowingMission()) {
+            	System.out.println("came5");
+        		missionDialog5.stopShowMission();
+        	}
+        }
+        
+        if (player.isPetrified() && !isDefeatScreenTriggered && everybodyEnd == true) {
+            isDefeatScreenTriggered = true;
+            game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
+            initialAllPlayerStatus();
+            //dispose();
         }
 
         if(everybodyEnd == true && player.isBoss()) {
@@ -867,6 +900,10 @@ public class GameScreen implements Screen {
 
             //탈출구에 출입할시
             if (isEscape){
+            	if(endShoted == false) {
+            		_Imported_ClientBase.setEnd();
+                	endShoted = true;
+            	}
                 renderer.getBatch().begin();
                 player.render(renderer.getBatch());
                 renderer.getBatch().end();
@@ -883,7 +920,7 @@ public class GameScreen implements Screen {
 
                 escapeAnimationTimer += delta;
 
-                if (escapeAnimationTimer >= escapeAnimationDuration) {
+                if (escapeAnimationTimer >= escapeAnimationDuration && everybodyEnd == true) {
                     game.setScreen(new EscapeResultScreen(game, true, deadPlayer, totalPlayer)); //탈출 성공
                     initialAllPlayerStatus();
                     //dispose(); // 현재 화면의 리소스 정리
