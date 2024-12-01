@@ -55,7 +55,7 @@ public class MissionDialog extends Dialog implements Disposable {
     private boolean isNewRound = true;
     private int remainingBalls = 2;
     private float stateTime = 0f;
-    private boolean isShowingMission = false;
+    private static boolean isShowingMission = false;
 
     // 애니메이션 관련
     private TextureAtlas successAtals = new TextureAtlas("publicImages/successes.atlas");
@@ -192,6 +192,11 @@ public class MissionDialog extends Dialog implements Disposable {
         });
     }
 
+    public void stopShowMission() {
+    	isShowingMission = false;
+        MissionDialog.this.hide();
+    }
+    
     //GameScreen에서 미니게임이 열려있는지 확인 용도
     public boolean isShowingMission(){
         return isShowingMission;

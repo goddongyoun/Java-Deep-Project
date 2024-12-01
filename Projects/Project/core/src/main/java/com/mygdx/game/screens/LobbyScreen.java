@@ -105,7 +105,7 @@ public class LobbyScreen implements Screen {
         }
 
         // 설정 버튼
-        AnimatedImageButton editButton = createAnimatedButton(buttonTexture, "settingBtn",
+        /*AnimatedImageButton editButton = createAnimatedButton(buttonTexture, "settingBtn",
             new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -113,6 +113,7 @@ public class LobbyScreen implements Screen {
                     // TODO: 방 설정 다이얼로그 표시
                 }
             });
+        buttonTable.add(editButton).width(112).height(34).padBottom(10).row();*/
 
         // 나가기 버튼
         AnimatedImageButton leaveButton = createAnimatedButtonForStartLeave(startButtonTexture, "leaveLobbyButton",
@@ -123,7 +124,6 @@ public class LobbyScreen implements Screen {
                 }
             });
 
-        buttonTable.add(editButton).width(112).height(34).padBottom(10).row();
         buttonTable.add(leaveButton).width(112).height(34).padBottom(10).row();
 
         stage.addActor(buttonTable);

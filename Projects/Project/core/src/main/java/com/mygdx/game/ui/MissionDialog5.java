@@ -143,6 +143,16 @@ public class MissionDialog5 extends Dialog implements Disposable {
     private Image fail;
     private float failStateTime = 0f; //애니메이션이 0f->처음부터 시작, 0.3f->0.3초 이후부터 시작
 
+    public void stopShowMission() {
+    	isShowingMission = false;
+        MissionDialog5.this.hide();
+    }
+    
+    //GameScreen에서 미니게임이 열려있는지 확인 용도
+    public boolean isShowingMission(){
+        return isShowingMission;
+    }
+    
     public MissionDialog5(String title, Skin skin, Stage stage) {
         super(title, skin);
         this.stage = stage;

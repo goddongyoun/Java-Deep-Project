@@ -120,6 +120,16 @@ public class MissionDialog4 extends Dialog implements Disposable {
     private boolean isFailed = false;
     private Random random = new Random();
 
+    
+    public void stopShowMission() {
+    	isShowingMission = false;
+        MissionDialog4.this.hide();
+    }
+    
+    //GameScreen에서 미니게임이 열려있는지 확인 용도
+    public boolean isShowingMission(){
+        return isShowingMission;
+    }
 
     public MissionDialog4(String title, Skin skin, Stage stage) {
         super(title, skin);

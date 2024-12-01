@@ -305,10 +305,10 @@ public class PlayerOfMulti {
         // 구르기 끝날 때 IDLE 상태로 전환하고 서버에 전송
         if (isInGame) {
             String state = isBoss ? "BOSS_IDLE" : "IDLE";
+            currentState = isBoss ? PlayerState.BOSS_IDLE : PlayerState.IDLE;
+            serverPlayerState = currentState;
             _Imported_ClientBase.endRoll();
         }
-        currentState = isBoss ? PlayerState.BOSS_IDLE : PlayerState.IDLE;
-        serverPlayerState = currentState;
     }
 
     private void updateMovement(float dx, float dy, float delta) {

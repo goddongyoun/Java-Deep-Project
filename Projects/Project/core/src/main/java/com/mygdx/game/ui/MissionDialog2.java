@@ -265,6 +265,16 @@ public class MissionDialog2 extends Dialog implements Disposable {
 
     Random random = new Random();
 
+    public void stopShowMission() {
+    	isShowingMission = false;
+        MissionDialog2.this.hide();
+    }
+    
+    //GameScreen에서 미니게임이 열려있는지 확인 용도
+    public boolean isShowingMission(){
+        return isShowingMission;
+    }
+    
     public MissionDialog2(String title, Skin skin, Stage stage) {
         super(title, skin);
         this.stage = stage;

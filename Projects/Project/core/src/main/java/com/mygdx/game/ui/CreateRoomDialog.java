@@ -226,6 +226,7 @@ public class CreateRoomDialog extends Dialog {
             }
             String saver = _Imported_ClientBase.MakeGame_TCP(roomName); //The returning string looks like 'Success makeGame/ABC123', so the string has to be split by '/'.
             String[] parts = saver.split("/");
+        	System.out.println(saver);
             if(parts[0].equals("Success makeGame")) {
                 if(parts.length > 1) {
                     roomCode = parts[1];
