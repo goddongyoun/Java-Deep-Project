@@ -293,7 +293,7 @@ public class _Imported_ClientBase {
             else {
                 String[] parts = saver.split(" ");
                 playerCount = Integer.parseInt(parts[0]);
-                //System.out.println(saver);
+                //System.out.println(playerCount);
                 try {
                     for (int i = 0; i < playerCount; i++) {
                         String[] coords = parts[i + 1].split("/");
@@ -648,6 +648,7 @@ public class _Imported_ClientBase {
                                 System.out.println("end");
                             }
                             else if(saver.equals("EveryBodyEnded")) {
+                            	System.out.println("EBE captured [LOG]");
                             	GameScreen.everybodyEnd = true;
                             }
                         }

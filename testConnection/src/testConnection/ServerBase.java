@@ -771,7 +771,10 @@ public class ServerBase {
 								System.out.println("Unconnectable Now");
 							}
 							for(int j = 0; j<tempRoom.curUserNum; j++) {
-								System.out.println(tempRoom.users[j].name + " " + tempRoom.users[j].ip);
+								if(tempRoom.users[i] == null) {
+									System.out.println(tempRoom.curUserNum);
+									System.out.println(tempRoom.users[j].name + " " + tempRoom.users[j].ip);
+								}
 							}
 							System.out.println();
 						}

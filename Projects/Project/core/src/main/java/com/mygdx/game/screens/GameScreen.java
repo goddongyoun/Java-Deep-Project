@@ -824,7 +824,12 @@ public class GameScreen implements Screen {
         setMissionPosition();
         loadMissionCompletionStatusFromServer();
         checkAllMissionsComplete();
-
+        
+        if(everybodyEnd == true) {
+        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
+            initialAllPlayerStatus();
+        }
+        
         if(player.isPetrified()) {
         	if(petrifiedTimer < petrifiedDuration) {
         		petrifiedTimer+=delta;
@@ -833,6 +838,10 @@ public class GameScreen implements Screen {
         		if(endShoted == false) {
         			_Imported_ClientBase.setEnd();
                 	endShoted = true;
+        		}
+        		if(everybodyEnd == true) {
+        			game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
+                    initialAllPlayerStatus();
         		}
         	}
 
@@ -859,6 +868,7 @@ public class GameScreen implements Screen {
         }
 
         if (player.isPetrified() && !isDefeatScreenTriggered && everybodyEnd == true) {
+        	System.out.println("862");
             isDefeatScreenTriggered = true;
             game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
             initialAllPlayerStatus();
@@ -866,6 +876,7 @@ public class GameScreen implements Screen {
         }
 
         if(everybodyEnd == true && player.isBoss()) {
+        	System.out.println("870");
         	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 성공
             initialAllPlayerStatus();
         }
@@ -942,7 +953,7 @@ public class GameScreen implements Screen {
 
             // 다른 플레이어들 렌더링 (fake_wall1 레이어보다 아래)
             renderer.getBatch().begin();
-            for (int i = 0; i < currentRoom.pCount; i++) {
+            for (int i = 0; i < currentRoom.pCount-1; i++) {
                 if (currentRoom.m_players[i] != null) {
                     currentRoom.m_players[i].render(renderer.getBatch());
                 }
@@ -1220,7 +1231,7 @@ public class GameScreen implements Screen {
         );
 
         _Imported_ClientBase.getLocation();
-        currentRoom.pCount = _Imported_ClientBase.playerCount - 1;
+        currentRoom.pCount = _Imported_ClientBase.playerCount;
         totalPlayer = currentRoom.pCount; //현재 총 플레이어 수 (보스 제외)
 
         int temp = 0;

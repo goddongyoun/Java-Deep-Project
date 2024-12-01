@@ -151,7 +151,7 @@ public class LobbyScreen implements Screen {
 
     private void handleGameStart() {
         Room currentRoom = game.getCurrentRoom();
-        int totalPlayers = currentRoom.pCount + 1; // 현재 플레이어 수 (자신 포함)
+        int totalPlayers = currentRoom.pCount; // 현재 플레이어 수 (자신 포함)
 
         // 플레이어 수 체크
         if (totalPlayers < 1) {
