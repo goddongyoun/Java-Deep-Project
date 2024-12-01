@@ -509,6 +509,16 @@ public class GameScreen implements Screen {
             }
         }
 
+        //미션 클리어하면 objonlayer가 보이던 것을 안보이게 설정함.
+        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
+            String checkObjId = entry.getKey();
+            boolean isMissionComplete = entry.getValue();
+
+            if (isMissionComplete) {
+                objOnLayers.get(checkObjId).setVisible(false);
+            }
+        }
+
         if (!foundInteraction && currentInteractiveObj != null) {
             if (objActiveStates.get(currentInteractiveObj)) {
                 objOnLayers.get(currentInteractiveObj).setVisible(false);
@@ -571,8 +581,6 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
-                            //TODO 미션 클리어하면 objon안보이게 설정
-//                            updateMissionCompletionStatus(); //미션 클리어시 동상 상호작용 레이어 안보이게 설정
                             _Imported_ClientBase.setMission(0,true);
                         });
                         break;
@@ -584,7 +592,6 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog2.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
-//                            updateMissionCompletionStatus();
                             _Imported_ClientBase.setMission(1,true);
                         });
                         break;
@@ -595,7 +602,6 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog3.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
-//                            updateMissionCompletionStatus();
                             _Imported_ClientBase.setMission(2,true);
                         });
                         break;
@@ -606,7 +612,6 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog4.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
-//                            updateMissionCompletionStatus();
                             _Imported_ClientBase.setMission(3,true);
                         });
                         break;
@@ -617,7 +622,6 @@ public class GameScreen implements Screen {
                         // 미션 완료 시 서버에 알림
                         missionDialog5.setMissionCompleteCallback(() -> {
                             missionCompletionStatus.put(objId, true);
-//                            updateMissionCompletionStatus();
                             _Imported_ClientBase.setMission(4,true);
                         });
                         break;
@@ -636,20 +640,6 @@ public class GameScreen implements Screen {
 
         } catch (Exception e) {
             Gdx.app.log("Mission Load", "Error loading mission completion status from server", e);
-        }
-    }
-
-
-    //미션 클리어하면 objonlayer가 보이던 것을 안보이게 설정함.
-    //이 메소드는 일시적인 것으로, 계속 안보이게 설정하는 것은 상호작용 관련 로직에 따로 설정함
-    private void updateMissionCompletionStatus() {
-        for (Map.Entry<String, Boolean> entry : missionCompletionStatus.entrySet()) {
-            String checkObjId = entry.getKey();
-            boolean isMissionComplete = entry.getValue();
-
-            if (isMissionComplete) {
-                objOnLayers.get(checkObjId).setVisible(false);
-            }
         }
     }
 
