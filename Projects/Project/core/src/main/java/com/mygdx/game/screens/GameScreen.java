@@ -843,7 +843,7 @@ public class GameScreen implements Screen {
         }
 
         if(everybodyEnd == true && player.isBoss()) {
-        	game.setScreen(new EscapeResultScreen(game, true, deadPlayer, totalPlayer)); //탈출 성공
+        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 성공
             initialAllPlayerStatus();
         }
 
