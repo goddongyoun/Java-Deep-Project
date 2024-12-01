@@ -116,6 +116,9 @@ public class GameScreen implements Screen {
 
     public static boolean everybodyEnd = false;
 
+    public int totalPlayer;
+    public int deadPlayer;
+
     InputMultiplexer multiplexer;
 
     public GameScreen(Main game) {
@@ -341,6 +344,7 @@ public class GameScreen implements Screen {
                     PlayerOfMulti target = currentRoom.m_players[i];
                     if (target != null && !target.isPetrified() && checkSkillCollision(target)) {
                         System.out.println("hit");
+                        deadPlayer++; //죽은 플레이어 수 카운트
                         currentRoom.m_players[i].setPetrified(true);
                         _Imported_ClientBase.setIsDead(target.getNickname());
                     }
@@ -832,15 +836,15 @@ public class GameScreen implements Screen {
 
             if (petrifiedTimer >= petrifiedDuration) {
                 isDefeatScreenTriggered = true;
+                game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
                 initialAllPlayerStatus();
-                game.setScreen(new EscapeResultScreen(game, false));
                 //dispose();
             }
         }
 
         if(everybodyEnd == true && player.isBoss()) {
+        	game.setScreen(new EscapeResultScreen(game, true, deadPlayer, totalPlayer)); //탈출 성공
             initialAllPlayerStatus();
-        	game.setScreen(new EscapeResultScreen(game, true));
         }
 
         if (renderer != null) {
@@ -886,13 +890,12 @@ public class GameScreen implements Screen {
                 if (playerPos.y < 2800f) {
                     player.setPosition(playerPos.x, playerPos.y += 120 * delta);
                 }
-                System.out.println(playerPos.y);
 
                 escapeAnimationTimer += delta;
 
                 if (escapeAnimationTimer >= escapeAnimationDuration) {
+                    game.setScreen(new EscapeResultScreen(game, true, deadPlayer, totalPlayer)); //탈출 성공
                     initialAllPlayerStatus();
-                    game.setScreen(new EscapeResultScreen(game, true));
                     //dispose(); // 현재 화면의 리소스 정리
                 }
             }
@@ -985,8 +988,8 @@ public class GameScreen implements Screen {
                 float playerCenterY = playerPos.y + player.size/2;
 
                 // 스킬 크기 조정
-                float skillWidth = BOSS_SKILL_RANGE;
-                float skillHeight = BOSS_SKILL_RANGE;
+                float skillWidth = 240f;
+                float skillHeight = 80f;
 
                 // 스킬 오프셋 설정 (캐릭터로부터의 거리)
                 float skillOffsetX = 40f;
@@ -1042,8 +1045,8 @@ public class GameScreen implements Screen {
                 float playerCenterY = playerPos.y + player.size/2;
 
                 // 스킬 크기 조정
-                float skillWidth = BOSS_SKILL_RANGE;
-                float skillHeight = BOSS_SKILL_RANGE;
+                float skillWidth = 240f;
+                float skillHeight = 80f;
 
                 // 스킬 오프셋 설정 (캐릭터로부터의 거리)
                 float skillOffsetX = 40f;
@@ -1191,6 +1194,7 @@ public class GameScreen implements Screen {
 
         _Imported_ClientBase.getLocation();
         currentRoom.pCount = _Imported_ClientBase.playerCount - 1;
+        totalPlayer = currentRoom.pCount; //현재 총 플레이어 수 (보스 제외)
 
         int temp = 0;
         for (int i = 0; i < 5; i++) {

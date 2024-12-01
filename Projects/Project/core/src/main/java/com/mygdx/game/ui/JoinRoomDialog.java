@@ -1,7 +1,13 @@
 package com.mygdx.game.ui;
 
 import com.ImportedPackage._Imported_ClientBase;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.mygdx.game.Main;
 import com.mygdx.game.Player;
@@ -17,8 +23,17 @@ public class JoinRoomDialog extends Dialog {
     private TextField playerNameField;
     private Label messageLabel;
 
+    private static TextureRegionDrawable joinRoom = new TextureRegionDrawable(new Texture(Gdx.files.internal("makeJoinRoom/joinRoom.png")));
+    private static TextureRegionDrawable no = new TextureRegionDrawable(new Texture(Gdx.files.internal("makeJoinRoom/No1.png")));
+    private static TextureRegionDrawable noHover = new TextureRegionDrawable(new Texture(Gdx.files.internal("makeJoinRoom/No2.png")));
+    private static TextureRegionDrawable okay = new TextureRegionDrawable(new Texture(Gdx.files.internal("makeJoinRoom/Okay1.png")));
+    private static TextureRegionDrawable okayHover = new TextureRegionDrawable(new Texture(Gdx.files.internal("makeJoinRoom/Okay2.png")));
+
+    private Button okayButton;
+    private Button noButton;
+
     public JoinRoomDialog(Skin skin, final Main game) {
-        super("방 참여", skin, "dialog");
+        super("", skin, "dialog");
         this.game = game;
 
         getTitleLabel().setStyle(createLabelStyle(skin, 24));
@@ -29,25 +44,43 @@ public class JoinRoomDialog extends Dialog {
         Label.LabelStyle labelStyle = createLabelStyle(skin, 18);
         TextField.TextFieldStyle textFieldStyle = createTextFieldStyle(skin, 18);
 
-        contentTable.add(new Label("방 코드:", labelStyle)).align(Align.left);
-        roomCodeField = new TextField("", textFieldStyle);
-        contentTable.add(roomCodeField).fillX().row();
+        contentTable.setBackground(joinRoom);
 
-        contentTable.add(new Label("비밀번호 (있는 경우):", labelStyle)).align(Align.left);
+        roomCodeField = new TextField("", textFieldStyle);
+        contentTable.add(roomCodeField).width(140).height(22).expand().fillX().row();
+
         passwordField = new TextField("", textFieldStyle);
         passwordField.setPasswordCharacter('*');
         passwordField.setPasswordMode(true);
-        contentTable.add(passwordField).fillX().row();
+        contentTable.add(passwordField).width(140).height(22).expand().fillX().row();
 
-        contentTable.add(new Label("플레이어 이름:", labelStyle)).align(Align.left);
         playerNameField = new TextField(game.getPlayerNickname(), textFieldStyle);
-        contentTable.add(playerNameField).fillX().row();
+        contentTable.add(playerNameField).width(140).height(22).expand().fillX().row();
 
         messageLabel = new Label("", labelStyle);
         contentTable.add(messageLabel).colspan(2).pad(10).row();
 
-        button("참여", true, createTextButtonStyle(skin, 18));
-        button("취소", false, createTextButtonStyle(skin, 18));
+        Button.ButtonStyle noButtonStyle = new Button.ButtonStyle();
+        noButtonStyle.up = no; // 기본 상태
+        noButtonStyle.down = noHover; // 눌렸을 때
+        noButtonStyle.over = noHover; // 호버 상태 (옵션)
+        noButton = new Button(noButtonStyle);
+
+        Button.ButtonStyle okayButtonStyle = new Button.ButtonStyle();
+        okayButtonStyle.up = okay; // 기본 상태
+        okayButtonStyle.down = okayHover; // 눌렸을 때
+        okayButtonStyle.over = okayHover; // 호버 상태 (옵션)
+        okayButton = new Button(okayButtonStyle);
+
+        contentTable.add(okayButton).width(50).height(40).expand().fill();
+        contentTable.add(noButton).width(50).height(40).expand().fill();
+
+        buttonEventListener();
+
+        // 크기를 명시적으로 설정하여 다이얼로그가 팝업 크기를 따르도록 함
+        this.getCell(contentTable).width(350).height(350*24/31);
+        // 배경을 제거
+        this.setBackground((Drawable) null);
     }
 
     private static Label.LabelStyle createLabelStyle(Skin skin, int fontSize) {
@@ -58,14 +91,43 @@ public class JoinRoomDialog extends Dialog {
 
     private static TextField.TextFieldStyle createTextFieldStyle(Skin skin, int fontSize) {
         TextField.TextFieldStyle style = new TextField.TextFieldStyle(skin.get(TextField.TextFieldStyle.class));
+        style.background = null; // 배경 제거
+        style.focusedBackground = null; // 포커스 배경 제거
+        style.disabledBackground = null; // 비활성 배경 제거
         style.font = FontManager.getInstance().getFont(fontSize);
         return style;
     }
 
-    private static TextButton.TextButtonStyle createTextButtonStyle(Skin skin, int fontSize) {
-        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle(skin.get(TextButton.TextButtonStyle.class));
-        style.font = FontManager.getInstance().getFont(fontSize);
-        return style;
+    private void buttonEventListener(){
+        // 버튼 클릭 시 true 값을 전달
+        okayButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                result(true);
+            }
+        });
+
+        // 버튼 클릭 시 true 값을 전달
+        noButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                result(false);
+                hide();
+            }
+        });
+    }
+
+    @Override
+    public void act(float delta){
+        super.act(delta);
+
+        messageLabel.setPosition((this.getWidth()-messageLabel.getWidth())/2, 60);
+        playerNameField.setPosition(this.getWidth()/2-6, 60+38);
+        passwordField.setPosition(this.getWidth()/2-6, 60+39*2);
+        roomCodeField.setPosition(this.getWidth()/2-6, 60+39*3);
+
+        okayButton.setPosition(116,11);
+        noButton.setPosition(184,11);
     }
 
     @Override

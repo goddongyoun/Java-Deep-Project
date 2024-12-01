@@ -1,0 +1,33 @@
+startLeaveButton.png
+size: 4560, 360
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+leaveLobbyButton
+  rotate: false
+  xy: 0, 0
+  size: 1140, 360
+  orig: 1140, 360
+  offset: 0, 0
+  index: -1
+leaveLobbyButtonHover
+  rotate: false
+  xy: 1140, 0
+  size: 1140, 360
+  orig: 1140, 360
+  offset: 0, 0
+  index: -1
+startButton
+  rotate: false
+  xy: 2280, 0
+  size: 1140, 360
+  orig: 1140, 360
+  offset: 0, 0
+  index: -1
+startButtonHover
+  rotate: false
+  xy: 3420, 0
+  size: 1140, 360
+  orig: 1140, 360
+  offset: 0, 0
+  index: -1

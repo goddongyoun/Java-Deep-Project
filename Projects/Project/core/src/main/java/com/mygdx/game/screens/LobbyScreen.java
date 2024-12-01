@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Main;
@@ -35,6 +36,7 @@ public class LobbyScreen implements Screen {
     private final Viewport viewport;
     private final GlyphLayout layout;
     private final TextureAtlas buttonAtlas;
+    private final TextureAtlas startLeaveButtonAtlas;
     private Table buttonTable;
     private final Room room;
     public static boolean isJoined = false;
@@ -52,6 +54,8 @@ public class LobbyScreen implements Screen {
         this.skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         this.layout = new GlyphLayout();
         this.buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button.atlas"));
+        this.startLeaveButtonAtlas = new TextureAtlas(Gdx.files.internal("ui/startLeaveButton.atlas"));
+
         this.room = game.getCurrentRoom();
         LobbyScreen.isJoined = isJoined;
         shouldStart = false;
@@ -81,9 +85,11 @@ public class LobbyScreen implements Screen {
         buttonTable.setFillParent(true);
 
         Texture buttonTexture = buttonAtlas.findRegion("createLobbyBtn").getTexture();
+        Texture startButtonTexture = startLeaveButtonAtlas.findRegion("leaveLobbyButton").getTexture();
+
         if(isJoined == false) {
             // 게임 시작 버튼
-            AnimatedImageButton startButton = createAnimatedButton(buttonTexture, "createLobbyBtn",
+            AnimatedImageButton startButton = createAnimatedButtonForStartLeave(startButtonTexture, "startButton",
                 new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
@@ -95,7 +101,7 @@ public class LobbyScreen implements Screen {
                     }
                 });
 
-            buttonTable.add(startButton).padBottom(10).row();
+            buttonTable.add(startButton).width(112).height(34).padBottom(10).row();
         }
 
         // 설정 버튼
@@ -109,7 +115,7 @@ public class LobbyScreen implements Screen {
             });
 
         // 나가기 버튼
-        AnimatedImageButton leaveButton = createAnimatedButton(buttonTexture, "closeGameBtn",
+        AnimatedImageButton leaveButton = createAnimatedButtonForStartLeave(startButtonTexture, "leaveLobbyButton",
             new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -117,8 +123,8 @@ public class LobbyScreen implements Screen {
                 }
             });
 
-        buttonTable.add(editButton).padBottom(10).row();
-        buttonTable.add(leaveButton);
+        buttonTable.add(editButton).width(112).height(34).padBottom(10).row();
+        buttonTable.add(leaveButton).width(112).height(34).padBottom(10).row();
 
         stage.addActor(buttonTable);
     }
@@ -133,12 +139,22 @@ public class LobbyScreen implements Screen {
         return button;
     }
 
+    private AnimatedImageButton createAnimatedButtonForStartLeave(Texture buttonTexture, String regionName,
+                                                     ClickListener listener) {
+        TextureAtlas.AtlasRegion region = startLeaveButtonAtlas.findRegion(regionName);
+        AnimatedImageButton button = new AnimatedImageButton(buttonTexture,
+            region.getRegionX(), region.getRegionY(),
+            region.getRegionWidth(), region.getRegionHeight());
+        button.addListener(listener);
+        return button;
+    }
+
     private void handleGameStart() {
         Room currentRoom = game.getCurrentRoom();
         int totalPlayers = currentRoom.pCount + 1; // 현재 플레이어 수 (자신 포함)
 
         // 플레이어 수 체크
-        if (totalPlayers < 2) {
+        if (totalPlayers < 1) {
             showDialog("게임 시작 불가", "게임을 시작하려면 최소 2명의 플레이어가 필요합니다.");
             return;
         }
