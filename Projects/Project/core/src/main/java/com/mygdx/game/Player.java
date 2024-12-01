@@ -26,8 +26,8 @@ public class Player {
     private String nickname;
     private Vector2 position;
     private Vector2 velocity;
-    private float speedX = 160f; //160
-    private float speedY = 120f; //120
+    private float speedX = 200f; //160
+    private float speedY = 160f; //120
     private Rectangle bounds;
     public float size;
     private int x, y;
@@ -71,7 +71,7 @@ public class Player {
     private float rollingCooldown = 3.0f;
     private long lastRollingTime = 0;
     private float rollingDuration = 0.5f;
-    private float rollingSpeedMultiplier = 1.5f;
+    private float rollingSpeedMultiplier = 2f; //1.5f
     private boolean isRolling = false;
     private boolean isInGame = false;
     private static final float ROLL_DISTANCE = 150f;
@@ -428,8 +428,18 @@ public class Player {
         currentState = PlayerState.BOSS_IDLE;
         size *= 1.2f;
         bounds.setSize(size, size);
+
+        updateBossSpeed();
         // 보스 변신 상태를 서버에 전송
         //_Imported_ClientBase.sendBossTransform(true); TODO: erased
+    }
+
+    private void updateBossSpeed(){
+        if(isBoss){
+            System.out.println("speed changed");
+            speedX=220f;
+            speedY=175f;
+        }
     }
 
     public void transformToFlog() {

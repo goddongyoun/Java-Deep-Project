@@ -81,6 +81,7 @@ public class MissionDialog3 extends Dialog implements Disposable {
     private TextureRegionDrawable stage1Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round1"));
     private TextureRegionDrawable stage2Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round2"));
     private TextureRegionDrawable stage3Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round3"));
+    private TextureRegionDrawable stage4Drawable = new TextureRegionDrawable(roundsAtlas.findRegion("mission_round4"));
     private Image card;
     private Image startCard = new Image(new TextureRegionDrawable(new Texture(Gdx.files.internal("publicImages/start.png"))));
 
@@ -93,8 +94,8 @@ public class MissionDialog3 extends Dialog implements Disposable {
     private int amongusHeight = 84;
     private int currentRound = 1;
     private int totalAmongus = 4;
-    private int totalRound = 3;
-    private int totalSequence = 9;
+    private int totalRound = 4;
+    private int totalSequence = 8;
     private int thisRoundSequenceCount = 0; // 해당 라운드 순서 횟수
     private int correctCount = 0;
     private int amongusXGap = 144;
@@ -120,12 +121,12 @@ public class MissionDialog3 extends Dialog implements Disposable {
     	isShowingMission = false;
         MissionDialog3.this.hide();
     }
-    
+
     //GameScreen에서 미니게임이 열려있는지 확인 용도
     public boolean isShowingMission(){
         return isShowingMission;
     }
-    
+
     public MissionDialog3(String title, Skin skin, Stage stage){
         super(title, skin);
         this.stage = stage;
@@ -360,7 +361,7 @@ public class MissionDialog3 extends Dialog implements Disposable {
         intputSequence.clear(); // 이전 입력값 없앰
         disableListeners(); // 키 리스너를 없앰
 
-        thisRoundSequenceCount += 3;
+        thisRoundSequenceCount += 2;
 
         changeStageCard();
         card.setVisible(true);
@@ -437,6 +438,9 @@ public class MissionDialog3 extends Dialog implements Disposable {
                 break;
             case 3:
                 card.setDrawable(stage3Drawable);
+                break;
+            case 4:
+                card.setDrawable(stage4Drawable);
                 break;
             default:
                 break;

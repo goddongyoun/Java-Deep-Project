@@ -19,8 +19,8 @@ public class PlayerOfMulti {
     private String nickname;
     private Vector2 position;
     private Vector2 velocity;
-    private float speedX = 160f;
-    private float speedY = 120f;
+    private float speedX = 200f; //160
+    private float speedY = 160f; //120
     private Rectangle bounds;
     public float size;
     private Vector2 serverPosition = new Vector2();
@@ -61,7 +61,7 @@ public class PlayerOfMulti {
     private float rollingCooldown = 3.0f;
     private long lastRollingTime = 0;
     private float rollingDuration = 0.5f;
-    private float rollingSpeedMultiplier = 1.5f;
+    private float rollingSpeedMultiplier = 2f;
     private boolean isRolling = false;
     private boolean isInGame = false;
     private static final float ROLL_DISTANCE = 150f;
@@ -90,7 +90,7 @@ public class PlayerOfMulti {
     public void resetStateTime() {
         stateTime = 0;
     }
-    
+
     public PlayerOfMulti(String nickname, float x, float y, float size) {
         this.nickname = nickname;
         this.position = new Vector2(x, y);
@@ -124,7 +124,7 @@ public class PlayerOfMulti {
             currentState = PlayerState.BOSS_IDLE;
         }
     }
-    
+
     private void loadTextures() {
         try {
             loadBasicAnimations();
@@ -274,7 +274,7 @@ public class PlayerOfMulti {
                 updateMovement(dx, dy, delta);
             }
         }
-        
+
         //System.out.println(serverPlayerState + " " + currentState);
         if (serverPlayerState == PlayerState.ROLLING && currentState != PlayerState.ROLLING) {
             startRolling();
@@ -399,15 +399,25 @@ public class PlayerOfMulti {
         currentState = PlayerState.BOSS_IDLE;
         size *= 1.2f;
         bounds.setSize(size, size);
+
+        updateBossSpeed();
         // 보스 변신 상태를 서버에 전송
         //_Imported_ClientBase.sendBossTransform(true); TODO: erased
+    }
+
+    private void updateBossSpeed(){
+        if(isBoss){
+            System.out.println("speed changed");
+            speedX=220f;
+            speedY=175f;
+        }
     }
 
     public void transformToFlog() {
     	isBoss = false;
         currentState = PlayerState.IDLE;
     }
-    
+
     private TextureRegion getCurrentFrame() {
         try {
             if (isPetrified) {

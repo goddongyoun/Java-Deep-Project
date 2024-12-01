@@ -806,7 +806,7 @@ public class GameScreen implements Screen {
     private boolean isDefeatScreenTriggered = false;
 
     public static boolean endShoted = false;
-    
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -835,7 +835,7 @@ public class GameScreen implements Screen {
                 	endShoted = true;
         		}
         	}
-        	
+
         	if(missionDialog.isShowingMission()) {
             	System.out.println("came1");
         		missionDialog.stopShowMission();
@@ -857,7 +857,7 @@ public class GameScreen implements Screen {
         		missionDialog5.stopShowMission();
         	}
         }
-        
+
         if (player.isPetrified() && !isDefeatScreenTriggered && everybodyEnd == true) {
             isDefeatScreenTriggered = true;
             game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
