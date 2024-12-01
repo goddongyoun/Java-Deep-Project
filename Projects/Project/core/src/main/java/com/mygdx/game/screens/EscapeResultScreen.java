@@ -78,6 +78,7 @@ public class EscapeResultScreen implements Screen {
         	player.size = 32;
         	player.transformToFlog();
         	player.nicknameColor = Color.WHITE;
+        	player.setCanMove(true);
         	for(int i = 0; i<currentRoom.pCount; i++) {
         		if(currentRoom.m_players[i] != null) {
         			currentRoom.m_players[i].size = 64;
