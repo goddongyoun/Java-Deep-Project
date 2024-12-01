@@ -273,13 +273,13 @@ public class MissionDialog5 extends Dialog implements Disposable {
         //닫기버튼 추가
         contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
 
-        this.getCell(contentTable).width(dialogSizeWidth).height(dialogSizeHeight).expand().fill();
+        this.getCell(contentTable).width(dialogSizeWidth+10).height(dialogSizeHeight+10).expand().fill();
         // 미션 클래스 자체의 배경을 제거
         this.setBackground((Drawable) null);
     }
 
     public void showMission(Stage stage){
-        this.setSize(dialogSizeWidth, dialogSizeHeight);
+        this.setSize(dialogSizeWidth+10, dialogSizeHeight+10);
         stage.addActor(this);
 
         isShowingMission = true;
@@ -332,10 +332,8 @@ public class MissionDialog5 extends Dialog implements Disposable {
     public void act(float delta) {
         super.act(delta);
 
-        closeButton.setPosition(
-            this.getWidth()-closeButton.getWidth(),
-            this.getHeight()-(closeButton.getHeight()+3)
-        );
+        //닫기 버튼 위치 설정
+        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()+8),this.getHeight()-(closeButton.getHeight()+10));
 
         background.setPosition(
             (this.getWidth() - background.getWidth())/2,

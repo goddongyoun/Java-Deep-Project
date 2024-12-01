@@ -249,7 +249,7 @@ public class MissionDialog extends Dialog implements Disposable {
         shooterImage.setPosition(shooterInitialX, shooterInitialY);
 
         // 닫기 버튼 위치
-        closeButton.setPosition(this.getWidth() - closeButton.getWidth(), this.getHeight() - closeButton.getHeight());
+        closeButton.setPosition(this.getWidth() - (closeButton.getWidth()+2), this.getHeight() - closeButton.getHeight());
 
         // 테두리 및 배경 위치
         borderImage.setPosition(0, -5);

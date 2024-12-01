@@ -231,13 +231,13 @@ public class MissionDialog3 extends Dialog implements Disposable {
 
         contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
 
-        this.getCell(contentTable).width(640).height(360).expand().fill();
-        // 미션 클래스 자체의 배경을 제거
+        this.getCell(contentTable).width(650).height(370).expand().fill();
+//        // 미션 클래스 자체의 배경을 제거
         this.setBackground((Drawable) null);
     }
 
     public void showMission(Stage stage){
-        this.setSize(640, 360);  // 팝업창 크기를 640x360으로 설정
+        this.setSize(650, 370);
         stage.addActor(this);
 
         isShowingMission = true;
@@ -267,7 +267,7 @@ public class MissionDialog3 extends Dialog implements Disposable {
         super.act(delta);
 
         //닫기 버튼 위치 설정
-        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+3));
+        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()+6),this.getHeight()-(closeButton.getHeight()+8));
 
         card.setPosition(
             (this.getWidth() - card.getWidth()) / 2,

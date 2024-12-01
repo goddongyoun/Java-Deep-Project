@@ -266,13 +266,13 @@ public class MissionDialog4 extends Dialog implements Disposable {
 
         contentTable.add(closeButton).width(32).height(32).expand().fill().pad(10);
 
-        this.getCell(contentTable).width(dialogSize).height(dialogSize).expand().fill();
+        this.getCell(contentTable).width(dialogSize+14).height(dialogSize+10).expand().fill();
         // 미션 클래스 자체의 배경을 제거
         this.setBackground((Drawable) null);
     }
 
     public void showMission(Stage stage){
-        this.setSize(dialogSize, dialogSize);
+        this.setSize(dialogSize+14, dialogSize+10);
         stage.addActor(this);
 
         isShowingMission = true;
@@ -307,7 +307,7 @@ public class MissionDialog4 extends Dialog implements Disposable {
         }
 
         //닫기 버튼 위치 설정
-        closeButton.setPosition(this.getWidth()-closeButton.getWidth(),this.getHeight()-(closeButton.getHeight()+3));
+        closeButton.setPosition(this.getWidth()-(closeButton.getWidth()+6),this.getHeight()-(closeButton.getHeight()+6));
 
         border.setPosition(
             (this.getWidth() - border.getWidth()) / 2,
