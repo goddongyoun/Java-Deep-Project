@@ -437,8 +437,8 @@ public class Player {
     private void updateBossSpeed(){
         if(isBoss){
             System.out.println("speed changed");
-            speedX=220f;
-            speedY=175f;
+            speedX=225f;
+            speedY=180f;
         }
     }
 

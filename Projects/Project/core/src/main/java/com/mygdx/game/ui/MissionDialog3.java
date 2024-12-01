@@ -94,8 +94,8 @@ public class MissionDialog3 extends Dialog implements Disposable {
     private int amongusHeight = 84;
     private int currentRound = 1;
     private int totalAmongus = 4;
-    private int totalRound = 4;
-    private int totalSequence = 8;
+    private int totalRound = 3;
+    private int totalSequence = 6;
     private int thisRoundSequenceCount = 0; // 해당 라운드 순서 횟수
     private int correctCount = 0;
     private int amongusXGap = 144;
