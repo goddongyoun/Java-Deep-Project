@@ -2,6 +2,7 @@ package com.mygdx.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygdx.game.Player;
@@ -12,18 +13,20 @@ public class GameUI {
     private SpriteBatch batch;
     private BitmapFont font;
     private Player player;
+    private OrthographicCamera camera;
 
     // 보스 관련 변수
     private boolean isBossPlayer;
     private boolean bossActivated;
     private float gameStartTimer;
     private static final float BOSS_ACTIVATION_TIME = 20f;
-    private float bossSkillCooldown = 5f;
+    private float bossSkillCooldown = 3f;
     private float lastBossSkillTime = 0;
 
-    public GameUI(SpriteBatch batch, Player player) {
+    public GameUI(SpriteBatch batch, Player player, OrthographicCamera camera) {
         this.batch = batch;
         this.player = player;
+        this.camera = camera;
         this.font = FontManager.getInstance().getFont(20);
         this.gameStartTimer = 0;
     }
@@ -33,6 +36,11 @@ public class GameUI {
     }
 
     public void render() {
+        // 화면 중앙 좌표 계산 (카메라 기준)
+        float centerX = camera.position.x - (camera.viewportWidth / 2);
+        float centerY = camera.position.y + (camera.viewportHeight / 2);
+
+        batch.setProjectionMatrix(camera.combined); // 카메라 기준으로 렌더링
         batch.begin();
 
         // 보스 변신 타이머
@@ -40,37 +48,39 @@ public class GameUI {
             font.setColor(Color.WHITE);
             String timeText = String.format("보스 등장까지: %.1f초",
                 Math.max(0, BOSS_ACTIVATION_TIME - gameStartTimer));
-            font.draw(batch, timeText, 10, Gdx.graphics.getHeight() - 10);
+            font.draw(batch, timeText, centerX + camera.viewportWidth / 2 - font.getRegion().getRegionWidth() / 2,
+                centerY - 50);
         }
 
         // 보스 스킬 쿨타임
-        //TODO 글자 위치 조정
         if (bossActivated && isBossPlayer) {
             float skillCooldown = bossSkillCooldown - (gameStartTimer - lastBossSkillTime);
+            String skillText;
             if (skillCooldown > 0) {
                 font.setColor(Color.RED);
-                font.draw(batch, String.format("스킬 쿨타임: %.1f초", skillCooldown),
-                    10, Gdx.graphics.getHeight() - 10);
+                skillText = String.format("스킬 쿨타임: %.1f초", skillCooldown);
             } else {
                 font.setColor(Color.GREEN);
-                font.draw(batch, "스킬 사용 가능! (A키)",
-                    10, Gdx.graphics.getHeight() - 10);
+                skillText = "스킬 사용 가능! (A키)";
             }
+            font.draw(batch, skillText, centerX + camera.viewportWidth / 2 - font.getRegion().getRegionWidth() / 2,
+                centerY - 70);
         }
 
-        // 구르기 쿨타임
-        if (player.isInGame() && !player.isPetrified()) {
+        // 플레이어 구르기 쿨타임
+        if (player.isInGame() && !player.isPetrified() && !player.isBoss()) {
             float rollCooldown = player.getRollingCooldown() -
                 (TimeUtils.millis() - player.getLastRollingTime()) / 1000f;
+            String rollText;
             if (rollCooldown > 0) {
                 font.setColor(Color.YELLOW);
-                font.draw(batch, String.format("구르기 쿨타임: %.1f초", rollCooldown),
-                    10, Gdx.graphics.getHeight() - 30);
+                rollText = String.format("구르기 쿨타임: %.1f초", rollCooldown);
             } else {
                 font.setColor(Color.GREEN);
-                font.draw(batch, "구르기 가능! (SPACE)",
-                    10, Gdx.graphics.getHeight() - 30);
+                rollText = "구르기 가능! (SPACE)";
             }
+            font.draw(batch, rollText, centerX + camera.viewportWidth / 2 - font.getRegion().getRegionWidth() / 2,
+                centerY - 90);
         }
 
         batch.end();

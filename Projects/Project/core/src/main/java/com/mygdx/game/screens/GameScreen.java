@@ -205,7 +205,7 @@ public class GameScreen implements Screen {
 
         findLayers();
         missionCompletionStatus = new HashMap<>();
-        this.gameUI = new GameUI(batch, player);
+        this.gameUI = new GameUI(batch, player, camera);
 
         // 입력 처리를 위한 InputMultiplexer 설정
         multiplexer = new InputMultiplexer();
