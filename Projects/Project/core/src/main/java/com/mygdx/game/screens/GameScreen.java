@@ -826,7 +826,7 @@ public class GameScreen implements Screen {
         checkAllMissionsComplete();
         
         if(everybodyEnd == true) {
-        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
+        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer-1)); //탈출 실패
             initialAllPlayerStatus();
         }
         
@@ -840,7 +840,7 @@ public class GameScreen implements Screen {
                 	endShoted = true;
         		}
         		if(everybodyEnd == true) {
-        			game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
+        			game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer-1)); //탈출 실패
                     initialAllPlayerStatus();
         		}
         	}
@@ -870,14 +870,14 @@ public class GameScreen implements Screen {
         if (player.isPetrified() && !isDefeatScreenTriggered && everybodyEnd == true) {
         	System.out.println("862");
             isDefeatScreenTriggered = true;
-            game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 실패
+            game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer-1)); //탈출 실패
             initialAllPlayerStatus();
             //dispose();
         }
 
         if(everybodyEnd == true && player.isBoss()) {
         	System.out.println("870");
-        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer)); //탈출 성공
+        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer-1)); //탈출 성공
             initialAllPlayerStatus();
         }
 
@@ -932,7 +932,7 @@ public class GameScreen implements Screen {
                 escapeAnimationTimer += delta;
 
                 if (escapeAnimationTimer >= escapeAnimationDuration && everybodyEnd == true) {
-                    game.setScreen(new EscapeResultScreen(game, true, deadPlayer, totalPlayer)); //탈출 성공
+                    game.setScreen(new EscapeResultScreen(game, true, deadPlayer, totalPlayer-1)); //탈출 성공
                     initialAllPlayerStatus();
                     //dispose(); // 현재 화면의 리소스 정리
                 }
