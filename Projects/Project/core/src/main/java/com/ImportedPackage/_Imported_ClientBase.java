@@ -28,7 +28,7 @@ import com.mygdx.game.screens.LobbyScreen;
 public class _Imported_ClientBase {
 
     static byte[] sendBuf;
-    static String SERVER_ADDRESS = "127.0.0.1"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
+    static String SERVER_ADDRESS = "219.254.146.234"; // final dms dkslwlaks qusrudehlaus dksehlqslek. qusrudehlaus chltjsdmfekgo vjdvjd dnf wktls dlTtmqslek. --snrnsrk
     final static int SERVER_PORT_TCP = 1235;
     final static int SERVER_PORT_UDP  = 4000;
     static ExecutorService executorService = Executors.newFixedThreadPool(3);

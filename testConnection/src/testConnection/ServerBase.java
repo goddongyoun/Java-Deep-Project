@@ -757,57 +757,6 @@ public class ServerBase {
 			//멀티 스레드 고정 설정
 			ExecutorService executorService = Executors.newCachedThreadPool();
 
-			// UDP receiver
-			executorService.execute(()->{
-				try {
-					byte[] recvBuf = new byte[256];
-					DatagramPacket udpRecvPack = new DatagramPacket(recvBuf, recvBuf.length);
-					while(true) {
-						udpSock.receive(udpRecvPack);
-						String recvMessage = new String(udpRecvPack.getData()).trim();
-						if(recvMessage.equals("ConnectionTest") && SEND_LOCKED == false) {
-							System.out.println("UDP received Connection Test " + udpRecvPack.getAddress());
-							addressToSend = udpRecvPack.getAddress();
-							//System.out.println(addressToSend);
-							stringToBeSended = "Connection Good";
-							needSend = true;
-						}
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
-
-			// UDP sender
-			executorService.execute(()->{
-				try {
-					//System.out.println("0 came");
-					byte[] sendBuf = new byte[1];
-					DatagramPacket udpSendPack = new DatagramPacket(sendBuf, sendBuf.length);
-					udpSendPack.setPort(4001);
-					while(true){
-						Thread.sleep(10);
-						//System.out.println("Looping");
-						if(needSend == true) {
-							//System.out.println("1 came");
-							if(addressToSend != null && stringToBeSended != null) {
-								sendBuf = stringToBeSended.getBytes();
-								udpSendPack.setAddress(addressToSend);
-								udpSendPack.setData(sendBuf);
-								//System.out.println(new String(sendBuf) + "108");
-								if(SEND_LOCKED == false) {
-									System.out.println("Sended");
-									udpSock.send(udpSendPack);
-								}
-								needSend = false;
-							}
-						}
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
-
 			executorService.execute(()->{
 				@SuppressWarnings("resource")
 				Scanner sc = new Scanner(System.in);
