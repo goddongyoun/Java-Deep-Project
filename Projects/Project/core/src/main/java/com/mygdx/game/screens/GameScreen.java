@@ -346,7 +346,7 @@ public class GameScreen implements Screen {
                     PlayerOfMulti target = currentRoom.m_players[i];
                     if (target != null && !target.isPetrified() && checkSkillCollision(target)) {
                         System.out.println("hit");
-                        deadPlayer++; //죽은 플레이어 수 카운트
+                        //deadPlayer++; //죽은 플레이어 수 카운트
                         currentRoom.m_players[i].setPetrified(true);
                         _Imported_ClientBase.setIsDead(target.getNickname());
                     }
@@ -827,8 +827,14 @@ public class GameScreen implements Screen {
         checkAllMissionsComplete();
         
         if(everybodyEnd == true) {
-        	game.setScreen(new EscapeResultScreen(game, isOk, deadPlayer, totalPlayer-1));
+        	if(isOk) {
+        		game.setScreen(new EscapeResultScreen(game, isOk, deadPlayer, totalPlayer-1));
+        	} else {
+        		game.setScreen(new EscapeResultScreen(game, isOk, deadPlayer, totalPlayer-1));
+        	}
             initialAllPlayerStatus();
+        } else {
+			checkDeadPlayers();
         }
         
         if(player.isPetrified()) {
@@ -1122,6 +1128,17 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void checkDeadPlayers() {
+    	this.deadPlayer = 0;
+    	for(int i = 0; i<currentRoom.pCount; i++) {
+        	if(currentRoom.m_players[i] != null) {
+        		if(currentRoom.m_players[i].isPetrified()) {
+        			this.deadPlayer++;
+        		}
+        	}
+        }
+    }
+    
     private void initialAllPlayerStatus(){
         player.initialPlayerStatus();
         for (int i = 0; i < currentRoom.pCount; i++) {

@@ -37,6 +37,7 @@ public class EscapeResultScreen implements Screen {
     private Image resultImage;
     private int totalPlayer;
     private int deadPlayer;
+    private int showNum = 0;
 
     private float screenDuration = 5.0f;
     private float screenTimer = 0f;
@@ -51,6 +52,10 @@ public class EscapeResultScreen implements Screen {
         this.player = currentRoom.getme();
         this.totalPlayer = totalPlayer;
         this.deadPlayer = deadPlayer;
+        if(player.isPetrified()) {
+        	this.deadPlayer++;
+        }
+        System.out.println("dead = " + deadPlayer);
         isWin = winOrDead;
         /*
         if(!player.isBoss()) {
@@ -83,7 +88,7 @@ public class EscapeResultScreen implements Screen {
 
             int l=0,r=0;
 
-            for (int i=0;i<totalPlayer;i++){
+            for (int i=0;i<deadPlayer;i++){
                 if (toggle){
                     playerRImage.add(new Image(deadAtlas.findRegion("FrogDeadR8")));
                     playerRImage.get(r).setSize(playerSize,playerSize);
@@ -96,12 +101,13 @@ public class EscapeResultScreen implements Screen {
                     l++;
                 }
                 toggle = !toggle; // 토글 값 반전
+                this.showNum = deadPlayer;
             }
         }else{
 
             int l=0,r=0;
 
-            for (int i=0;i<totalPlayer;i++){
+            for (int i=0;i<totalPlayer - deadPlayer;i++){
                 if (toggle){
                     System.out.println(1);
                     playerRImage.add(new Image(playerAtlas.findRegion("FrogIdleR1")));
@@ -125,6 +131,7 @@ public class EscapeResultScreen implements Screen {
             for (int i=0;i<playerLImage.size;i++){
                 System.out.println(playerLImage.get(i));
             }
+            this.showNum = totalPlayer - deadPlayer;
         }
     }
 
@@ -154,7 +161,7 @@ public class EscapeResultScreen implements Screen {
         toggle = true;
         int l=0,r=0;
 
-        for (int i=0;i<totalPlayer;i++){
+        for (int i=0;i<showNum;i++){
             if (toggle){
                 if (r==0) {
                     playerRImage.get(r).setPosition(
@@ -198,6 +205,7 @@ public class EscapeResultScreen implements Screen {
         	player.transformToFlog();
         	player.nicknameColor = Color.WHITE;
         	player.setCanMove(true);
+        	player.setIsEscapeState(false);
         	for(int i = 0; i<currentRoom.pCount; i++) {
         		if(currentRoom.m_players[i] != null) {
         			currentRoom.m_players[i].size = 64;

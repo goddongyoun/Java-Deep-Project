@@ -286,7 +286,7 @@ class Room{
 			start = false;
 			everybodyEnd = true;
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -631,6 +631,7 @@ class Clients implements Runnable{
 						}
 						else if(ServerBase.rooms.get(RecogPort).everybodyEnd == true) {
 							tcpWriter.write("EveryBodyEnded"); tcpWriter.newLine(); tcpWriter.flush();
+							Thread.sleep(1000);
 							isStarted = false;
 							updateTime = 0;
 							skillUpdateTime = 0;
