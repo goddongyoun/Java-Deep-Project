@@ -806,6 +806,7 @@ public class GameScreen implements Screen {
     private boolean isDefeatScreenTriggered = false;
 
     public static boolean endShoted = false;
+    public boolean isOk = false;
 
     @Override
     public void render(float delta) {
@@ -826,7 +827,7 @@ public class GameScreen implements Screen {
         checkAllMissionsComplete();
         
         if(everybodyEnd == true) {
-        	game.setScreen(new EscapeResultScreen(game, false, deadPlayer, totalPlayer-1)); //탈출 실패
+        	game.setScreen(new EscapeResultScreen(game, isOk, deadPlayer, totalPlayer-1));
             initialAllPlayerStatus();
         }
         
@@ -912,6 +913,7 @@ public class GameScreen implements Screen {
             //탈출구에 출입할시
             if (isEscape){
             	if(endShoted == false) {
+            		isOk = true;
             		_Imported_ClientBase.setEnd();
                 	endShoted = true;
             	}
